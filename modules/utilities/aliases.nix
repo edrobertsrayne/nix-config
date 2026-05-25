@@ -3,7 +3,6 @@ _: {
     home = {
       shell.enableShellIntegration = true;
       shellAliases = {
-        c = "clear";
         top = "btop";
         du = "ncdu";
       };
