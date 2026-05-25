@@ -5,6 +5,7 @@ _: {
     http = 80;
     https = 443;
     dns = 53;
+    unbound = 5335;
 
     # Monitoring
     prometheus = 9090;
