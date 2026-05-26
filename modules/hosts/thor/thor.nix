@@ -73,11 +73,11 @@
         };
 
         tailscale = {
-          useRoutingFeatures = "server";
-          # extraUpFlags = [
-          #   "--exit-node=100.84.2.120"
-          #   "--exit-node-allow-lan-access=true"
-          # ];
+          useRoutingFeatures = "client";
+          extraSetFlags = [
+            "--exit-node=se-sto-wg-201.mullvad.ts.net"
+            "--exit-node-allow-lan-access=true"
+          ];
         };
 
         fstrim.enable = true;
