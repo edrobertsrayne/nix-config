@@ -30,5 +30,16 @@ in {
     };
 
     users.users.${cfg.user}.extraGroups = ["tank"];
+
+    homepage.services."Media" = [
+      {
+        Lidarr = {
+          href = "https://${service}.${server.domain}";
+          description = "Music manager";
+          icon = "lidarr.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.lidarr}";
+        };
+      }
+    ];
   };
 }

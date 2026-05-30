@@ -65,5 +65,16 @@ in {
         proxyWebsockets = true;
       };
     };
+
+    homepage.services."Media" = [
+      {
+        Transmission = {
+          href = "https://transmission.${server.domain}";
+          description = "Torrent downloader";
+          icon = "transmission.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.transmission}";
+        };
+      }
+    ];
   };
 }

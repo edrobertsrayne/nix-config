@@ -22,5 +22,16 @@ in {
         };
       };
     };
+
+    homepage.services."Productivity" = [
+      {
+        Karakeep = {
+          href = "https://${url}";
+          description = "Bookmark manager";
+          icon = "karakeep.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

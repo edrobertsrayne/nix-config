@@ -30,5 +30,16 @@ in {
     };
 
     users.users.${cfg.user}.extraGroups = ["tank"];
+
+    homepage.services."Media" = [
+      {
+        Radarr = {
+          href = "https://${service}.${server.domain}";
+          description = "Movie manager";
+          icon = "radarr.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.radarr}";
+        };
+      }
+    ];
   };
 }

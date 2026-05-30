@@ -49,5 +49,16 @@ in {
         proxyWebsockets = true;
       };
     };
+
+    homepage.services."Library" = [
+      {
+        Immich = {
+          href = "https://photos.${server.domain}";
+          description = "Photo library";
+          icon = "immich.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.immich}";
+        };
+      }
+    ];
   };
 }

@@ -33,5 +33,16 @@ in {
         proxyWebsockets = true;
       };
     };
+
+    homepage.services."Media" = [
+      {
+        Prowlarr = {
+          href = "https://${service}.${server.domain}";
+          description = "Indexer manager";
+          icon = "prowlarr.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.prowlarr}";
+        };
+      }
+    ];
   };
 }

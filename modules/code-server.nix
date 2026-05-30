@@ -24,5 +24,16 @@ in {
         proxyWebsockets = true;
       };
     };
+
+    homepage.services."Productivity" = [
+      {
+        "Code Server" = {
+          href = "https://${url}";
+          description = "VS Code in browser";
+          icon = "code-server.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

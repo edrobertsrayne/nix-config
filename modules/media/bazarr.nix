@@ -19,5 +19,16 @@ in {
         };
       };
     };
+
+    homepage.services."Media" = [
+      {
+        Bazarr = {
+          href = "https://${url}";
+          description = "Subtitle manager";
+          icon = "bazarr.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.bazarr}";
+        };
+      }
+    ];
   };
 }

@@ -27,5 +27,16 @@ in {
         };
       };
     };
+
+    homepage.services."Tools" = [
+      {
+        SearXNG = {
+          href = "https://${url}";
+          description = "Private search engine";
+          icon = "searxng.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

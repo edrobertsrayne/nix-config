@@ -35,5 +35,16 @@ in {
         '';
       };
     };
+
+    homepage.services."Infrastructure" = [
+      {
+        Portainer = {
+          href = "https://portainer.${server.domain}";
+          description = "Container manager";
+          icon = "portainer.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.portainer}";
+        };
+      }
+    ];
   };
 }

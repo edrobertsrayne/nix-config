@@ -19,5 +19,16 @@ in {
         proxyWebsockets = true;
       };
     };
+
+    homepage.services."Tools" = [
+      {
+        Ntfy = {
+          href = "https://${url}";
+          description = "Push notifications";
+          icon = "ntfy.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

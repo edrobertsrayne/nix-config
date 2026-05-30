@@ -19,5 +19,16 @@ in {
         };
       };
     };
+
+    homepage.services."Productivity" = [
+      {
+        Mealie = {
+          href = "https://${url}";
+          description = "Recipe manager";
+          icon = "mealie.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

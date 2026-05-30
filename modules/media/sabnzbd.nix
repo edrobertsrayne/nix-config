@@ -37,5 +37,16 @@ in {
         '';
       };
     };
+
+    homepage.services."Media" = [
+      {
+        SABnzbd = {
+          href = "https://${url}";
+          description = "Usenet downloader";
+          icon = "sabnzbd.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.sabnzbd}";
+        };
+      }
+    ];
   };
 }

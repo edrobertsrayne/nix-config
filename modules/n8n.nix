@@ -26,5 +26,16 @@ in {
         };
       };
     };
+
+    homepage.services."Productivity" = [
+      {
+        n8n = {
+          href = "https://${url}";
+          description = "Workflow automation";
+          icon = "n8n.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

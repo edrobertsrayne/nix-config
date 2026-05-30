@@ -22,5 +22,16 @@ in {
         };
       };
     };
+
+    homepage.services."Tools" = [
+      {
+        Vaultwarden = {
+          href = "https://${url}";
+          description = "Password manager";
+          icon = "vaultwarden.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
   };
 }

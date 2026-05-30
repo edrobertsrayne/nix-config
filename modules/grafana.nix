@@ -46,5 +46,16 @@ in {
         proxyWebsockets = true;
       };
     };
+
+    homepage.services."Infrastructure" = [
+      {
+        Grafana = {
+          href = "https://grafana.${server.domain}";
+          description = "Metrics dashboard";
+          icon = "grafana.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.grafana}";
+        };
+      }
+    ];
   };
 }

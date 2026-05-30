@@ -18,5 +18,16 @@ in {
         };
       };
     };
+
+    homepage.services."Media" = [
+      {
+        Jellyseerr = {
+          href = "https://seerr.${server.domain}";
+          description = "Request manager";
+          icon = "jellyseerr.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.seerr}";
+        };
+      }
+    ];
   };
 }

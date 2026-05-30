@@ -30,5 +30,16 @@ in {
     };
 
     users.users.${cfg.user}.extraGroups = ["tank"];
+
+    homepage.services."Media" = [
+      {
+        Sonarr = {
+          href = "https://${service}.${server.domain}";
+          description = "TV series manager";
+          icon = "sonarr.png";
+          siteMonitor = "http://127.0.0.1:${toString ports.media.sonarr}";
+        };
+      }
+    ];
   };
 }
