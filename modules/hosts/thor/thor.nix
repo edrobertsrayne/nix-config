@@ -34,6 +34,7 @@
         homepage
         paperless
         joplin
+        bentopdf
       ];
 
       boot = {

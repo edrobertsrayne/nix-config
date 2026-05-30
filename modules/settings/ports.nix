@@ -55,5 +55,6 @@ _: {
     homepage = 8086;
     paperless = 28981;
     joplin = 22300;
+    bentopdf = 8085;
   };
 }
