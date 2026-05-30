@@ -33,6 +33,7 @@
         searxng
         homepage
         paperless
+        joplin
       ];
 
       boot = {

@@ -54,5 +54,6 @@ _: {
     logseq = 8084;
     homepage = 8086;
     paperless = 28981;
+    joplin = 22300;
   };
 }
