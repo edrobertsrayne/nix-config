@@ -52,5 +52,6 @@ _: {
     codeServer = 8888;
     searxng = 8083;
     logseq = 8084;
+    homepage = 8086;
   };
 }

@@ -31,6 +31,7 @@
         ntfy
         code-server
         searxng
+        homepage
       ];
 
       boot = {
