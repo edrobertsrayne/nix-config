@@ -1,0 +1,45 @@
+{inputs, ...}: let
+  inherit (inputs.self.settings) server ports;
+  url = "paperless.${server.domain}";
+  port = ports.paperless;
+in {
+  flake.modules.nixos.paperless = {config, ...}: {
+    age.secrets.paperless = {
+      file = ../secrets/paperless.age;
+      owner = "paperless";
+      group = "paperless";
+    };
+
+    services = {
+      paperless = {
+        enable = true;
+        inherit port;
+        dataDir = "/srv/paperless";
+        consumptionDir = "/srv/paperless/consume";
+        consumptionDirIsPublic = true;
+        settings = {
+          PAPERLESS_URL = "https://${url}";
+          PAPERLESS_OCR_LANGUAGE = "eng";
+          PAPERLESS_TIME_ZONE = "Europe/London";
+        };
+        environmentFile = config.age.secrets.paperless.path;
+      };
+
+      nginx.virtualHosts."${url}".locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString port}";
+        proxyWebsockets = true;
+      };
+    };
+
+    homepage.services."Productivity" = [
+      {
+        Paperless = {
+          href = "https://${url}";
+          description = "Document management";
+          icon = "paperless-ngx.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
+    ];
+  };
+}

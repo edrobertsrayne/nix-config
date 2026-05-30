@@ -32,6 +32,7 @@
         code-server
         searxng
         homepage
+        paperless
       ];
 
       boot = {

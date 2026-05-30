@@ -53,5 +53,6 @@ _: {
     searxng = 8083;
     logseq = 8084;
     homepage = 8086;
+    paperless = 28981;
   };
 }
