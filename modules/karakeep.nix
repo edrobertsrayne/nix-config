@@ -1,7 +1,12 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) server ports;
 in {
-  flake.modules.nixos.karakeep = {config, ...}: let
+  flake.modules.nixos.karakeep = {
+    config,
+    lib,
+    pkgs,
+    ...
+  }: let
     url = "keep.${server.domain}";
     port = ports.karakeep;
   in {
@@ -21,6 +26,11 @@ in {
           proxyWebsockets = true;
         };
       };
+    };
+
+    fonts = {
+      fontconfig.enable = lib.mkForce true;
+      packages = [pkgs.noto-fonts];
     };
 
     homepage.services."Productivity" = [
