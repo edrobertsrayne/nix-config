@@ -22,7 +22,7 @@
         vaultwarden
         # stirling-pdf
         karakeep
-        mealie
+        # mealie
         prometheus
         grafana
         loki
