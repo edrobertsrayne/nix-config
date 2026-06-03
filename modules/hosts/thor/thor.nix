@@ -24,6 +24,9 @@
         karakeep
         # mealie
         prometheus
+        alertmanager
+        alertmanager-ntfy
+        alert-rules
         grafana
         loki
         n8n

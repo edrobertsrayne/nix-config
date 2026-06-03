@@ -9,6 +9,8 @@ _: {
 
     # Monitoring
     prometheus = 9090;
+    alertmanager = 9093;
+    alertmanagerNtfy = 9094;
     grafana = 3000;
     loki = 3100;
     alloy = 12345;

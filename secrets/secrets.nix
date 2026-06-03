@@ -15,4 +15,5 @@ in {
   "searxng.age".publicKeys = systems ++ users;
   "grafana.age".publicKeys = systems ++ users;
   "paperless.age".publicKeys = systems ++ users;
+  "ntfy-alert-topics.age".publicKeys = systems ++ users;
 }

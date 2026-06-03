@@ -11,8 +11,9 @@ in {
         evaluation_interval = "15s";
       };
       retentionTime = "30d";
-      # Scrape configs added by individual service modules
+      # Scrape configs and alertmanagers added by individual service modules
       scrapeConfigs = [];
+      alertmanagers = [];
     };
   };
 }
