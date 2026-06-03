@@ -73,7 +73,7 @@ _: {
                   description: "{{ $labels.mountpoint }} has only {{ $value | humanize }}B free (threshold: 100 GiB)"
 
               - alert: HostFanStopped
-                expr: node_hwmon_fan_rpm == 0
+                expr: node_hwmon_fan_rpm{chip=~"platform_it87.*",sensor="fan2"} == 0
                 for: 2m
                 labels:
                   severity: critical

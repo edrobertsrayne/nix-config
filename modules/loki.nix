@@ -9,22 +9,22 @@ in {
           rules:
             - alert: SystemdUnitFailed
               expr: |
-                sum by (unit, host) (
+                sum by (host) (
                   count_over_time(
-                    {job="systemd-journal"} |~ "(?i)failed with result|main process exited, code=exited, status=[^0]" [5m]
+                    {job="systemd-journal", unit="init.scope"} |~ "(?i)failed with result|main process exited, code=exited, status=[^0]" [5m]
                   )
                 ) > 0
               labels:
                 severity: critical
               annotations:
                 summary: Systemd unit failed on {{ $labels.host }}
-                description: "Unit {{ $labels.unit }} reported a failure"
+                description: "A systemd unit failed — check journalctl for details"
 
             - alert: OomKill
               expr: |
                 sum by (host) (
                   count_over_time(
-                    {job="systemd-journal"} |~ "(?i)out of memory|oom-killer|killed process" [5m]
+                    {job="systemd-journal", unit=""} |~ "(?i)out of memory|oom-killer" [5m]
                   )
                 ) > 0
               labels:
@@ -37,7 +37,7 @@ in {
               expr: |
                 sum by (host) (
                   count_over_time(
-                    {job="systemd-journal"} |~ "ZFS:" |~ "(?i)error|degraded|fault|corrupt" [10m]
+                    {job="systemd-journal", unit=""} |~ "ZFS:" |~ "(?i)error|degraded|fault|corrupt" [10m]
                   )
                 ) > 0
               labels:
@@ -50,7 +50,7 @@ in {
               expr: |
                 sum by (host) (
                   count_over_time(
-                    {job="systemd-journal"} |~ "(?i)kernel panic|hard lockup|machine check exception|general protection fault" [5m]
+                    {job="systemd-journal", unit=""} |~ "(?i)kernel panic|hard lockup|machine check exception|general protection fault" [5m]
                   )
                 ) > 0
               labels:
