@@ -109,6 +109,8 @@
         pciutils
       ];
 
+      fileSystems."/boot".options = ["umask=0077"];
+
       fileSystems."/mnt/storage" = {
         depends = [
           "/mnt/disk1"
