@@ -53,8 +53,20 @@
         initrd.systemd.enable = true;
         tmp.cleanOnBoot = true;
         zfs.forceImportRoot = false;
-        extraModulePackages = [config.boot.kernelPackages.it87];
+        extraModulePackages = [
+          (config.boot.kernelPackages.it87.overrideAttrs (old: {
+            postInstall =
+              (old.postInstall or "")
+              + ''
+                ver=$(ls $out/lib/modules)
+                mkdir -p $out/lib/modules/$ver/updates
+                mv $out/lib/modules/$ver/kernel/drivers/hwmon/it87.ko \
+                   $out/lib/modules/$ver/updates/it87.ko
+              '';
+          }))
+        ];
         kernelModules = ["it87"];
+        extraModprobeConfig = "options it87 ignore_resource_conflict=1";
       };
       zramSwap = {
         enable = true;
