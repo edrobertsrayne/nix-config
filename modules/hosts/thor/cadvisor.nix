@@ -14,7 +14,7 @@ in {
         job_name = "cadvisor";
         static_configs = [
           {
-            targets = ["thor:${toString ports.exporters.cadvisor}"];
+            targets = ["127.0.0.1:${toString ports.exporters.cadvisor}"];
           }
         ];
       }
