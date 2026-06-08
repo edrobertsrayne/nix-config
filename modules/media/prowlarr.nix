@@ -23,9 +23,7 @@ in {
       flaresolverr.enable = true;
     };
 
-    systemd.tmpfiles.rules = [
-      "d ${config.services.prowlarr.dataDir} 0755 prowlarr prowlarr - -"
-    ];
+    systemd.services.prowlarr.serviceConfig.SupplementaryGroups = ["tank"];
 
     services.nginx.virtualHosts."${service}.${server.domain}" = {
       locations."/" = {
