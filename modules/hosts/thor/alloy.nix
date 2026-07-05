@@ -36,6 +36,7 @@ in {
     services.alloy = {
       enable = true;
       configPath = alloyConfig;
+      extraFlags = ["--disable-reporting"];
     };
   };
 }
