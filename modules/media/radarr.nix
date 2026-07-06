@@ -31,6 +31,8 @@ in {
 
     users.users.${cfg.user}.extraGroups = ["tank"];
 
+    systemd.services.${service}.serviceConfig.UMask = "0002";
+
     homepage.services."Media" = [
       {
         Radarr = {

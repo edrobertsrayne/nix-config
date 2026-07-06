@@ -6,6 +6,7 @@ in {
     url = "bazarr.${server.domain}";
   in {
     users.users.${cfg.user}.extraGroups = ["tank"];
+    systemd.services.bazarr.serviceConfig.UMask = "0002";
     services = {
       bazarr = {
         enable = true;
