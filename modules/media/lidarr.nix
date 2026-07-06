@@ -3,7 +3,11 @@
   apikey = "f6a4315040e94c7c9eb2aefe5bfc4445";
   service = "lidarr";
 in {
-  flake.modules.nixos.media = {config, ...}: let
+  flake.modules.nixos.media = {
+    config,
+    lib,
+    ...
+  }: let
     cfg = config.services.${service};
   in {
     services = {
@@ -31,7 +35,7 @@ in {
 
     users.users.${cfg.user}.extraGroups = ["tank"];
 
-    systemd.services.${service}.serviceConfig.UMask = "0002";
+    systemd.services.${service}.serviceConfig.UMask = lib.mkForce "0002";
 
     homepage.services."Media" = [
       {

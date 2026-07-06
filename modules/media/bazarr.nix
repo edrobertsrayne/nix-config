@@ -1,12 +1,16 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) server ports;
 in {
-  flake.modules.nixos.media = {config, ...}: let
+  flake.modules.nixos.media = {
+    config,
+    lib,
+    ...
+  }: let
     cfg = config.services.bazarr;
     url = "bazarr.${server.domain}";
   in {
     users.users.${cfg.user}.extraGroups = ["tank"];
-    systemd.services.bazarr.serviceConfig.UMask = "0002";
+    systemd.services.bazarr.serviceConfig.UMask = lib.mkForce "0002";
     services = {
       bazarr = {
         enable = true;

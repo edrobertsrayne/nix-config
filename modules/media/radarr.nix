@@ -3,7 +3,11 @@
   apikey = "45f0ce64ed8b4d34b51908c60b7a70fc";
   service = "radarr";
 in {
-  flake.modules.nixos.media = {config, ...}: let
+  flake.modules.nixos.media = {
+    config,
+    lib,
+    ...
+  }: let
     cfg = config.services.${service};
   in {
     services = {
@@ -31,7 +35,7 @@ in {
 
     users.users.${cfg.user}.extraGroups = ["tank"];
 
-    systemd.services.${service}.serviceConfig.UMask = "0002";
+    systemd.services.${service}.serviceConfig.UMask = lib.mkForce "0002";
 
     homepage.services."Media" = [
       {
