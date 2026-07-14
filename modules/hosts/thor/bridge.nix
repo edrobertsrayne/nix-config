@@ -22,5 +22,15 @@ _: {
       };
       nameservers = ["127.0.0.1" "1.1.1.1" "8.8.8.8"];
     };
+
+    systemd.network.networks."40-br0".routingPolicyRules = [
+      {
+        routingPolicyRuleConfig = {
+          From = ipAddress;
+          Table = "main";
+          Priority = 100;
+        };
+      }
+    ];
   };
 }
