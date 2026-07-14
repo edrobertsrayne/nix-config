@@ -1,5 +1,5 @@
 _: {
   flake.modules.homeManager.utilities = {
-    programs.gemini-cli.enable = true;
+    programs.antigravity-cli.enable = true;
   };
 }
