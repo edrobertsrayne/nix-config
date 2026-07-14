@@ -10,6 +10,7 @@ in {
     url = "keep.${server.domain}";
     port = ports.karakeep;
   in {
+    nixpkgs.config.permittedInsecurePackages = ["pnpm-9.15.9"];
     age.secrets.karakeep.file = ../secrets/karakeep.age;
     services = {
       karakeep = {
