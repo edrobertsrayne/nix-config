@@ -10,143 +10,185 @@ _: {
             lspkind.enable = true;
           };
 
-          maps = {
-            normal = {
-              # === LSP (quick access) ===
-              "K" = {
-                action = "vim.lsp.buf.hover";
-                lua = true;
-                desc = "Hover documentation";
-              };
-              "gK" = {
-                action = "vim.lsp.buf.signature_help";
-                lua = true;
-                desc = "Signature help";
-              };
-              "gd" = {
-                action = "vim.lsp.buf.definition";
-                lua = true;
-                desc = "Go to definition";
-              };
-              "gD" = {
-                action = "vim.lsp.buf.declaration";
-                lua = true;
-                desc = "Go to declaration";
-              };
-              "gr" = {
-                action = "vim.lsp.buf.references";
-                lua = true;
-                desc = "Go to references";
-              };
-              "gI" = {
-                action = "vim.lsp.buf.implementation";
-                lua = true;
-                desc = "Go to implementation";
-              };
-              "gy" = {
-                action = "vim.lsp.buf.type_definition";
-                lua = true;
-                desc = "Go to type definition";
-              };
+          keymaps = [
+            # === LSP (quick access) ===
+            {
+              key = "K";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.hover";
+              desc = "Hover documentation";
+            }
+            {
+              key = "gK";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.signature_help";
+              desc = "Signature help";
+            }
+            {
+              key = "gd";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.definition";
+              desc = "Go to definition";
+            }
+            {
+              key = "gD";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.declaration";
+              desc = "Go to declaration";
+            }
+            {
+              key = "gr";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.references";
+              desc = "Go to references";
+            }
+            {
+              key = "gI";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.implementation";
+              desc = "Go to implementation";
+            }
+            {
+              key = "gy";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.type_definition";
+              desc = "Go to type definition";
+            }
 
-              # === Code/LSP ===
-              "<leader>ca" = {
-                action = "vim.lsp.buf.code_action";
-                lua = true;
-                desc = "Code actions";
-              };
-              "<leader>cr" = {
-                action = "vim.lsp.buf.rename";
-                lua = true;
-                desc = "Rename symbol";
-              };
-              "<leader>cf" = {
-                action = "vim.lsp.buf.format";
-                lua = true;
-                desc = "Format code/buffer";
-              };
-              "<leader>cD" = {
-                action = "vim.lsp.buf.declaration";
-                lua = true;
-                desc = "Go to declaration";
-              };
-              "<leader>ci" = {
-                action = "vim.lsp.buf.implementation";
-                lua = true;
-                desc = "Go to implementation";
-              };
-              "<leader>cy" = {
-                action = "vim.lsp.buf.type_definition";
-                lua = true;
-                desc = "Go to type definition";
-              };
-              "<leader>ch" = {
-                action = "vim.lsp.buf.hover";
-                lua = true;
-                desc = "Hover documentation";
-              };
-              "<leader>cd" = {
-                action = "vim.diagnostic.open_float";
-                lua = true;
-                desc = "Line diagnostics";
-              };
+            # === Code/LSP ===
+            {
+              key = "<leader>ca";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.code_action";
+              desc = "Code actions";
+            }
+            {
+              key = "<leader>cr";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.rename";
+              desc = "Rename symbol";
+            }
+            {
+              key = "<leader>cf";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.format";
+              desc = "Format code/buffer";
+            }
+            {
+              key = "<leader>cD";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.declaration";
+              desc = "Go to declaration";
+            }
+            {
+              key = "<leader>ci";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.implementation";
+              desc = "Go to implementation";
+            }
+            {
+              key = "<leader>cy";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.type_definition";
+              desc = "Go to type definition";
+            }
+            {
+              key = "<leader>ch";
+              mode = "n";
+              lua = true;
+              action = "vim.lsp.buf.hover";
+              desc = "Hover documentation";
+            }
+            {
+              key = "<leader>cd";
+              mode = "n";
+              lua = true;
+              action = "vim.diagnostic.open_float";
+              desc = "Line diagnostics";
+            }
 
-              # === Diagnostics ===
-              "]d" = {
-                action = "function() vim.diagnostic.goto_next() end";
-                lua = true;
-                desc = "Next diagnostic";
-              };
-              "[d" = {
-                action = "function() vim.diagnostic.goto_prev() end";
-                lua = true;
-                desc = "Previous diagnostic";
-              };
-              "]e" = {
-                action = "function() vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR}) end";
-                lua = true;
-                desc = "Next error";
-              };
-              "[e" = {
-                action = "function() vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR}) end";
-                lua = true;
-                desc = "Previous error";
-              };
-              "]w" = {
-                action = "function() vim.diagnostic.goto_next({severity = vim.diagnostic.severity.WARN}) end";
-                lua = true;
-                desc = "Next warning";
-              };
-              "[w" = {
-                action = "function() vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.WARN}) end";
-                lua = true;
-                desc = "Previous warning";
-              };
-            };
+            # === Diagnostics ===
+            {
+              key = "]d";
+              mode = "n";
+              lua = true;
+              action = "function() vim.diagnostic.goto_next() end";
+              desc = "Next diagnostic";
+            }
+            {
+              key = "[d";
+              mode = "n";
+              lua = true;
+              action = "function() vim.diagnostic.goto_prev() end";
+              desc = "Previous diagnostic";
+            }
+            {
+              key = "]e";
+              mode = "n";
+              lua = true;
+              action = "function() vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR}) end";
+              desc = "Next error";
+            }
+            {
+              key = "[e";
+              mode = "n";
+              lua = true;
+              action = "function() vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR}) end";
+              desc = "Previous error";
+            }
+            {
+              key = "]w";
+              mode = "n";
+              lua = true;
+              action = "function() vim.diagnostic.goto_next({severity = vim.diagnostic.severity.WARN}) end";
+              desc = "Next warning";
+            }
+            {
+              key = "[w";
+              mode = "n";
+              lua = true;
+              action = "function() vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.WARN}) end";
+              desc = "Previous warning";
+            }
 
-            insert = {
-              # === LSP in insert mode ===
-              "<C-k>" = {
-                action = "vim.lsp.buf.signature_help";
-                lua = true;
-                desc = "Signature help";
-              };
-            };
+            # === LSP in insert mode ===
+            {
+              key = "<C-k>";
+              mode = "i";
+              lua = true;
+              action = "vim.lsp.buf.signature_help";
+              desc = "Signature help";
+            }
 
-            visual = {
-              # === Code/LSP in visual mode ===
-              "<leader>ca" = {
-                action = "vim.lsp.buf.code_action";
-                lua = true;
-                desc = "Code actions";
-              };
-              "<leader>cf" = {
-                action = "vim.lsp.buf.format";
-                lua = true;
-                desc = "Format selection";
-              };
-            };
-          };
+            # === Code/LSP in visual mode ===
+            {
+              key = "<leader>ca";
+              mode = "v";
+              lua = true;
+              action = "vim.lsp.buf.code_action";
+              desc = "Code actions";
+            }
+            {
+              key = "<leader>cf";
+              mode = "v";
+              lua = true;
+              action = "vim.lsp.buf.format";
+              desc = "Format selection";
+            }
+          ];
         };
       };
     };

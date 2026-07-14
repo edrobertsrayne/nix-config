@@ -10,67 +10,89 @@ _: {
             };
           };
 
-          maps = {
-            normal = {
-              # === Git hunks ===
-              "]h" = {
-                action = "<cmd>Gitsigns next_hunk<CR>";
-                desc = "Next git hunk";
-              };
-              "[h" = {
-                action = "<cmd>Gitsigns prev_hunk<CR>";
-                desc = "Previous git hunk";
-              };
-              "<leader>gb" = {
-                action = "<cmd>Gitsigns blame_line<CR>";
-                desc = "Git blame line";
-              };
-              "<leader>gd" = {
-                action = "<cmd>Gitsigns diffthis<CR>";
-                desc = "Git diff";
-              };
-              "<leader>gh" = {
-                action = "<cmd>Gitsigns preview_hunk<CR>";
-                desc = "Preview git hunk";
-              };
-              "<leader>gr" = {
-                action = "<cmd>Gitsigns reset_hunk<CR>";
-                desc = "Reset hunk";
-              };
-              "<leader>gS" = {
-                action = "<cmd>Gitsigns stage_buffer<CR>";
-                desc = "Stage buffer";
-              };
-              "<leader>gu" = {
-                action = "<cmd>Gitsigns undo_stage_hunk<CR>";
-                desc = "Undo stage hunk";
-              };
+          keymaps = [
+            # === Git hunks ===
+            {
+              key = "]h";
+              mode = "n";
+              action = "<cmd>Gitsigns next_hunk<CR>";
+              desc = "Next git hunk";
+            }
+            {
+              key = "[h";
+              mode = "n";
+              action = "<cmd>Gitsigns prev_hunk<CR>";
+              desc = "Previous git hunk";
+            }
+            {
+              key = "<leader>gb";
+              mode = "n";
+              action = "<cmd>Gitsigns blame_line<CR>";
+              desc = "Git blame line";
+            }
+            {
+              key = "<leader>gd";
+              mode = "n";
+              action = "<cmd>Gitsigns diffthis<CR>";
+              desc = "Git diff";
+            }
+            {
+              key = "<leader>gh";
+              mode = "n";
+              action = "<cmd>Gitsigns preview_hunk<CR>";
+              desc = "Preview git hunk";
+            }
+            {
+              key = "<leader>gr";
+              mode = "n";
+              action = "<cmd>Gitsigns reset_hunk<CR>";
+              desc = "Reset hunk";
+            }
+            {
+              key = "<leader>gS";
+              mode = "n";
+              action = "<cmd>Gitsigns stage_buffer<CR>";
+              desc = "Stage buffer";
+            }
+            {
+              key = "<leader>gu";
+              mode = "n";
+              action = "<cmd>Gitsigns undo_stage_hunk<CR>";
+              desc = "Undo stage hunk";
+            }
 
-              # === LazyGit ===
-              "<leader>gg" = {
-                action = "function() Snacks.lazygit() end";
-                lua = true;
-                desc = "LazyGit (root)";
-              };
-              "<leader>gG" = {
-                action = "function() Snacks.lazygit({ cwd = vim.fn.getcwd() }) end";
-                lua = true;
-                desc = "LazyGit (cwd)";
-              };
+            # === LazyGit ===
+            {
+              key = "<leader>gg";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.lazygit() end";
+              desc = "LazyGit (root)";
+            }
+            {
+              key = "<leader>gG";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.lazygit({ cwd = vim.fn.getcwd() }) end";
+              desc = "LazyGit (cwd)";
+            }
 
-              # === Git Browse ===
-              "<leader>gB" = {
-                action = "function() Snacks.gitbrowse() end";
-                lua = true;
-                desc = "Git Browse (open)";
-              };
-              "<leader>gY" = {
-                action = "function() Snacks.gitbrowse({ open = function(url) vim.fn.setreg('+', url) end }) end";
-                lua = true;
-                desc = "Git Browse (copy)";
-              };
-            };
-          };
+            # === Git Browse ===
+            {
+              key = "<leader>gB";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.gitbrowse() end";
+              desc = "Git Browse (open)";
+            }
+            {
+              key = "<leader>gY";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.gitbrowse({ open = function(url) vim.fn.setreg('+', url) end }) end";
+              desc = "Git Browse (copy)";
+            }
+          ];
         };
       };
     };

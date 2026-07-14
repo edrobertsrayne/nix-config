@@ -9,14 +9,14 @@ _: {
             };
           };
 
-          maps = {
-            terminal = {
-              "<Esc><Esc>" = {
-                action = "<C-\\><C-n>";
-                desc = "Exit terminal mode";
-              };
-            };
-          };
+          keymaps = [
+            {
+              key = "<Esc><Esc>";
+              mode = "t";
+              action = "<C-\\><C-n>";
+              desc = "Exit terminal mode";
+            }
+          ];
         };
       };
     };

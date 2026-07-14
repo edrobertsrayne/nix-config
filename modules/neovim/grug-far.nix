@@ -12,16 +12,20 @@ _: {
             };
           };
 
-          maps.normal = {
-            "<leader>sr" = {
+          keymaps = [
+            {
+              key = "<leader>sr";
+              mode = "n";
               action = "<cmd>lua require('grug-far').open()<CR>";
               desc = "Search and Replace";
-            };
-            "<leader>sR" = {
+            }
+            {
+              key = "<leader>sR";
+              mode = "n";
               action = "<cmd>lua require('grug-far').open({ prefills = { search = vim.fn.expand('<cword>') } })<CR>";
               desc = "Search and Replace (word)";
-            };
-          };
+            }
+          ];
         };
       };
     };

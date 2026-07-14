@@ -2,156 +2,207 @@ _: {
   flake.modules.homeManager.neovim = {
     programs.nvf = {
       settings = {
-        vim = {
-          maps = {
-            normal = {
-              # === Save ===
-              "<leader>w" = {
-                action = ":w<CR>";
-                desc = "Save file";
-              };
-              "<C-s>" = {
-                action = ":w<CR>";
-                desc = "Save file";
-              };
+        vim.keymaps = [
+          # === Save ===
+          {
+            key = "<leader>w";
+            mode = "n";
+            action = ":w<CR>";
+            desc = "Save file";
+          }
+          {
+            key = "<C-s>";
+            mode = "n";
+            action = ":w<CR>";
+            desc = "Save file";
+          }
 
-              # === Buffer management ===
-              "<leader>bd" = {
-                action = ":bdelete<CR>";
-                desc = "Delete buffer";
-              };
-              "<leader>bb" = {
-                action = "<cmd>e #<CR>";
-                desc = "Switch to alternate buffer";
-              };
-              "<leader>bo" = {
-                action = "<cmd>%bd|e#|bd#<CR>";
-                desc = "Delete other buffers";
-              };
-              "<leader>bD" = {
-                action = "<cmd>bd<CR><cmd>close<CR>";
-                desc = "Delete buffer and window";
-              };
-              "<S-h>" = {
-                action = ":bprevious<CR>";
-                desc = "Previous buffer";
-              };
-              "<S-l>" = {
-                action = ":bnext<CR>";
-                desc = "Next buffer";
-              };
-              "[b" = {
-                action = ":bprevious<CR>";
-                desc = "Previous buffer";
-              };
-              "]b" = {
-                action = ":bnext<CR>";
-                desc = "Next buffer";
-              };
+          # === Buffer management ===
+          {
+            key = "<leader>bd";
+            mode = "n";
+            action = ":bdelete<CR>";
+            desc = "Delete buffer";
+          }
+          {
+            key = "<leader>bb";
+            mode = "n";
+            action = "<cmd>e #<CR>";
+            desc = "Switch to alternate buffer";
+          }
+          {
+            key = "<leader>bo";
+            mode = "n";
+            action = "<cmd>%bd|e#|bd#<CR>";
+            desc = "Delete other buffers";
+          }
+          {
+            key = "<leader>bD";
+            mode = "n";
+            action = "<cmd>bd<CR><cmd>close<CR>";
+            desc = "Delete buffer and window";
+          }
+          {
+            key = "<S-h>";
+            mode = "n";
+            action = ":bprevious<CR>";
+            desc = "Previous buffer";
+          }
+          {
+            key = "<S-l>";
+            mode = "n";
+            action = ":bnext<CR>";
+            desc = "Next buffer";
+          }
+          {
+            key = "[b";
+            mode = "n";
+            action = ":bprevious<CR>";
+            desc = "Previous buffer";
+          }
+          {
+            key = "]b";
+            mode = "n";
+            action = ":bnext<CR>";
+            desc = "Next buffer";
+          }
 
-              # === Window management ===
-              "<leader>wd" = {
-                action = "<C-w>c";
-                desc = "Delete/close window";
-              };
-              "<leader>-" = {
-                action = "<C-w>s";
-                desc = "Split window horizontally";
-              };
-              "<leader>|" = {
-                action = "<C-w>v";
-                desc = "Split window vertically";
-              };
+          # === Window management ===
+          {
+            key = "<leader>wd";
+            mode = "n";
+            action = "<C-w>c";
+            desc = "Delete/close window";
+          }
+          {
+            key = "<leader>-";
+            mode = "n";
+            action = "<C-w>s";
+            desc = "Split window horizontally";
+          }
+          {
+            key = "<leader>|";
+            mode = "n";
+            action = "<C-w>v";
+            desc = "Split window vertically";
+          }
 
-              # === Window resize ===
-              "<C-Up>" = {
-                action = ":resize +2<CR>";
-                desc = "Increase window height";
-              };
-              "<C-Down>" = {
-                action = ":resize -2<CR>";
-                desc = "Decrease window height";
-              };
-              "<C-Left>" = {
-                action = ":vertical resize -2<CR>";
-                desc = "Decrease window width";
-              };
-              "<C-Right>" = {
-                action = ":vertical resize +2<CR>";
-                desc = "Increase window width";
-              };
+          # === Window resize ===
+          {
+            key = "<C-Up>";
+            mode = "n";
+            action = ":resize +2<CR>";
+            desc = "Increase window height";
+          }
+          {
+            key = "<C-Down>";
+            mode = "n";
+            action = ":resize -2<CR>";
+            desc = "Decrease window height";
+          }
+          {
+            key = "<C-Left>";
+            mode = "n";
+            action = ":vertical resize -2<CR>";
+            desc = "Decrease window width";
+          }
+          {
+            key = "<C-Right>";
+            mode = "n";
+            action = ":vertical resize +2<CR>";
+            desc = "Increase window width";
+          }
 
-              # === Better n/N (center search results) ===
-              "n" = {
-                action = "nzzzv";
-                desc = "Next search result";
-              };
-              "N" = {
-                action = "Nzzzv";
-                desc = "Previous search result";
-              };
+          # === Better n/N (center search results) ===
+          {
+            key = "n";
+            mode = "n";
+            action = "nzzzv";
+            desc = "Next search result";
+          }
+          {
+            key = "N";
+            mode = "n";
+            action = "Nzzzv";
+            desc = "Previous search result";
+          }
 
-              # === Clear search highlights ===
-              "<Esc>" = {
-                action = ":noh<CR><Esc>";
-                desc = "Clear search highlights";
-              };
-            };
+          # === Clear search highlights ===
+          {
+            key = "<Esc>";
+            mode = "n";
+            action = ":noh<CR><Esc>";
+            desc = "Clear search highlights";
+          }
 
-            insert = {
-              "jk" = {
-                action = "<Esc>";
-                desc = "Exit insert mode";
-              };
+          # === Insert mode ===
+          {
+            key = "jk";
+            mode = "i";
+            action = "<Esc>";
+            desc = "Exit insert mode";
+          }
+          {
+            key = "<C-s>";
+            mode = "i";
+            action = "<Esc>:w<CR>a";
+            desc = "Save file";
+          }
 
-              # === Save in insert mode ===
-              "<C-s>" = {
-                action = "<Esc>:w<CR>a";
-                desc = "Save file";
-              };
+          # === Move lines in insert mode ===
+          {
+            key = "<A-j>";
+            mode = "i";
+            action = "<Esc>:m .+1<CR>==gi";
+            desc = "Move line down";
+          }
+          {
+            key = "<A-k>";
+            mode = "i";
+            action = "<Esc>:m .-2<CR>==gi";
+            desc = "Move line up";
+          }
 
-              # === Move lines in insert mode ===
-              "<A-j>" = {
-                action = "<Esc>:m .+1<CR>==gi";
-                desc = "Move line down";
-              };
-              "<A-k>" = {
-                action = "<Esc>:m .-2<CR>==gi";
-                desc = "Move line up";
-              };
-            };
+          # === Visual mode — keep selection after indent ===
+          {
+            key = "<";
+            mode = "v";
+            action = "<gv";
+            desc = "Indent left";
+          }
+          {
+            key = ">";
+            mode = "v";
+            action = ">gv";
+            desc = "Indent right";
+          }
 
-            visual = {
-              # Keep selection after indent
-              "<" = {
-                action = "<gv";
-                desc = "Indent left";
-              };
-              ">" = {
-                action = ">gv";
-                desc = "Indent right";
-              };
-
-              # === Move lines in visual mode ===
-              "J" = {
-                action = ":m '>+1<CR>gv=gv";
-                desc = "Move line down";
-              };
-              "K" = {
-                action = ":m '<-2<CR>gv=gv";
-                desc = "Move line up";
-              };
-              "<A-j>" = {
-                action = ":m '>+1<CR>gv=gv";
-                desc = "Move line down";
-              };
-              "<A-k>" = {
-                action = ":m '<-2<CR>gv=gv";
-                desc = "Move line up";
-              };
-            };
-          };
-        };
+          # === Move lines in visual mode ===
+          {
+            key = "J";
+            mode = "v";
+            action = ":m '>+1<CR>gv=gv";
+            desc = "Move line down";
+          }
+          {
+            key = "K";
+            mode = "v";
+            action = ":m '<-2<CR>gv=gv";
+            desc = "Move line up";
+          }
+          {
+            key = "<A-j>";
+            mode = "v";
+            action = ":m '>+1<CR>gv=gv";
+            desc = "Move line down";
+          }
+          {
+            key = "<A-k>";
+            mode = "v";
+            action = ":m '<-2<CR>gv=gv";
+            desc = "Move line up";
+          }
+        ];
       };
     };
   };

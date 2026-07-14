@@ -31,151 +31,199 @@ _: {
               };
             };
           };
-          maps = {
-            normal = {
-              # GitHub pickers
-              "<leader>gi" = {
-                action = "function() Snacks.picker.gh_issue() end";
-                lua = true;
-                desc = "GitHub Issues (open)";
-              };
-              "<leader>gI" = {
-                action = "function() Snacks.picker.gh_issue({ state = \"all\" }) end";
-                lua = true;
-                desc = "GitHub Issues (all)";
-              };
-              "<leader>gp" = {
-                action = "function() Snacks.picker.gh_pr() end";
-                lua = true;
-                desc = "GitHub Pull Requests (open)";
-              };
-              "<leader>gP" = {
-                action = "function() Snacks.picker.gh_pr({ state = \"all\" }) end";
-                lua = true;
-                desc = "GitHub Pull Requests (all)";
-              };
 
-              # File pickers
-              "<leader><space>" = {
-                action = "function() Snacks.picker.files() end";
-                lua = true;
-                desc = "Find Files (root)";
-              };
-              "<leader>ff" = {
-                action = "function() Snacks.picker.files() end";
-                lua = true;
-                desc = "Find Files (root)";
-              };
-              "<leader>fF" = {
-                action = "function() Snacks.picker.files({ cwd = vim.fn.getcwd() }) end";
-                lua = true;
-                desc = "Find Files (cwd)";
-              };
-              "<leader>fg" = {
-                action = "function() Snacks.picker.git_files() end";
-                lua = true;
-                desc = "Git Files";
-              };
-              "<leader>fb" = {
-                action = "function() Snacks.picker.buffers() end";
-                lua = true;
-                desc = "Buffers";
-              };
-              "<leader>," = {
-                action = "function() Snacks.picker.buffers() end";
-                lua = true;
-                desc = "Buffers";
-              };
-              "<leader>fr" = {
-                action = "function() Snacks.picker.recent() end";
-                lua = true;
-                desc = "Recent Files";
-              };
-              "<leader>fR" = {
-                action = "function() Snacks.picker.recent({ cwd = vim.fn.getcwd() }) end";
-                lua = true;
-                desc = "Recent Files (cwd)";
-              };
+          keymaps = [
+            # GitHub pickers
+            {
+              key = "<leader>gi";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.gh_issue() end";
+              desc = "GitHub Issues (open)";
+            }
+            {
+              key = "<leader>gI";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.gh_issue({ state = \"all\" }) end";
+              desc = "GitHub Issues (all)";
+            }
+            {
+              key = "<leader>gp";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.gh_pr() end";
+              desc = "GitHub Pull Requests (open)";
+            }
+            {
+              key = "<leader>gP";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.gh_pr({ state = \"all\" }) end";
+              desc = "GitHub Pull Requests (all)";
+            }
 
-              # Grep/search
-              "<leader>/" = {
-                action = "function() Snacks.picker.grep() end";
-                lua = true;
-                desc = "Grep (root)";
-              };
-              "<leader>sg" = {
-                action = "function() Snacks.picker.grep() end";
-                lua = true;
-                desc = "Grep (root)";
-              };
-              "<leader>sG" = {
-                action = "function() Snacks.picker.grep({ cwd = vim.fn.getcwd() }) end";
-                lua = true;
-                desc = "Grep (cwd)";
-              };
+            # File pickers
+            {
+              key = "<leader><space>";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.files() end";
+              desc = "Find Files (root)";
+            }
+            {
+              key = "<leader>ff";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.files() end";
+              desc = "Find Files (root)";
+            }
+            {
+              key = "<leader>fF";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.files({ cwd = vim.fn.getcwd() }) end";
+              desc = "Find Files (cwd)";
+            }
+            {
+              key = "<leader>fg";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.git_files() end";
+              desc = "Git Files";
+            }
+            {
+              key = "<leader>fb";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.buffers() end";
+              desc = "Buffers";
+            }
+            {
+              key = "<leader>,";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.buffers() end";
+              desc = "Buffers";
+            }
+            {
+              key = "<leader>fr";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.recent() end";
+              desc = "Recent Files";
+            }
+            {
+              key = "<leader>fR";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.recent({ cwd = vim.fn.getcwd() }) end";
+              desc = "Recent Files (cwd)";
+            }
 
-              # History
-              "<leader>:" = {
-                action = "function() Snacks.picker.command_history() end";
-                lua = true;
-                desc = "Command History";
-              };
-              "<leader>s/" = {
-                action = "function() Snacks.picker.search_history() end";
-                lua = true;
-                desc = "Search History";
-              };
+            # Grep/search
+            {
+              key = "<leader>/";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.grep() end";
+              desc = "Grep (root)";
+            }
+            {
+              key = "<leader>sg";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.grep() end";
+              desc = "Grep (root)";
+            }
+            {
+              key = "<leader>sG";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.grep({ cwd = vim.fn.getcwd() }) end";
+              desc = "Grep (cwd)";
+            }
 
-              # Explorer
-              "<leader>e" = {
-                action = "function() Snacks.explorer() end";
-                lua = true;
-                desc = "Explorer (root)";
-              };
-              "<leader>E" = {
-                action = "function() Snacks.explorer({ cwd = vim.fn.getcwd() }) end";
-                lua = true;
-                desc = "Explorer (cwd)";
-              };
+            # History
+            {
+              key = "<leader>:";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.command_history() end";
+              desc = "Command History";
+            }
+            {
+              key = "<leader>s/";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.picker.search_history() end";
+              desc = "Search History";
+            }
 
-              # Notifications & scratch
-              "<leader>n" = {
-                action = "function() Snacks.notifier.show_history() end";
-                lua = true;
-                desc = "Notification History";
-              };
-              "<leader>un" = {
-                action = "function() Snacks.notifier.hide() end";
-                lua = true;
-                desc = "Dismiss Notifications";
-              };
-              "<leader>." = {
-                action = "function() Snacks.scratch() end";
-                lua = true;
-                desc = "Toggle Scratch Buffer";
-              };
-              "<leader>S" = {
-                action = "function() Snacks.scratch.select() end";
-                lua = true;
-                desc = "Select Scratch Buffer";
-              };
+            # Explorer
+            {
+              key = "<leader>e";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.explorer() end";
+              desc = "Explorer (root)";
+            }
+            {
+              key = "<leader>E";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.explorer({ cwd = vim.fn.getcwd() }) end";
+              desc = "Explorer (cwd)";
+            }
 
-              # Zen mode
-              "<leader>uz" = {
-                action = "function() Snacks.zen() end";
-                lua = true;
-                desc = "Toggle Zen Mode";
-              };
-            };
-            terminal = {
-              # Terminal
-              "<C-/>" = {
-                action = "function() Snacks.terminal() end";
-                lua = true;
-                desc = "Toggle Terminal";
-              };
-            };
-          };
+            # Notifications & scratch
+            {
+              key = "<leader>n";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.notifier.show_history() end";
+              desc = "Notification History";
+            }
+            {
+              key = "<leader>un";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.notifier.hide() end";
+              desc = "Dismiss Notifications";
+            }
+            {
+              key = "<leader>.";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.scratch() end";
+              desc = "Toggle Scratch Buffer";
+            }
+            {
+              key = "<leader>S";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.scratch.select() end";
+              desc = "Select Scratch Buffer";
+            }
+
+            # Zen mode
+            {
+              key = "<leader>uz";
+              mode = "n";
+              lua = true;
+              action = "function() Snacks.zen() end";
+              desc = "Toggle Zen Mode";
+            }
+
+            # Terminal
+            {
+              key = "<C-/>";
+              mode = "t";
+              lua = true;
+              action = "function() Snacks.terminal() end";
+              desc = "Toggle Terminal";
+            }
+          ];
         };
       };
     };
