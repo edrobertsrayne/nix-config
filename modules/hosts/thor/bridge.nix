@@ -25,11 +25,9 @@ _: {
 
     systemd.network.networks."40-br0".routingPolicyRules = [
       {
-        routingPolicyRuleConfig = {
-          From = ipAddress;
-          Table = "main";
-          Priority = 100;
-        };
+        From = ipAddress;
+        Table = "main";
+        Priority = 100;
       }
     ];
   };
