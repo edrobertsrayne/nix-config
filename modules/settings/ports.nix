@@ -58,5 +58,10 @@ _: {
     paperless = 28981;
     joplin = 22300;
     bentopdf = 8085;
+    barAssistant = {
+      server = 8087;
+      meilisearch = 8088;
+      saltRim = 8089;
+    };
   };
 }

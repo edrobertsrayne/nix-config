@@ -16,4 +16,5 @@ in {
   "grafana.age".publicKeys = systems ++ users;
   "paperless.age".publicKeys = systems ++ users;
   "ntfy-alert-topics.age".publicKeys = systems ++ users;
+  "bar-assistant.age".publicKeys = systems ++ users;
 }
