@@ -39,6 +39,7 @@ _: {
       flaresolverr = 8191;
       slskd = 5030;
       slskdListen = 50300;
+      soularr = 8265;
     };
 
     # Applications

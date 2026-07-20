@@ -15,8 +15,11 @@ in {
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
-      "d ${downloadDir}/complete 0755 ${cfg.user} tank -"
-      "d ${downloadDir}/incomplete 0755 ${cfg.user} tank -"
+      # 2775: setgid so slskd's own per-album subdirs inherit group tank
+      # (not slskd's primary group) - required for lidarr/soularr (tank
+      # members) to delete imported files after copying them out.
+      "d ${downloadDir}/complete 2775 ${cfg.user} tank -"
+      "d ${downloadDir}/incomplete 2775 ${cfg.user} tank -"
     ];
 
     services.slskd = {
