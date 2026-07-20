@@ -37,6 +37,8 @@ _: {
       transmission = 9091;
       transmissionPeer = 51413;
       flaresolverr = 8191;
+      slskd = 5030;
+      slskdListen = 50300;
     };
 
     # Applications
