@@ -41,6 +41,7 @@ _: {
       slskdListen = 50300;
       soularr = 8265;
       navidrome = 4533;
+      minidlna = 8200;
     };
 
     # Applications

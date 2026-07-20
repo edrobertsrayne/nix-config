@@ -16,6 +16,12 @@ _: {
           "read only" = "yes";
           "guest ok" = "yes";
         };
+        "music" = {
+          "path" = "/mnt/ssd/music";
+          "browseable" = "yes";
+          "read only" = "yes";
+          "guest ok" = "yes";
+        };
         "downloads" = {
           "path" = "/mnt/ssd/downloads";
           "browseable" = "yes";
