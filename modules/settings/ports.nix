@@ -40,6 +40,7 @@ _: {
       slskd = 5030;
       slskdListen = 50300;
       soularr = 8265;
+      navidrome = 4533;
     };
 
     # Applications
