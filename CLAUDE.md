@@ -115,10 +115,10 @@ name as scope**
 | Type             | Location                       | Example                            |
 | ---------------- | ------------------------------ | ---------------------------------- |
 | Simple aspect    | `modules/{name}.nix`           | `modules/ssh.nix`                  |
-| Complex feature  | `modules/{feature}/`           | `modules/nixvim/lsp.nix`           |
+| Complex feature  | `modules/{feature}/`           | `modules/neovim/lsp.nix`           |
 | Host-specific    | `modules/hosts/{hostname}/`    | `modules/hosts/thor/hardware.nix`  |
-| Project option   | `modules/settings/+{name}.nix` | `modules/settings/+user.nix`      |
-| Helper functions | `modules/lib/{name}.nix`       | `modules/lib/nixvim.nix`           |
+| Project option   | `modules/settings/{name}.nix` | `modules/settings/user.nix`      |
+| Helper functions | `modules/lib/{name}.nix`       | `modules/lib/hosts.nix`           |
 
 **Naming:** Use aspect/purpose names (`ssh.nix`, `development-tools.nix`), not
 host names.
@@ -182,7 +182,7 @@ nix flake check --impure  # when modifying system config
 
 **Examples:**
 
-- `feat(nixvim): add LSP support for Rust`
+- `feat(neovim): add LSP support for Rust`
 - `fix(hyprland): correct keybind for workspace switching`
 - `refactor(desktop): reorganize aggregator imports`
 
@@ -226,8 +226,8 @@ nix flake check --impure  # when modifying system config
 ### File Naming
 
 - `{aspect}.nix` - Single-file aspect (`ssh.nix`)
-- `{feature}/` - Multi-file feature (`nixvim/`)
-- `+{option}.nix` - Project option (`+user.nix`)
+- `{feature}/` - Multi-file feature (`neovim/`)
+- `{option}.nix` - Project option (`user.nix`)
 
 ---
 
