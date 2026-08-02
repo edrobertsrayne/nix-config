@@ -13,7 +13,8 @@ in {
       enable = true;
       port = ports.immich;
       host = "0.0.0.0";
-      openFirewall = true;
+      # No openFirewall: reached via cloudflared -> nginx (Access-gated) or
+      # the tailnet; the LAN bridge must not reach it directly.
       mediaLocation = mediaDir;
     };
 
