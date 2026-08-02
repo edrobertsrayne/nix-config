@@ -48,8 +48,5 @@ _: {
       man.enable = false;
       nixos.enable = false;
     };
-
-    # Reduce ZFS monthly snapshots (default is 12)
-    services.zfs.autoSnapshot.monthly = lib.mkDefault 1;
   };
 }

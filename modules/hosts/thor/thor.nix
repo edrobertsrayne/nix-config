@@ -21,6 +21,7 @@
         blocky
         media
         libvirt
+        zfs
         vaultwarden
         # stirling-pdf
         karakeep
@@ -55,7 +56,6 @@
         };
         initrd.systemd.enable = true;
         tmp.cleanOnBoot = true;
-        zfs.forceImportRoot = false;
         extraModulePackages = [
           (config.boot.kernelPackages.it87.overrideAttrs (old: {
             postInstall =
