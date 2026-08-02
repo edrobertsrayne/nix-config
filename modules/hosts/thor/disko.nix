@@ -82,6 +82,11 @@ _: {
               mountpoint = "/";
               options."com.sun:auto-snapshot" = "false";
             };
+            libvirt = {
+              type = "zfs_fs";
+              mountpoint = "/var/lib/libvirt";
+              options."com.sun:auto-snapshot" = "true";
+            };
           };
         };
       };
