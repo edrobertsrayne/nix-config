@@ -6,10 +6,10 @@ git-tracked `.nix` file under `modules/`.
 ## Core Rules
 
 1. **`git add` new `.nix` files immediately** — import-tree only loads tracked
-   files; an untracked file plus its auto-generated option collide as
-   "option defined multiple times".
-2. Run all checks (below) before committing; confirm with user before the
-   commit itself.
+   files; an untracked file plus its auto-generated option collide as "option
+   defined multiple times".
+2. Run all checks (below) before committing; confirm with user before the commit
+   itself.
 3. Multi-commit work: commit each logical change (edit, check, commit) before
    editing for the next. Never batch edits across commits then split after.
 4. Be concise — sacrifice grammar for brevity, in chat and commits.
@@ -18,13 +18,13 @@ git-tracked `.nix` file under `modules/`.
 
 ## Module Placement
 
-| Type             | Location                      | Example                          |
-| ---------------- | ------------------------------ | --------------------------------- |
-| Simple aspect    | `modules/{name}.nix`          | `modules/ssh.nix`                 |
-| Complex feature  | `modules/{feature}/`          | `modules/neovim/lsp.nix`          |
-| Host-specific    | `modules/hosts/{hostname}/`   | `modules/hosts/thor/_hardware.nix`|
-| Project option   | `modules/settings/{name}.nix` | `modules/settings/ports.nix`      |
-| Helper functions | `modules/lib/{name}.nix`      | `modules/lib/hosts.nix`           |
+| Type             | Location                      | Example                            |
+| ---------------- | ----------------------------- | ---------------------------------- |
+| Simple aspect    | `modules/{name}.nix`          | `modules/ssh.nix`                  |
+| Complex feature  | `modules/{feature}/`          | `modules/neovim/lsp.nix`           |
+| Host-specific    | `modules/hosts/{hostname}/`   | `modules/hosts/thor/_hardware.nix` |
+| Project option   | `modules/settings/{name}.nix` | `modules/settings/ports.nix`       |
+| Helper functions | `modules/lib/{name}.nix`      | `modules/lib/hosts.nix`            |
 
 Name files by aspect/purpose (`ssh.nix`, `development-tools.nix`), not host.
 
@@ -39,17 +39,13 @@ elsewhere.
 
 - Keep an aspect's full config in one `flake.modules.nixos.<aspect>` block —
   don't split one aspect across files.
-- Gate cross-aspect wiring on `config.services.<X>.enable`, not on import
-  order.
+- Gate cross-aspect wiring on `config.services.<X>.enable`, not on import order.
 
 ## Quality Checks
 
 Run before every commit:
 
 ```bash
-alejandra --check .       # fmt; fix: alejandra .
-statix check .             # lint; fix: statix fix .
-deadnix --fail .           # dead code; fix: remove unused
 nix flake check --impure   # build; fix: usually a missing `git add`
 ```
 
@@ -61,8 +57,8 @@ Conventional Commits, aspect name as scope: `<type>(<aspect>): <description>`
 
 Types: `feat`, `fix`, `refactor`, `style`, `docs`, `chore`.
 
-One commit per logical change. Split refactor from new feature (refactor
-first). Examples:
+One commit per logical change. Split refactor from new feature (refactor first).
+Examples:
 
 - `feat(neovim): add LSP support for Rust`
 - `fix(hyprland): correct keybind for workspace switching`
