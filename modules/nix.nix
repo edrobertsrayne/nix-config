@@ -56,6 +56,7 @@ in {
       flake = "github:edrobertsrayne/nix-config";
       flags = [];
       dates = "04:00";
+      allowReboot = true;
     };
 
     nixpkgs.config.allowUnfree = true;
