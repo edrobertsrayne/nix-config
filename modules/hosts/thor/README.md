@@ -86,7 +86,6 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | ------------ | --------- | ------------------------------ |
 | Nginx        | 80/443    | Reverse proxy                  |
 | Blocky       | 4000 (53) | DNS with ad-blocking           |
-| Unbound      | 5335      | Recursive DNS resolver         |
 | Cloudflared  | -         | Tunnel to Cloudflare           |
 | Tailscale    | -         | Mesh VPN                       |
 | NFS          | 2049      | Network file sharing (Linux)   |

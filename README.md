@@ -77,7 +77,6 @@ Home server running NixOS. Services:
 | Nginx | Reverse proxy |
 | Cloudflared | Cloudflare tunnel |
 | Blocky | DNS server with ad-blocking |
-| Unbound | Recursive DNS resolver |
 | Tailscale | Mesh VPN |
 | Docker | Container runtime |
 | Portainer | Container management UI |

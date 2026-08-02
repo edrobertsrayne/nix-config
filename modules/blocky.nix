@@ -17,7 +17,7 @@ in {
             http = ports.blocky;
           };
           upstreams.groups.default = [
-            "https://one.one.one.one/dns-query"
+            "https://dns.mullvad.net/dns-query"
           ];
           prometheus = {
             enable = true;
@@ -29,8 +29,8 @@ in {
             prefetching = true;
           };
           bootstrapDns = {
-            upstream = "https://one.one.one.one/dns-query";
-            ips = ["1.1.1.1" "1.0.0.1"];
+            upstream = "https://dns.mullvad.net/dns-query";
+            ips = ["194.242.2.2" "2a07:e340::2"];
           };
           queryLog = {
             type = "postgresql";

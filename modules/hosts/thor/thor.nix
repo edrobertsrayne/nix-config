@@ -19,7 +19,6 @@
         nginx
         portainer
         blocky
-        unbound
         media
         libvirt
         vaultwarden

@@ -17,11 +17,6 @@
       type = types.port;
       default = 53;
     };
-    unbound = mkOption {
-      type = types.port;
-      default = 5335;
-    };
-
     # Monitoring
     prometheus = mkOption {
       type = types.port;
