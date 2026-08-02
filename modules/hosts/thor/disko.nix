@@ -62,6 +62,7 @@ _: {
             atime = "off";
             compression = "lz4";
             xattr = "sa";
+            "com.sun:auto-snapshot" = "false";
           };
           options.ashift = "12";
 

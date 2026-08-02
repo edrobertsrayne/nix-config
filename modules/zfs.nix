@@ -1,9 +1,15 @@
 _: {
-  flake.modules.nixos.zfs = {lib, ...}: {
+  flake.modules.nixos.zfs = {
     boot.zfs.forceImportRoot = false;
 
-    # Reduce ZFS monthly snapshots (default is 12)
-    services.zfs.autoSnapshot.monthly = lib.mkDefault 1;
+    services.zfs.autoSnapshot = {
+      enable = true;
+      frequent = 4; # 15-min, 1 hour of cover
+      hourly = 24;
+      daily = 7;
+      weekly = 4;
+      monthly = 3;
+    };
 
     services.zfs.autoScrub = {
       enable = true;
