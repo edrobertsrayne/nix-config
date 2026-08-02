@@ -1,72 +1,244 @@
-_: {
-  flake.settings.ports = {
+{lib, ...}: {
+  options.flake.settings.ports = with lib; {
     # Infrastructure
-    ssh = 22;
-    http = 80;
-    https = 443;
-    dns = 53;
-    unbound = 5335;
+    ssh = mkOption {
+      type = types.port;
+      default = 22;
+    };
+    http = mkOption {
+      type = types.port;
+      default = 80;
+    };
+    https = mkOption {
+      type = types.port;
+      default = 443;
+    };
+    dns = mkOption {
+      type = types.port;
+      default = 53;
+    };
+    unbound = mkOption {
+      type = types.port;
+      default = 5335;
+    };
 
     # Monitoring
-    prometheus = 9090;
-    alertmanager = 9093;
-    alertmanagerNtfy = 9094;
-    grafana = 3000;
-    loki = 3100;
-    alloy = 12345;
+    prometheus = mkOption {
+      type = types.port;
+      default = 9090;
+    };
+    alertmanager = mkOption {
+      type = types.port;
+      default = 9093;
+    };
+    alertmanagerNtfy = mkOption {
+      type = types.port;
+      default = 9094;
+    };
+    grafana = mkOption {
+      type = types.port;
+      default = 3000;
+    };
+    loki = mkOption {
+      type = types.port;
+      default = 3100;
+    };
+    alloy = mkOption {
+      type = types.port;
+      default = 12345;
+    };
 
     # Exporters (9xxx series)
-    exporters = {
-      node = 9100;
-      nginx = 9113;
-      zfs = 9134;
-      cadvisor = 9338;
-      smartctl = 9633;
+    exporters = mkOption {
+      type = types.submodule {
+        options = {
+          node = mkOption {
+            type = types.port;
+            default = 9100;
+          };
+          nginx = mkOption {
+            type = types.port;
+            default = 9113;
+          };
+          zfs = mkOption {
+            type = types.port;
+            default = 9134;
+          };
+          cadvisor = mkOption {
+            type = types.port;
+            default = 9338;
+          };
+          smartctl = mkOption {
+            type = types.port;
+            default = 9633;
+          };
+        };
+      };
+      default = {};
     };
 
     # Media services
-    media = {
-      jellyfin = 8096;
-      seerr = 5055;
-      radarr = 7878;
-      sonarr = 8989;
-      lidarr = 8686;
-      bazarr = 6767;
-      prowlarr = 9696;
-      sabnzbd = 8080;
-      transmission = 9091;
-      transmissionPeer = 51413;
-      flaresolverr = 8191;
-      slskd = 5030;
-      slskdListen = 50300;
-      soularr = 8265;
-      navidrome = 4533;
-      minidlna = 8200;
+    media = mkOption {
+      type = types.submodule {
+        options = {
+          jellyfin = mkOption {
+            type = types.port;
+            default = 8096;
+          };
+          seerr = mkOption {
+            type = types.port;
+            default = 5055;
+          };
+          radarr = mkOption {
+            type = types.port;
+            default = 7878;
+          };
+          sonarr = mkOption {
+            type = types.port;
+            default = 8989;
+          };
+          lidarr = mkOption {
+            type = types.port;
+            default = 8686;
+          };
+          bazarr = mkOption {
+            type = types.port;
+            default = 6767;
+          };
+          prowlarr = mkOption {
+            type = types.port;
+            default = 9696;
+          };
+          sabnzbd = mkOption {
+            type = types.port;
+            default = 8080;
+          };
+          transmission = mkOption {
+            type = types.port;
+            default = 9091;
+          };
+          transmissionPeer = mkOption {
+            type = types.port;
+            default = 51413;
+          };
+          flaresolverr = mkOption {
+            type = types.port;
+            default = 8191;
+          };
+          slskd = mkOption {
+            type = types.port;
+            default = 5030;
+          };
+          slskdListen = mkOption {
+            type = types.port;
+            default = 50300;
+          };
+          soularr = mkOption {
+            type = types.port;
+            default = 8265;
+          };
+          navidrome = mkOption {
+            type = types.port;
+            default = 4533;
+          };
+          minidlna = mkOption {
+            type = types.port;
+            default = 8200;
+          };
+        };
+      };
+      default = {};
     };
 
     # Applications
-    blocky = 4000;
-    vaultwarden = 8222;
-    portainer = 9000;
-    portainerHTTPS = 9443;
-    portainerEdge = 8000;
-    karakeep = 8081;
-    mealie = 8223;
-    stirlingPdf = 8082;
-    n8n = 5678;
-    ntfy = 2586;
-    immich = 2283;
-    codeServer = 8888;
-    searxng = 8083;
-    logseq = 8084;
-    homepage = 8086;
-    paperless = 28981;
-    joplin = 22300;
-    bentopdf = 8085;
-    barAssistant = {
-      server = 8087;
-      meilisearch = 8088;
-      saltRim = 8089;
+    blocky = mkOption {
+      type = types.port;
+      default = 4000;
+    };
+    vaultwarden = mkOption {
+      type = types.port;
+      default = 8222;
+    };
+    portainer = mkOption {
+      type = types.port;
+      default = 9000;
+    };
+    portainerHTTPS = mkOption {
+      type = types.port;
+      default = 9443;
+    };
+    portainerEdge = mkOption {
+      type = types.port;
+      default = 8000;
+    };
+    karakeep = mkOption {
+      type = types.port;
+      default = 8081;
+    };
+    mealie = mkOption {
+      type = types.port;
+      default = 8223;
+    };
+    stirlingPdf = mkOption {
+      type = types.port;
+      default = 8082;
+    };
+    n8n = mkOption {
+      type = types.port;
+      default = 5678;
+    };
+    ntfy = mkOption {
+      type = types.port;
+      default = 2586;
+    };
+    immich = mkOption {
+      type = types.port;
+      default = 2283;
+    };
+    codeServer = mkOption {
+      type = types.port;
+      default = 8888;
+    };
+    searxng = mkOption {
+      type = types.port;
+      default = 8083;
+    };
+    homepage = mkOption {
+      type = types.port;
+      default = 8086;
+    };
+    paperless = mkOption {
+      type = types.port;
+      default = 28981;
+    };
+    joplin = mkOption {
+      type = types.port;
+      default = 22300;
+    };
+    bentopdf = mkOption {
+      type = types.port;
+      default = 8085;
+    };
+
+    # Bar Assistant
+    barAssistant = mkOption {
+      type = types.submodule {
+        options = {
+          server = mkOption {
+            type = types.port;
+            default = 8087;
+          };
+          meilisearch = mkOption {
+            type = types.port;
+            default = 8088;
+          };
+          saltRim = mkOption {
+            type = types.port;
+            default = 8089;
+          };
+        };
+      };
+      default = {};
     };
   };
 }
