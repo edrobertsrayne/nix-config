@@ -3,19 +3,17 @@
   url = "code.${server.domain}";
   port = ports.codeServer;
 in {
-  flake.modules.nixos.code-server = {pkgs, ...}: {
-    systemd.services.code-server = {
-      description = "code-server VS Code in the browser";
-      after = ["network-online.target"];
-      wants = ["network-online.target"];
-      wantedBy = ["multi-user.target"];
-      serviceConfig = {
-        User = user.username;
-        WorkingDirectory = "/home/${user.username}";
-        ExecStart = "${pkgs.code-server}/bin/code-server --auth=none --bind-addr=127.0.0.1:${toString port} /home/${user.username}";
-        Restart = "on-failure";
-        RestartSec = 5;
-      };
+  flake.modules.nixos.code-server = _: {
+    services.code-server = {
+      enable = true;
+      user = user.username;
+      group = "users";
+      host = "127.0.0.1";
+      inherit port;
+      auth = "none";
+      extraArguments = ["/home/${user.username}"];
+      disableTelemetry = true;
+      disableUpdateCheck = true;
     };
 
     services.nginx.virtualHosts."${url}" = {
