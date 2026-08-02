@@ -8,7 +8,8 @@ in {
     services = {
       sabnzbd = {
         enable = true;
-        openFirewall = true;
+        # No openFirewall: reached via cloudflared -> nginx (Access-gated) or
+        # the tailnet; the LAN bridge must not reach it directly.
         configFile = null;
         settings.misc = {
           host_whitelist = "localhost, 127.0.0.1, ${url}";

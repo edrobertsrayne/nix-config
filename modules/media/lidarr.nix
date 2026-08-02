@@ -14,7 +14,8 @@ in {
       ${service} = {
         enable = true;
         dataDir = "/srv/${service}";
-        openFirewall = true;
+        # No openFirewall: reached via cloudflared -> nginx (Access-gated) or
+        # the tailnet; the LAN bridge must not reach it directly.
         settings = {
           server.port = ports.media.lidarr;
           auth = {

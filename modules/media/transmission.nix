@@ -54,10 +54,10 @@ in {
       };
     };
 
-    networking.firewall.allowedTCPPorts = [
-      cfg.settings.rpc-port
-      cfg.settings.peer-port
-    ];
+    # RPC port stays off the LAN: reached via cloudflared -> nginx
+    # (Access-gated) or the tailnet. Peer port must stay open for inbound
+    # BitTorrent peers.
+    networking.firewall.allowedTCPPorts = [cfg.settings.peer-port];
 
     services.nginx.virtualHosts."transmission.${server.domain}" = {
       locations."/" = {
