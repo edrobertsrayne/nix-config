@@ -10,8 +10,10 @@ git-tracked `.nix` file under `modules/`.
    "option defined multiple times".
 2. Run all checks (below) before committing; confirm with user before the
    commit itself.
-3. Be concise — sacrifice grammar for brevity, in chat and commits.
-4. Use Context7 proactively for flake-input docs (nvf, agenix, home-manager,
+3. Multi-commit work: commit each logical change (edit, check, commit) before
+   editing for the next. Never batch edits across commits then split after.
+4. Be concise — sacrifice grammar for brevity, in chat and commits.
+5. Use Context7 proactively for flake-input docs (nvf, agenix, home-manager,
    disko, flake-parts, import-tree) — don't rely on trained knowledge.
 
 ## Module Placement
