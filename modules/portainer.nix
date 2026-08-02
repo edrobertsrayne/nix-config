@@ -8,10 +8,14 @@ in {
         image = "portainer/portainer-ce:latest";
         autoStart = true;
 
+        # Loopback-bound: Docker publishes ports via DOCKER-USER, which
+        # bypasses networking.firewall, so this is the only way to keep the
+        # LAN bridge out. Reached via cloudflared -> nginx (Access-gated);
+        # not reachable on these raw ports from the tailnet.
         ports = [
-          "${toString ports.portainerHTTPS}:9443"
-          "${toString ports.portainer}:9000"
-          "${toString ports.portainerEdge}:8000"
+          "127.0.0.1:${toString ports.portainerHTTPS}:9443"
+          "127.0.0.1:${toString ports.portainer}:9000"
+          "127.0.0.1:${toString ports.portainerEdge}:8000"
         ];
 
         volumes = [
