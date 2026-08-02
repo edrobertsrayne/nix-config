@@ -20,8 +20,7 @@ _: {
         address = "192.168.68.1";
         interface = "br0";
       };
-      # nameservers = ["127.0.0.1" "1.1.1.1" "8.8.8.8"];
-      nameservers = ["1.1.1.1" "8.8.8.8"];
+      nameservers = ["194.242.2.2" "1.1.1.1" "8.8.8.8"];
     };
 
     systemd.network.networks."40-br0".routingPolicyRules = [
