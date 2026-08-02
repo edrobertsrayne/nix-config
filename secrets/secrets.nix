@@ -18,4 +18,5 @@ in {
   "ntfy-alert-topics.age".publicKeys = systems ++ users;
   "bar-assistant.age".publicKeys = systems ++ users;
   "slskd.age".publicKeys = systems ++ users;
+  "code-server.age".publicKeys = systems ++ users;
 }
