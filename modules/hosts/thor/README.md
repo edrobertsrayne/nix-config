@@ -12,7 +12,7 @@ Thor serves as the central infrastructure hub:
 - **Media Server**: Jellyfin streaming with automated acquisition (*arr stack)
 - **Home Automation**: Home Assistant VM via libvirt
 - **Monitoring**: Prometheus/Grafana/Loki observability stack
-- **Self-Hosted Apps**: Password manager, recipe manager, bookmarks, etc.
+- **Self-Hosted Apps**: Password manager, documents, bookmarks, photos, etc.
 - **Network Services**: DNS (Blocky), file sharing (NFS/Samba)
 
 ---
@@ -59,21 +59,26 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | Transmission | 9091  | BitTorrent client        |
 | Sabnzbd      | 8080  | Usenet client            |
 | Flaresolverr | 8191  | Cloudflare bypass        |
+| slskd        | 5030  | Soulseek P2P client      |
+| Soularr      | 8265  | slskd-to-Lidarr bridge   |
+| Navidrome    | 4533  | Music streaming server   |
+| MiniDLNA     | 8200  | DLNA media streaming     |
 
 ### Monitoring Stack
 
 | Service           | Port | Description               |
 | ----------------- | ---- | ------------------------- |
-| Prometheus        | 9090 | Metrics database          |
-| Grafana           | 3000 | Visualization dashboards  |
-| Loki              | 3100 | Log aggregation           |
-| Promtail          | 9080 | Log shipper               |
-| Node Exporter     | 9100 | System metrics            |
-| Nginx Exporter    | 9113 | Nginx metrics             |
-| ZFS Exporter      | 9134 | ZFS pool/dataset metrics  |
-| cAdvisor          | 9338 | Container metrics         |
-| Smartctl Exporter | 9633 | Disk health metrics       |
-| Uptime Kuma       | -    | Status page and alerting  |
+| Prometheus        | 9090  | Metrics database          |
+| Alertmanager      | 9093  | Alert routing             |
+| Alertmanager-ntfy | 9094  | Alert delivery via ntfy   |
+| Grafana           | 3000  | Visualization dashboards  |
+| Loki              | 3100  | Log aggregation           |
+| Alloy             | 12345 | Log shipper (Grafana Alloy) |
+| Node Exporter     | 9100  | System metrics            |
+| Nginx Exporter    | 9113  | Nginx metrics             |
+| ZFS Exporter      | 9134  | ZFS pool/dataset metrics  |
+| cAdvisor          | 9338  | Container metrics         |
+| Smartctl Exporter | 9633  | Disk health metrics       |
 
 ### Infrastructure
 
@@ -81,6 +86,7 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | ------------ | --------- | ------------------------------ |
 | Nginx        | 80/443    | Reverse proxy                  |
 | Blocky       | 4000 (53) | DNS with ad-blocking           |
+| Unbound      | 5335      | Recursive DNS resolver         |
 | Cloudflared  | -         | Tunnel to Cloudflare           |
 | Tailscale    | -         | Mesh VPN                       |
 | NFS          | 2049      | Network file sharing (Linux)   |
@@ -88,14 +94,20 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 
 ### Applications
 
-| Service      | Port | Description               |
-| ------------ | ---- | ------------------------- |
-| Vaultwarden  | 8222 | Password manager          |
-| Mealie       | 8223 | Recipe manager            |
-| Karakeep     | 8081 | Bookmark manager          |
-| Stirling-PDF | 8082 | PDF manipulation toolkit  |
-| n8n          | 5678 | Workflow automation       |
-| ntfy         | 2586 | Push notification service |
+| Service       | Port  | Description               |
+| ------------- | ----- | ------------------------- |
+| Vaultwarden   | 8222  | Password manager          |
+| Karakeep      | 8081  | Bookmark manager          |
+| Immich        | 2283  | Photo management          |
+| Paperless     | 28981 | Document management       |
+| Joplin        | 22300 | Note-taking sync server   |
+| BentoPDF      | 8085  | PDF manipulation toolkit  |
+| Bar Assistant | 8087  | Cocktail manager          |
+| SearXNG       | 8083  | Metasearch engine         |
+| Homepage      | 8086  | Service dashboard         |
+| Code Server   | 8888  | Browser-based VS Code     |
+| n8n           | 5678  | Workflow automation       |
+| ntfy          | 2586  | Push notification service |
 
 ---
 
@@ -176,5 +188,5 @@ journalctl -u jellyfin -f
 ### Monitoring
 
 - Grafana dashboards: `grafana.greensroad.uk`
-- Uptime status: `uptime.greensroad.uk`
+- Alertmanager: `alertmanager.greensroad.uk`
 - Prometheus targets: `prometheus.greensroad.uk/targets`

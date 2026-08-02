@@ -50,6 +50,10 @@ Home server running NixOS. Services:
 | Bazarr | Subtitle management |
 | Transmission | BitTorrent client |
 | Sabnzbd | Usenet client |
+| slskd | Soulseek P2P client |
+| Soularr | Bridges slskd downloads to Lidarr |
+| Navidrome | Music streaming server |
+| MiniDLNA | DLNA media streaming |
 
 ### Monitoring
 
@@ -57,8 +61,9 @@ Home server running NixOS. Services:
 |------|-------------|
 | Grafana | Metrics visualization |
 | Prometheus | Time-series metrics database |
+| Alertmanager | Alert routing (delivered via ntfy) |
 | Loki | Log aggregation |
-| Promtail | Log shipping agent |
+| Alloy | Log shipping agent (Grafana Alloy) |
 | Node Exporter | System metrics |
 | Nginx Exporter | Web server metrics |
 | ZFS Exporter | Filesystem metrics |
@@ -70,18 +75,24 @@ Home server running NixOS. Services:
 | Name | Description |
 |------|-------------|
 | Nginx | Reverse proxy |
+| Cloudflared | Cloudflare tunnel |
 | Blocky | DNS server with ad-blocking |
+| Unbound | Recursive DNS resolver |
 | Tailscale | Mesh VPN |
 | Docker | Container runtime |
 | Portainer | Container management UI |
+| Libvirt | Virtual machine host (Home Assistant) |
+| Homepage | Service dashboard |
 | Vaultwarden | Password manager |
 | Karakeep | Bookmarking |
-| Mealie | Recipe manager |
-| Stirling-PDF | PDF toolkit |
+| Immich | Photo management |
+| Paperless | Document management |
+| Joplin | Note-taking sync server |
+| BentoPDF | PDF toolkit |
+| Bar Assistant | Cocktail manager |
+| SearXNG | Metasearch engine |
 | n8n | Workflow automation |
 | ntfy | Push notifications |
-| Uptime Kuma | Status monitoring |
-| Immich | Photo management |
 | Code Server | Browser-based VS Code |
 
 ---
