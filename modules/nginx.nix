@@ -1,6 +1,4 @@
-{inputs, ...}: let
-  inherit (inputs.self.settings) ports;
-in {
+_: {
   flake.modules.nixos.nginx = {
     services.nginx = {
       enable = true;
@@ -21,6 +19,10 @@ in {
       statusPage = true;
     };
 
-    networking.firewall.allowedTCPPorts = [ports.http ports.https];
+    # No global firewall opening: nginx is reached only via
+    # cloudflared -> 127.0.0.1:80 (thor.nix tunnel ingress) and, for admin,
+    # over the tailnet (tailscale0 is in firewall.trustedInterfaces,
+    # tailscale.nix). The LAN bridge (br0) must not reach nginx directly or
+    # it bypasses Cloudflare Access.
   };
 }

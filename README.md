@@ -94,6 +94,11 @@ Home server running NixOS. Services:
 | ntfy | Push notifications |
 | Code Server | Browser-based VS Code |
 
+**Ingress policy:** nginx opens no LAN-reachable port. The only paths in are
+the Cloudflare tunnel (`cloudflared` → `127.0.0.1:80`, gated by Cloudflare
+Access) and the Tailscale interface (trusted for admin access). Services that
+need direct LAN access must open their own port explicitly.
+
 ---
 
 ## Quick Start
