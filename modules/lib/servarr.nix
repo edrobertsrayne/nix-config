@@ -39,6 +39,12 @@
         server.port = port;
         auth = {
           method = "External";
+          # Deliberate, not an oversight - see #174: with the LAN opening
+          # gone (closed in #182), the only unauthenticated callers left
+          # are nginx on loopback (Access-gated) and soularr over docker0
+          # (soularr.nix), which depends on no-auth here (its api_key is
+          # disabled). Switching to "Forms" would break soularr and add a
+          # password layer that Access is meant to replace, not duplicate.
           type = "DisabledForLocalAddresses";
         };
       };
