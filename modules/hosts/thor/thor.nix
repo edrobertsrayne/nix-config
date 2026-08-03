@@ -31,6 +31,7 @@
         alertmanager-ntfy
         grafana
         loki
+        uptime-kuma
         n8n
         immich
         ntfy
