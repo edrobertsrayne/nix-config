@@ -57,6 +57,15 @@ _: {
         zroot = {
           type = "zpool";
           mode = "mirror";
+          # Deliberately unencrypted: no ZFS native encryption or LUKS
+          # layer. Accepted risk for a home server - physical access or
+          # disk disposal exposes data at rest, weighed against the
+          # complexity of key management on a headless box with no TPM
+          # unlock path here. Adding native encryption means destroying
+          # and recreating this pool (backup, `zpool create -O
+          # encryption=on ...`, restore), not a config edit - so it's a
+          # next-clean-install item, not something to retrofit live. See
+          # #181.
           rootFsOptions = {
             acltype = "posixacl";
             atime = "off";
