@@ -35,11 +35,20 @@ in {
 
     services.slskd = {
       enable = true;
+      # Opens ONLY the soulseek P2P listen port (50300), not the web UI -
+      # see the nixpkgs option description. Required for inbound peer
+      # connections; without it slskd reports as firewalled. Web port 5030
+      # is reachable only from loopback, the tailnet, and docker0 (opened
+      # separately in soularr.nix for the bridge).
       openFirewall = true;
       environmentFile = config.age.secrets.slskd.path;
       settings = {
         web = {
           port = ports.media.slskd;
+          # Access is the auth layer (see modules/nginx.nix): the web port
+          # is not LAN-exposed and the public vhost is Access-gated.
+          # soularr also relies on this being off (soularr.nix:
+          # api_key = disabled).
           authentication.disabled = true;
         };
         soulseek.listen_port = ports.media.slskdListen;
