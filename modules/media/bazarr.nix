@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.media = {
     config,
@@ -7,33 +7,24 @@ in {
     ...
   }: let
     cfg = config.services.bazarr;
-    url = "bazarr.${server.domain}";
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Bazarr";
+        subdomain = "bazarr";
+        port = ports.media.bazarr;
+        group = "Media";
+        description = "Subtitle manager";
+        icon = "bazarr.png";
+      })
+    ];
+
     users.users.${cfg.user}.extraGroups = ["tank"];
     systemd.services.bazarr.serviceConfig.UMask = lib.mkForce "0002";
-    services = {
-      bazarr = {
-        enable = true;
-        listenPort = ports.media.bazarr;
-        dataDir = "/srv/bazarr";
-      };
-      nginx.virtualHosts."${url}" = {
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:${builtins.toString cfg.listenPort}";
-          proxyWebsockets = true;
-        };
-      };
+    services.bazarr = {
+      enable = true;
+      listenPort = ports.media.bazarr;
+      dataDir = "/srv/bazarr";
     };
-
-    homepage.services."Media" = [
-      {
-        Bazarr = {
-          href = "https://${url}";
-          description = "Subtitle manager";
-          icon = "bazarr.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.bazarr}";
-        };
-      }
-    ];
   };
 }

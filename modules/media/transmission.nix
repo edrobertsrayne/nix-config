@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.media = {
     config,
@@ -9,6 +9,17 @@ in {
   }: let
     cfg = config.services.transmission;
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Transmission";
+        subdomain = "transmission";
+        port = ports.media.transmission;
+        group = "Media";
+        description = "Torrent downloader";
+        icon = "transmission.png";
+      })
+    ];
+
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
@@ -58,23 +69,5 @@ in {
     # (Access-gated) or the tailnet. Peer port must stay open for inbound
     # BitTorrent peers.
     networking.firewall.allowedTCPPorts = [cfg.settings.peer-port];
-
-    services.nginx.virtualHosts."transmission.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${builtins.toString cfg.settings.rpc-port}";
-        proxyWebsockets = true;
-      };
-    };
-
-    homepage.services."Media" = [
-      {
-        Transmission = {
-          href = "https://transmission.${server.domain}";
-          description = "Torrent downloader";
-          icon = "transmission.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.transmission}";
-        };
-      }
-    ];
   };
 }

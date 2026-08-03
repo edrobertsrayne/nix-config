@@ -1,6 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
-  service = "soularr";
+  inherit (inputs.self.settings) ports;
   downloadDir = "/mnt/ssd/downloads/slskd/complete";
   lidarrApiKey = "f6a4315040e94c7c9eb2aefe5bfc4445"; # must match media/lidarr.nix
 in {
@@ -59,6 +58,17 @@ in {
       backup_count = 3
     '';
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Soularr";
+        subdomain = "soularr";
+        port = ports.media.soularr;
+        group = "Media";
+        description = "Lidarr <-> slskd bridge";
+        icon = "soularr.png";
+      })
+    ];
+
     # writable /data for lock + log files, owned to match container user 306:992
     systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
 
@@ -87,21 +97,5 @@ in {
         "--add-host=host.docker.internal:host-gateway"
       ];
     };
-
-    services.nginx.virtualHosts."${service}.${server.domain}".locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString ports.media.soularr}";
-      proxyWebsockets = true;
-    };
-
-    homepage.services."Media" = [
-      {
-        Soularr = {
-          href = "https://${service}.${server.domain}";
-          description = "Lidarr <-> slskd bridge";
-          icon = "soularr.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.soularr}";
-        };
-      }
-    ];
   };
 }

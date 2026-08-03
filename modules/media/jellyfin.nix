@@ -6,6 +6,17 @@ in {
     config,
     ...
   }: {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Jellyfin";
+        subdomain = "jellyfin";
+        port = ports.media.jellyfin;
+        group = "Library";
+        description = "Media server";
+        icon = "jellyfin.png";
+      })
+    ];
+
     services = {
       jellyfin = {
         enable = true;
@@ -14,24 +25,7 @@ in {
       };
     };
 
-    services.nginx.virtualHosts."jellyfin.${inputs.self.settings.server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString ports.media.jellyfin}";
-        proxyWebsockets = true;
-      };
-    };
     users.users.${config.services.jellyfin.user}.extraGroups = ["tank"];
-
-    homepage.services."Library" = [
-      {
-        Jellyfin = {
-          href = "https://jellyfin.${inputs.self.settings.server.domain}";
-          description = "Media server";
-          icon = "jellyfin.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.jellyfin}";
-        };
-      }
-    ];
 
     environment.systemPackages = [
       pkgs.jellyfin

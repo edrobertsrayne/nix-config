@@ -1,11 +1,20 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
   apikey = "c20dce066e08419daaa4c2cbbe4ddcbe";
   service = "prowlarr";
 in {
-  flake.modules.nixos.media = {config, ...}: let
-    cfg = config.services.${service};
-  in {
+  flake.modules.nixos.media = {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Prowlarr";
+        subdomain = "prowlarr";
+        port = ports.media.prowlarr;
+        group = "Media";
+        description = "Indexer manager";
+        icon = "prowlarr.png";
+      })
+    ];
+
     services = {
       ${service} = {
         enable = true;
@@ -25,23 +34,5 @@ in {
     };
 
     systemd.services.prowlarr.serviceConfig.SupplementaryGroups = ["tank"];
-
-    services.nginx.virtualHosts."${service}.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${builtins.toString cfg.settings.server.port}";
-        proxyWebsockets = true;
-      };
-    };
-
-    homepage.services."Media" = [
-      {
-        Prowlarr = {
-          href = "https://${service}.${server.domain}";
-          description = "Indexer manager";
-          icon = "prowlarr.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.prowlarr}";
-        };
-      }
-    ];
   };
 }

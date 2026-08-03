@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
   apikey = "f6a4315040e94c7c9eb2aefe5bfc4445";
   service = "lidarr";
 in {
@@ -10,6 +10,17 @@ in {
   }: let
     cfg = config.services.${service};
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Lidarr";
+        subdomain = "lidarr";
+        port = ports.media.lidarr;
+        group = "Media";
+        description = "Music manager";
+        icon = "lidarr.png";
+      })
+    ];
+
     services = {
       ${service} = {
         enable = true;
@@ -27,26 +38,8 @@ in {
       };
     };
 
-    services.nginx.virtualHosts."${service}.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${builtins.toString cfg.settings.server.port}";
-        proxyWebsockets = true;
-      };
-    };
-
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.services.${service}.serviceConfig.UMask = lib.mkForce "0002";
-
-    homepage.services."Media" = [
-      {
-        Lidarr = {
-          href = "https://${service}.${server.domain}";
-          description = "Music manager";
-          icon = "lidarr.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.lidarr}";
-        };
-      }
-    ];
   };
 }

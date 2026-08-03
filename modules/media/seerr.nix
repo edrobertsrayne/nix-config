@@ -1,33 +1,19 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.media = {
-    services.seerr.enable = true;
-
-    services.nginx.virtualHosts = {
-      "jellyseerr.${server.domain}" = {
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:${toString ports.media.seerr}";
-          proxyWebsockets = true;
-        };
-      };
-      "seerr.${server.domain}" = {
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:${toString ports.media.seerr}";
-          proxyWebsockets = true;
-        };
-      };
-    };
-
-    homepage.services."Media" = [
-      {
-        Jellyseerr = {
-          href = "https://seerr.${server.domain}";
-          description = "Request manager";
-          icon = "jellyseerr.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.seerr}";
-        };
-      }
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Jellyseerr";
+        subdomain = "seerr";
+        aliases = ["jellyseerr"];
+        port = ports.media.seerr;
+        group = "Media";
+        description = "Request manager";
+        icon = "jellyseerr.png";
+      })
     ];
+
+    services.seerr.enable = true;
   };
 }

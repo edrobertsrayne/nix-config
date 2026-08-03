@@ -1,8 +1,18 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
-  service = "navidrome";
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.media = {config, ...}: {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Navidrome";
+        subdomain = "navidrome";
+        port = ports.media.navidrome;
+        group = "Media";
+        description = "Music streaming";
+        icon = "navidrome.png";
+      })
+    ];
+
     services.navidrome = {
       enable = true;
       settings = {
@@ -15,21 +25,5 @@ in {
     # parity with other media services (music tree is world-readable, so this
     # is belt-and-braces in case perms ever tighten)
     users.users.${config.services.navidrome.user}.extraGroups = ["tank"];
-
-    services.nginx.virtualHosts."${service}.${server.domain}".locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString ports.media.navidrome}";
-      proxyWebsockets = true;
-    };
-
-    homepage.services."Media" = [
-      {
-        Navidrome = {
-          href = "https://${service}.${server.domain}";
-          description = "Music streaming";
-          icon = "navidrome.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.navidrome}";
-        };
-      }
-    ];
   };
 }

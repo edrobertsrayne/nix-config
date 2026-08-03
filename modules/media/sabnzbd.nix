@@ -5,6 +5,20 @@ in {
     cfg = config.services.sabnzbd;
     url = "sabnzbd.${server.domain}";
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "SABnzbd";
+        subdomain = "sabnzbd";
+        port = ports.media.sabnzbd;
+        group = "Media";
+        description = "Usenet downloader";
+        icon = "sabnzbd.png";
+        extraConfig = ''
+          proxy_set_header X-Forwarded-Host $host;
+        '';
+      })
+    ];
+
     services = {
       sabnzbd = {
         enable = true;
@@ -27,27 +41,6 @@ in {
     systemd.tmpfiles.rules = [
       "d /mnt/ssd/downloads/usenet/complete 0755 ${cfg.user} tank -"
       "d /mnt/ssd/downloads/usenet/incomplete 0755 ${cfg.user} tank -"
-    ];
-
-    services.nginx.virtualHosts."${url}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString ports.media.sabnzbd}";
-        proxyWebsockets = true;
-        extraConfig = ''
-          proxy_set_header X-Forwarded-Host $host;
-        '';
-      };
-    };
-
-    homepage.services."Media" = [
-      {
-        SABnzbd = {
-          href = "https://${url}";
-          description = "Usenet downloader";
-          icon = "sabnzbd.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.sabnzbd}";
-        };
-      }
     ];
   };
 }

@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
   apikey = "45f0ce64ed8b4d34b51908c60b7a70fc";
   service = "radarr";
 in {
@@ -10,6 +10,17 @@ in {
   }: let
     cfg = config.services.${service};
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Radarr";
+        subdomain = "radarr";
+        port = ports.media.radarr;
+        group = "Media";
+        description = "Movie manager";
+        icon = "radarr.png";
+      })
+    ];
+
     services = {
       ${service} = {
         enable = true;
@@ -27,26 +38,8 @@ in {
       };
     };
 
-    services.nginx.virtualHosts."${service}.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${builtins.toString cfg.settings.server.port}";
-        proxyWebsockets = true;
-      };
-    };
-
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.services.${service}.serviceConfig.UMask = lib.mkForce "0002";
-
-    homepage.services."Media" = [
-      {
-        Radarr = {
-          href = "https://${service}.${server.domain}";
-          description = "Movie manager";
-          icon = "radarr.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.radarr}";
-        };
-      }
-    ];
   };
 }

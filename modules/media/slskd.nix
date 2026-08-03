@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
   service = "slskd";
   downloadDir = "/mnt/ssd/downloads/slskd";
 in {
@@ -10,6 +10,17 @@ in {
   }: let
     cfg = config.services.${service};
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Slskd";
+        subdomain = "slskd";
+        port = ports.media.slskd;
+        group = "Media";
+        description = "Soulseek client";
+        icon = "slskd.png";
+      })
+    ];
+
     age.secrets.slskd.file = ../../secrets/slskd.age;
 
     users.users.${cfg.user}.extraGroups = ["tank"];
@@ -47,21 +58,5 @@ in {
       # with ReadWritePaths for the same directory.
       ReadOnlyPaths = lib.mkForce [];
     };
-
-    services.nginx.virtualHosts."${service}.${server.domain}".locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString ports.media.slskd}";
-      proxyWebsockets = true;
-    };
-
-    homepage.services."Media" = [
-      {
-        Slskd = {
-          href = "https://${service}.${server.domain}";
-          description = "Soulseek client";
-          icon = "slskd.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.media.slskd}";
-        };
-      }
-    ];
   };
 }
