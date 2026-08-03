@@ -23,13 +23,18 @@ in {
       settings.server = {
         inherit port;
         base_url = "https://${url}";
-        bind_address = "0.0.0.0";
+        # Loopback only: reached via nginx (cloudflared -> Access-gated, or
+        # the tailnet). The firewall doesn't open this port today, so this
+        # is defence-in-depth - a firewall regression can't silently
+        # re-expose it (same reasoning as transmission.nix's rpc-bind).
+        bind_address = "127.0.0.1";
       };
       settings.search.formats = [
         "html"
-        "csv"
+        # json stays: n8n's SearXNG tool (searXngApi credential) consumes
+        # this API for web search. Safe now that it's loopback-only behind
+        # Access. csv/rss dropped - unused.
         "json"
-        "rss"
       ];
     };
   };
