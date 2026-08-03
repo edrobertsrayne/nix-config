@@ -106,6 +106,11 @@
         fstrim.enable = true;
       };
 
+      # Deliberate: thor is headless, SSH is key-only
+      # (PasswordAuthentication = false in modules/ssh.nix) and the web
+      # surface is behind Cloudflare Access. A shell as `ed` already implies
+      # root here; requiring a password would only gate interactive
+      # convenience, not close an attack path. See issue #183.
       security.sudo.wheelNeedsPassword = false;
 
       virtualisation.docker.daemon.settings = {
