@@ -51,6 +51,14 @@ in {
       };
     };
 
+    # Tracking `main` unattended is deliberate, not an oversight: commits only
+    # reach main after `nixos-rebuild test` on thor, so this pulls a config
+    # already validated on the machine it deploys to — a gated release branch
+    # would add ceremony without adding validation. Recovery is layered: 5 kept
+    # systemd-boot generations roll back config (and allowReboot falls back if
+    # a generation won't boot), and auto-snapshotted /srv + /persist (#163)
+    # roll back data. Same trade as floating container tags (#181): personal
+    # server, stay current without manual bumps. See #178.
     system.autoUpgrade = {
       enable = true;
       flake = "github:edrobertsrayne/nix-config";
