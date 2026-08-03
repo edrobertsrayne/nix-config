@@ -78,9 +78,10 @@ in {
     systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
 
     # slskd's web port isn't otherwise firewall-opened (only its soulseek
-    # listen port is); soularr reaches it via host.docker.internal, which
-    # arrives as non-loopback traffic on docker0 and needs an explicit allow.
-    networking.firewall.interfaces.docker0.allowedTCPPorts = [ports.media.slskd];
+    # listen port is), and lidarr's web UI lost its LAN opening in #182;
+    # soularr reaches both via host.docker.internal, which arrives as
+    # non-loopback traffic on docker0 and needs an explicit allow.
+    networking.firewall.interfaces.docker0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
 
     # reuse of lidarr's own secret - see media/lidarr.nix's age.secrets.lidarr-apikey.
     # (security#185: old plaintext *arr keys are rotated dead by this change;
