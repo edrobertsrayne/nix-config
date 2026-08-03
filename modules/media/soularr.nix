@@ -1,20 +1,25 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
   downloadDir = "/mnt/ssd/downloads/slskd/complete";
-  lidarrApiKey = "f6a4315040e94c7c9eb2aefe5bfc4445"; # must match media/lidarr.nix
 in {
-  flake.modules.nixos.soularr = {pkgs, ...}: let
-    # slskd auth is disabled, so this value is ignored by slskd; kept valid-length.
-    slskdApiKey = "soularr0000000000000000000000000";
+  flake.modules.nixos.soularr = {
+    config,
+    pkgs,
+    ...
+  }: let
+    # Real key is injected at activation time by soularr-config.service, which
+    # substitutes this placeholder for the lidarr-apikey secret (shared with
+    # media/lidarr.nix - not a second copy) before the container starts.
     configFile = pkgs.writeText "soularr-config.ini" ''
       [Lidarr]
-      api_key = ${lidarrApiKey}
+      api_key = @LIDARR_API_KEY@
       host_url = http://host.docker.internal:${toString ports.media.lidarr}
       download_dir = ${downloadDir}
       disable_sync = False
 
       [Slskd]
-      api_key = ${slskdApiKey}
+      # slskd auth is disabled, so this value is ignored by slskd.
+      api_key = disabled
       host_url = http://host.docker.internal:${toString ports.media.slskd}
       url_base = /
       download_dir = ${downloadDir}
@@ -77,6 +82,28 @@ in {
     # arrives as non-loopback traffic on docker0 and needs an explicit allow.
     networking.firewall.interfaces.docker0.allowedTCPPorts = [ports.media.slskd];
 
+    # reuse of lidarr's own secret - see media/lidarr.nix's age.secrets.lidarr-apikey.
+    # (security#185: old plaintext *arr keys are rotated dead by this change;
+    # no git-history rewrite done - it'd break every clone/CI ref for no
+    # remaining benefit once the keys themselves are inert.)
+    age.secrets.lidarr-apikey.file = ../../secrets/lidarr-apikey.age;
+
+    # configFile bakes in a placeholder api_key (not a real secret, so it's
+    # fine in the Nix store); this renders the real config.ini into
+    # /srv/soularr, which is already bind-mounted to /data in the container,
+    # so no separate ro mount for it is needed.
+    systemd.services.soularr-config = {
+      before = ["docker-soularr.service"];
+      requiredBy = ["docker-soularr.service"];
+      serviceConfig.Type = "oneshot";
+      script = ''
+        apikey=$(${pkgs.gnused}/bin/sed -n 's/^LIDARR__AUTH__APIKEY=//p' ${config.age.secrets.lidarr-apikey.path})
+        ${pkgs.gnused}/bin/sed "s/@LIDARR_API_KEY@/$apikey/" ${configFile} > /srv/soularr/config.ini
+        ${pkgs.coreutils}/bin/chown 306:992 /srv/soularr/config.ini
+        ${pkgs.coreutils}/bin/chmod 0640 /srv/soularr/config.ini
+      '';
+    };
+
     virtualisation.oci-containers.containers.soularr = {
       image = "mrusse08/soularr:latest";
       autoStart = true;
@@ -89,7 +116,6 @@ in {
       ports = ["127.0.0.1:${toString ports.media.soularr}:8265"];
       volumes = [
         "/srv/soularr:/data"
-        "${configFile}:/data/config.ini:ro"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
       ];
       extraOptions = [

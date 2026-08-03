@@ -1,9 +1,8 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
-  apikey = "c20dce066e08419daaa4c2cbbe4ddcbe";
   service = "prowlarr";
 in {
-  flake.modules.nixos.prowlarr = {
+  flake.modules.nixos.prowlarr = {config, ...}: {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Prowlarr";
@@ -14,6 +13,10 @@ in {
         icon = "prowlarr.png";
       })
     ];
+
+    # prowlarr runs with DynamicUser; no static owner/group to give this
+    # secret, so it stays root-owned/default like ntfy-alert-topics.
+    age.secrets."${service}-apikey".file = ../../secrets/${service}-apikey.age;
 
     services = {
       ${service} = {
@@ -26,9 +29,9 @@ in {
           auth = {
             method = "External";
             type = "DisabledForLocalAddresses";
-            inherit apikey;
           };
         };
+        environmentFiles = [config.age.secrets."${service}-apikey".path];
       };
       flaresolverr.enable = true;
     };

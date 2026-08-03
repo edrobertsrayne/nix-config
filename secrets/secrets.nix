@@ -19,4 +19,8 @@ in {
   "bar-assistant.age".publicKeys = systems ++ users;
   "slskd.age".publicKeys = systems ++ users;
   "code-server.age".publicKeys = systems ++ users;
+  "radarr-apikey.age".publicKeys = systems ++ users;
+  "sonarr-apikey.age".publicKeys = systems ++ users;
+  "lidarr-apikey.age".publicKeys = systems ++ users;
+  "prowlarr-apikey.age".publicKeys = systems ++ users;
 }

@@ -1,6 +1,5 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
-  apikey = "45f0ce64ed8b4d34b51908c60b7a70fc";
   service = "radarr";
 in {
   flake.modules.nixos.radarr = {
@@ -21,6 +20,12 @@ in {
       })
     ];
 
+    age.secrets."${service}-apikey" = {
+      file = ../../secrets/${service}-apikey.age;
+      owner = cfg.user;
+      group = cfg.user;
+    };
+
     services = {
       ${service} = {
         enable = true;
@@ -32,9 +37,9 @@ in {
           auth = {
             method = "External";
             type = "DisabledForLocalAddresses";
-            inherit apikey;
           };
         };
+        environmentFiles = [config.age.secrets."${service}-apikey".path];
       };
     };
 
