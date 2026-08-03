@@ -22,8 +22,22 @@ in {
       jellyfin = {
         enable = true;
         dataDir = "/srv/jellyfin";
-        openFirewall = true;
+        # No openFirewall: it expands (nixpkgs jellyfin.nix) to a *global*
+        # opening on every interface, not just br0 - docker0 and any virbr*
+        # too. Scope the LAN opening explicitly below instead.
       };
+    };
+
+    # Deliberate LAN opening (see #174): local players talk to
+    # 192.168.68.128:8096 directly, and there's no split-horizon DNS for
+    # jellyfin.${server.domain} (blocky.nix), so the Access-gated tunnel
+    # path isn't usable from a TV/Kodi app. Unlike the Servarr apps, this
+    # isn't an auth bypass - Jellyfin requires its own login regardless of
+    # source address. 8920 (HTTPS) stays closed: no TLS cert is configured
+    # for it.
+    networking.firewall.interfaces.br0 = {
+      allowedTCPPorts = [ports.media.jellyfin];
+      allowedUDPPorts = [1900 7359]; # SSDP + Jellyfin client auto-discovery
     };
 
     users.users.${config.services.jellyfin.user}.extraGroups = ["tank"];
