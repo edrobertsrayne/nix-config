@@ -42,6 +42,24 @@ in {
           # uids are pinned so the dashboard JSON in modules/dashboards can
           # reference them by a name we control. Grafana would otherwise
           # generate a random uid per install, which nothing can hardcode.
+          #
+          # deleteDatasources is required, not cosmetic: Grafana looks an
+          # existing datasource up by uid, and pinning a uid onto one that was
+          # created with a generated uid fails with "data source not found".
+          # That failure aborts the whole provisioning module — dashboards
+          # included — and crash-loops the service. Deleting first makes
+          # provisioning authoritative and the startup idempotent.
+          datasources.settings.deleteDatasources = [
+            {
+              name = "Prometheus";
+              orgId = 1;
+            }
+            {
+              name = "Loki";
+              orgId = 1;
+            }
+          ];
+
           datasources.settings.datasources = [
             {
               name = "Prometheus";
