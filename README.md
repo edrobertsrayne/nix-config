@@ -68,6 +68,12 @@ Home server running NixOS. Services:
 | ZFS Exporter | Filesystem metrics |
 | cAdvisor | Container metrics |
 | Smartctl Exporter | Disk health metrics |
+| Blackbox Exporter | HTTP probes of every proxied service |
+
+Grafana dashboards are provisioned from `modules/dashboards/`, contributed by
+the module owning the metrics each one displays (`monitoring.dashboards`). They
+are read-only in the browser — edit the JSON and rebuild. See
+[modules/dashboards/README.md](modules/dashboards/README.md).
 
 ### Infrastructure & Applications
 
