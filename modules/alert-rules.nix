@@ -140,6 +140,33 @@ _: {
                   summary: Systemd unit failed on {{ $labels.instance }}
                   description: "{{ $labels.name }} has been in a failed state for >5m — check systemctl --failed"
 
+              - alert: AlertmanagerNotificationsFailing
+                expr: sum(rate(alertmanager_notifications_failed_total{integration="webhook"}[15m])) > 0
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Alertmanager notification delivery failing on {{ $labels.instance }}
+                  description: "The ntfy webhook has been failing for >5m — alert delivery may be silently broken"
+
+              - alert: LogIngestionStopped
+                expr: sum(rate(loki_distributor_lines_received_total[15m])) == 0
+                for: 15m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Log ingestion stopped on {{ $labels.instance }}
+                  description: "Loki has received no log lines for >15m — Alloy may be running but shipping nothing, silently disabling the log-alerts rule group"
+
+              - alert: PrometheusRuleEvaluationFailures
+                expr: increase(prometheus_rule_evaluation_failures_total[15m]) > 0
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Prometheus rule evaluation failing on {{ $labels.instance }}
+                  description: "A rule has failed to evaluate in the last 15m — check prometheus logs for the broken expression"
+
           - name: probe-health
             rules:
               - alert: ProbeFailed
