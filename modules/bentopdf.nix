@@ -19,6 +19,10 @@ in {
       image = "ghcr.io/alam00000/bentopdf-simple:latest";
       autoStart = true;
       ports = ["${toString port}:8080"];
+      # :latest + --pull=always is deliberate, not an oversight: personal
+      # server, nixpkgs is already tracked on unstable, rolling container
+      # images are an accepted trade for staying current without manual
+      # version bumps. See #181.
       extraOptions = ["--pull=always"];
     };
   };

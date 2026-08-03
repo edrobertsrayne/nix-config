@@ -59,6 +59,13 @@ in {
       };
     };
 
+    # :latest/floating-major tags + --pull=always are deliberate, not an
+    # oversight: personal server, nixpkgs is already tracked on unstable,
+    # rolling container images are an accepted trade for staying current
+    # without manual version bumps. See #181. `meilisearch` below is the
+    # deliberate exception, pinned to a minor version because Meilisearch's
+    # index/dump format changes across releases and needs a controlled
+    # upgrade rather than a silent pull.
     virtualisation.oci-containers.containers = {
       meilisearch = {
         image = "getmeili/meilisearch:v1.15";

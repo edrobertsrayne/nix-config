@@ -33,6 +33,10 @@ in {
         DB_CLIENT = "sqlite3";
         SQLITE_DATABASE = "/home/joplin/data/db.sqlite";
       };
+      # :latest + --pull=always is deliberate, not an oversight: personal
+      # server, nixpkgs is already tracked on unstable, rolling container
+      # images are an accepted trade for staying current without manual
+      # version bumps. See #181.
       extraOptions = ["--pull=always"];
     };
   };
