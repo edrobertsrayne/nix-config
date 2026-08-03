@@ -7,18 +7,18 @@ in {
         - name: log-alerts
           interval: 1m
           rules:
-            - alert: SystemdUnitFailed
+            - alert: SystemdUnitCrashLooping
               expr: |
                 sum by (host) (
                   count_over_time(
                     {job="systemd-journal", unit="init.scope"} |~ "(?i)failed with result|main process exited, code=exited, status=[^0]" [5m]
                   )
-                ) > 0
+                ) > 2
               labels:
                 severity: critical
               annotations:
-                summary: Systemd unit failed on {{ $labels.host }}
-                description: "A systemd unit failed — check journalctl for details"
+                summary: Systemd unit crash-looping on {{ $labels.host }}
+                description: "A unit has failed repeatedly in the last 5m without settling into a failed state (Restart=always) — check journalctl for details"
 
             - alert: OomKill
               expr: |
@@ -162,11 +162,14 @@ in {
 
     # Loki local ruler expects rules at <storage.local.directory>/<tenant>/<file>.yml
     # With auth_enabled=false the tenant is "fake"
+    # L+ (not plain L): plain L only creates the symlink if the path doesn't already
+    # exist, so it silently stops tracking rule-content changes after the first deploy.
+    # Confirmed live: this symlink pointed at a June store path until this fix.
     systemd.tmpfiles.rules = [
       "d /srv/loki/rules 0750 loki loki -"
       "d /srv/loki/rules/fake 0750 loki loki -"
       "d /srv/loki/rules-temp 0750 loki loki -"
-      "L /srv/loki/rules/fake/log-alerts.yml - - - - ${logAlertRules}"
+      "L+ /srv/loki/rules/fake/log-alerts.yml - - - - ${logAlertRules}"
     ];
   };
 }

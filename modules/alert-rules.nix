@@ -131,6 +131,15 @@ _: {
                   summary: Monitoring component down on {{ $labels.instance }}
                   description: "{{ $labels.name }} is not active — alerting or log/metric collection may be degraded"
 
+              - alert: SystemdUnitFailed
+                expr: node_systemd_unit_state{state="failed"} == 1
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Systemd unit failed on {{ $labels.instance }}
+                  description: "{{ $labels.name }} has been in a failed state for >5m — check systemctl --failed"
+
           - name: probe-health
             rules:
               - alert: ProbeFailed
