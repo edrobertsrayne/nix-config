@@ -31,6 +31,11 @@ in {
       enable = true;
       home = lib.mkDefault "/srv/transmission";
       package = pkgs.transmission_4;
+      # Opens peer-port on TCP *and* UDP; the previous hand-rolled
+      # allowedTCPPorts missed UDP, which dht-enabled/utp-enabled need for
+      # inbound peer discovery. RPC port stays closed (openRPCPort defaults
+      # off) - it's reached only via nginx on loopback.
+      openPeerPorts = true;
       settings = {
         # Loopback only: reached via nginx (cloudflared -> Access-gated, or
         # over the tailnet). The firewall already keeps 9091 off br0;
@@ -74,10 +79,5 @@ in {
         blocklist-enabled = false;
       };
     };
-
-    # RPC port stays off the LAN: reached via cloudflared -> nginx
-    # (Access-gated) or the tailnet. Peer port must stay open for inbound
-    # BitTorrent peers.
-    networking.firewall.allowedTCPPorts = [cfg.settings.peer-port];
   };
 }
