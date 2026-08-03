@@ -119,6 +119,10 @@ in {
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
       ];
+      # :latest + --pull=always is deliberate, not an oversight: personal
+      # server, nixpkgs is already tracked on unstable, rolling container
+      # images are an accepted trade for staying current without manual
+      # version bumps. See #181.
       extraOptions = [
         "--pull=always"
         "--add-host=host.docker.internal:host-gateway"
