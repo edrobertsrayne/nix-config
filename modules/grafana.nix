@@ -1,7 +1,12 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) server ports;
 in {
-  flake.modules.nixos.grafana = {config, ...}: {
+  flake.modules.nixos.grafana = {
+    config,
+    lib,
+    pkgs,
+    ...
+  }: {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Grafana";
@@ -34,9 +39,13 @@ in {
         dataDir = "/srv/grafana";
         provision = {
           enable = true;
+          # uids are pinned so the dashboard JSON in modules/dashboards can
+          # reference them by a name we control. Grafana would otherwise
+          # generate a random uid per install, which nothing can hardcode.
           datasources.settings.datasources = [
             {
               name = "Prometheus";
+              uid = "prometheus";
               type = "prometheus";
               access = "proxy";
               url = "http://thor:${toString ports.prometheus}";
@@ -44,9 +53,31 @@ in {
             }
             {
               name = "Loki";
+              uid = "loki";
               type = "loki";
               access = "proxy";
               url = "http://thor:${toString ports.loki}";
+            }
+          ];
+
+          # Dashboards are contributed by the module owning the metrics they
+          # display (monitoring.dashboards in modules/interfaces.nix) and
+          # collected into one directory here. allowUiUpdates = false makes
+          # them read-only in the browser: edits go through the repo.
+          dashboards.settings.providers = [
+            {
+              name = "home-server";
+              type = "file";
+              folder = "Home Server";
+              allowUiUpdates = false;
+              disableDeletion = true;
+              options.path = pkgs.linkFarm "grafana-dashboards" (
+                lib.mapAttrsToList (name: path: {
+                  name = "${name}.json";
+                  inherit path;
+                })
+                config.monitoring.dashboards
+              );
             }
           ];
         };
