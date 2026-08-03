@@ -17,6 +17,8 @@ in {
               preferred_ip_protocol: ip4
       '';
     };
+
+    monitoring.dashboards.blackbox-http = ../../dashboards/blackbox-http.json;
   };
 
   flake.modules.nixos.prometheus = {config, ...}: {

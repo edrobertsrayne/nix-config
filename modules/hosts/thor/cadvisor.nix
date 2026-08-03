@@ -6,6 +6,8 @@ in {
       enable = true;
       port = ports.exporters.cadvisor;
     };
+
+    monitoring.dashboards.cadvisor = ../../dashboards/cadvisor.json;
   };
 
   flake.modules.nixos.prometheus = _: {

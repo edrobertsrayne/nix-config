@@ -6,6 +6,8 @@ in {
       enable = true;
       port = ports.exporters.smartctl;
     };
+
+    monitoring.dashboards.smartctl = ../../dashboards/smartctl.json;
   };
 
   flake.modules.nixos.prometheus = _: {

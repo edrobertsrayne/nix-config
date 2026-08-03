@@ -12,6 +12,8 @@ in {
         "thermal_zone"
       ];
     };
+
+    monitoring.dashboards.node-exporter-full = ../../dashboards/node-exporter-full.json;
   };
 
   flake.modules.nixos.prometheus = _: {

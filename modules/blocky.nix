@@ -140,6 +140,8 @@ in {
       allowedTCPPorts = [ports.dns];
       allowedUDPPorts = [ports.dns];
     };
+
+    monitoring.dashboards.blocky = ./dashboards/blocky.json;
   };
 
   flake.modules.nixos.prometheus = _: {
