@@ -50,10 +50,6 @@
             type = types.port;
             default = 9100;
           };
-          nginx = mkOption {
-            type = types.port;
-            default = 9113;
-          };
           zfs = mkOption {
             type = types.port;
             default = 9134;

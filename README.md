@@ -65,7 +65,6 @@ Home server running NixOS. Services:
 | Loki | Log aggregation |
 | Alloy | Log shipping agent (Grafana Alloy) |
 | Node Exporter | System metrics |
-| Nginx Exporter | Web server metrics |
 | ZFS Exporter | Filesystem metrics |
 | cAdvisor | Container metrics |
 | Smartctl Exporter | Disk health metrics |

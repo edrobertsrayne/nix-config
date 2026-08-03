@@ -14,9 +14,6 @@ _: {
           "" close;
         }
       '';
-
-      # Status endpoint for nginx-exporter
-      statusPage = true;
     };
 
     # No global firewall opening: nginx is reached only via

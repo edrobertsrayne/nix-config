@@ -75,7 +75,6 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | Loki              | 3100  | Log aggregation           |
 | Alloy             | 12345 | Log shipper (Grafana Alloy) |
 | Node Exporter     | 9100  | System metrics            |
-| Nginx Exporter    | 9113  | Nginx metrics             |
 | ZFS Exporter      | 9134  | ZFS pool/dataset metrics  |
 | cAdvisor          | 9338  | Container metrics         |
 | Smartctl Exporter | 9633  | Disk health metrics       |
