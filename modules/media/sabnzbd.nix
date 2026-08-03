@@ -31,7 +31,10 @@ in {
           inet_exposure = 4;
           download_dir = "/mnt/ssd/downloads/usenet/incomplete";
           complete_dir = "/mnt/ssd/downloads/usenet/complete";
-          permissions = "777";
+          # Was 777 (world-writable). tank-group write is enough - the *arr
+          # services that import from complete_dir are all in tank
+          # (mkArr's extraGroups) and already run with UMask 0002.
+          permissions = "775";
         };
       };
     };
