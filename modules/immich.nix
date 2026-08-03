@@ -1,15 +1,12 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.immich = {
-    config,
-    pkgs,
-    ...
-  }: let
+  flake.modules.nixos.immich = {config, ...}: let
     cfg = config.services.immich;
     mediaDir = "/mnt/ssd/immich";
   in {
     imports = [
+      inputs.self.modules.nixos.intel-vaapi
       (inputs.self.lib.mkProxiedService {
         name = "Immich";
         subdomain = "photos";
@@ -28,20 +25,6 @@ in {
       # No openFirewall: reached via cloudflared -> nginx (Access-gated) or
       # the tailnet; the LAN bridge must not reach it directly.
       mediaLocation = mediaDir;
-    };
-
-    # Hardware acceleration (Intel VA-API)
-    hardware.graphics = {
-      enable = true;
-      extraPackages = with pkgs; [
-        intel-media-driver
-        intel-vaapi-driver
-        libva-vdpau-driver
-        libvdpau-va-gl
-        intel-compute-runtime
-        vpl-gpu-rt
-        intel-media-driver
-      ];
     };
 
     # User permissions
