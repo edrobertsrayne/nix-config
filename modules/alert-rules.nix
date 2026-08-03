@@ -82,7 +82,7 @@ _: {
                   description: "Fan {{ $labels.sensor }} ({{ $labels.chip }}) reports 0 RPM — possible fan failure"
 
               - alert: InstanceDown
-                expr: up == 0
+                expr: up{job!="blackbox-http"} == 0
                 for: 5m
                 labels:
                   severity: critical
@@ -142,6 +142,26 @@ _: {
                 annotations:
                   summary: Monitoring component down on {{ $labels.instance }}
                   description: "{{ $labels.name }} is not active — alerting or log/metric collection may be degraded"
+
+          - name: probe-health
+            rules:
+              - alert: ProbeFailed
+                expr: probe_success == 0
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: HTTP probe failing — {{ $labels.instance }}
+                  description: "{{ $labels.instance }} has failed its blackbox HTTP probe for >5m — unreachable, non-2xx, or hung while its unit stays active"
+
+              - alert: ProbeSlow
+                expr: probe_duration_seconds > 5
+                for: 10m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: HTTP probe slow — {{ $labels.instance }}
+                  description: "{{ $labels.instance }} took {{ $value | printf \"%.1f\" }}s to respond (threshold: 5s)"
       ''
     ];
   };
