@@ -1,18 +1,23 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) user;
-  initialHashedPassword = "$y$j9T$vueRmYTLFOtT6Q3jiCH8M/$oTfJQqYfgnDprn/nBxRHgpz90EpDVDtAiV7Aqvx.U95";
 in {
   flake.modules.nixos.user = {
+    config,
     pkgs,
     lib,
     ...
   }: {
+    age.secrets = {
+      user-password.file = ../secrets/user-password.age;
+      root-password.file = ../secrets/root-password.age;
+    };
+
     users = {
       mutableUsers = false;
       users.${user.username} = {
         isNormalUser = true;
         description = user.fullname;
-        inherit initialHashedPassword;
+        hashedPasswordFile = config.age.secrets.user-password.path;
         extraGroups = ["wheel" "networkmanager"];
         openssh.authorizedKeys.keys = [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0EYKmro8pZDXNyT5NiBZnRGhQ/5HlTn5PJEWRawUN1"
@@ -27,7 +32,10 @@ in {
         ];
       };
 
-      users.root = {inherit initialHashedPassword;};
+      # Distinct from the user hash. Kept (not locked) so the KVM console
+      # stays a usable rescue path; PermitRootLogin = "no" (modules/ssh.nix)
+      # keeps it off the network.
+      users.root.hashedPasswordFile = config.age.secrets.root-password.path;
     };
 
     security.sudo = {
