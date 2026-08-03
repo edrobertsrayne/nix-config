@@ -119,6 +119,52 @@ _: {
                   summary: Drive temperature high on {{ $labels.instance }}
                   description: "Drive {{ $labels.device }} is {{ $value }}°C (threshold: 55°C)"
 
+              # SmartUnhealthy only fires once a drive declares overall failure,
+              # which is late. Reallocated (5), pending (197) and uncorrectable
+              # (198) sector counts creep up first, so any non-zero value is worth
+              # knowing about while the drive still reports itself healthy.
+              - alert: SmartSectorErrors
+                expr: smartctl_device_attribute{attribute_id=~"5|197|198",attribute_value_type="raw"} > 0
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: SMART sector errors on {{ $labels.instance }}
+                  description: "Drive {{ $labels.device }} reports {{ $value }} {{ $labels.attribute_name }} — reallocated or pending sectors indicate a drive beginning to fail"
+
+          - name: dns-health
+            rules:
+              # Blocky resolves DNS for the whole network, so a failure here is
+              # felt everywhere. loading.strategy = "fast" means Blocky serves
+              # regardless of blocklist state, which makes the two list rules
+              # necessary: without them, blocking degrades with no symptom.
+              - alert: BlockyResolutionErrors
+                expr: increase(blocky_error_total[15m]) > 0
+                for: 10m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Blocky resolution errors on {{ $labels.instance }}
+                  description: "Blocky is failing to resolve queries — the upstream DoH resolver (dns.mullvad.net) may be unreachable"
+
+              - alert: BlockyListDownloadsFailing
+                expr: increase(blocky_failed_downloads_total[1h]) > 0
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Blocky blocklist downloads failing on {{ $labels.instance }}
+                  description: "{{ $value }} blocklist download(s) failed in the last hour — Blocky keeps serving, so ad/tracker blocking degrades silently"
+
+              - alert: BlockyListRefreshStale
+                expr: time() - blocky_last_list_group_refresh_timestamp_seconds > 172800
+                for: 30m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Blocky blocklists not refreshing on {{ $labels.instance }}
+                  description: "Blocklists last refreshed {{ $value | humanizeDuration }} ago (threshold: 48h) — blocking is running on stale data"
+
           - name: monitoring-health
             rules:
               - alert: MonitoringUnitDown
