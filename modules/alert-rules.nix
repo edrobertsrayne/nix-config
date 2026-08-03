@@ -6,7 +6,7 @@ _: {
           - name: host-health
             rules:
               - alert: HostHighCpuTemperature
-                expr: node_hwmon_temp_celsius{chip=~"coretemp.*",sensor="temp1"} > 80
+                expr: node_hwmon_temp_celsius{chip=~".*coretemp.*",sensor="temp1"} > 80
                 for: 5m
                 labels:
                   severity: critical
@@ -15,7 +15,7 @@ _: {
                   description: "CPU temp is {{ $value | printf \"%.1f\" }}°C (threshold: 80°C)"
 
               - alert: HostHighCpuTemperatureWarn
-                expr: node_hwmon_temp_celsius{chip=~"coretemp.*",sensor="temp1"} > 72
+                expr: node_hwmon_temp_celsius{chip=~".*coretemp.*",sensor="temp1"} > 72
                 for: 10m
                 labels:
                   severity: warning
@@ -93,25 +93,13 @@ _: {
           - name: storage-health
             rules:
               - alert: ZfsPoolNotOnline
-                expr: zfs_pool_state{state!="online"} > 0
+                expr: zfs_pool_health != 0
                 for: 1m
                 labels:
                   severity: critical
                 annotations:
                   summary: ZFS pool degraded on {{ $labels.instance }}
-                  description: "Pool {{ $labels.pool }} is in state {{ $labels.state }}"
-
-              - alert: ZfsPoolErrorsIncreasing
-                expr: >
-                  increase(zfs_pool_read_errors_total[1h]) > 0
-                  or increase(zfs_pool_write_errors_total[1h]) > 0
-                  or increase(zfs_pool_checksum_errors_total[1h]) > 0
-                for: 0m
-                labels:
-                  severity: critical
-                annotations:
-                  summary: ZFS pool errors detected on {{ $labels.instance }}
-                  description: "Pool {{ $labels.pool }} has increasing I/O or checksum errors"
+                  description: "Pool {{ $labels.pool }} health code is {{ $value }} (0: ONLINE, 1: DEGRADED, 2: FAULTED, 3: OFFLINE, 4: UNAVAIL, 5: REMOVED, 6: SUSPENDED)"
 
               - alert: SmartUnhealthy
                 expr: smartctl_device_smart_status != 1
