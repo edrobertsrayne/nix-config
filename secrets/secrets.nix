@@ -24,4 +24,5 @@ in {
   "prowlarr-apikey.age".publicKeys = systems ++ users;
   "user-password.age".publicKeys = systems ++ users;
   "root-password.age".publicKeys = systems ++ users;
+  "samba-password.age".publicKeys = systems ++ users;
 }
