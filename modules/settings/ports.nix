@@ -67,6 +67,10 @@
             type = types.port;
             default = 9633;
           };
+          blackbox = mkOption {
+            type = types.port;
+            default = 9115;
+          };
         };
       };
       default = {};

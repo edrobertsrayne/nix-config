@@ -14,6 +14,7 @@
     websockets ? true,
     extraConfig ? "",
     aliases ? [],
+    probe ? true,
   }: let
     inherit (inputs.self.settings.server) domain;
     url = "${subdomain}.${domain}";
@@ -26,6 +27,7 @@
         }
         // lib.optionalAttrs (extraConfig != "") {inherit extraConfig;};
     };
+    backendUrl = "http://${host}:${toString port}";
   in {
     services.nginx.virtualHosts =
       {"${url}" = vhostConfig;}
@@ -36,9 +38,11 @@
         "${name}" = {
           href = "https://${url}";
           inherit description icon;
-          siteMonitor = "http://${host}:${toString port}";
+          siteMonitor = backendUrl;
         };
       }
     ];
+
+    monitoring.probeTargets = lib.optional probe backendUrl;
   };
 }

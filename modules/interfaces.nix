@@ -9,5 +9,11 @@ _: {
       default = {};
       description = "Service tiles keyed by group name; each service module appends its entry here.";
     };
+
+    options.monitoring.probeTargets = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      description = "HTTP URLs probed by blackbox-exporter; each proxied service appends its backend URL here.";
+    };
   };
 }

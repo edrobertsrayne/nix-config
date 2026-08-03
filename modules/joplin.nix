@@ -12,6 +12,9 @@ in {
         group = "Productivity";
         description = "Note sync server";
         icon = "joplin.png";
+        # Joplin Server 404s on a direct backend request unless Host matches
+        # APP_BASE_URL, so a blackbox probe against the bare backend URL can't work.
+        probe = false;
       })
     ];
 
