@@ -18,6 +18,11 @@ in {
           "127.0.0.1:${toString ports.portainerEdge}:8000"
         ];
 
+        # Raw socket, not a socket-proxy: Portainer needs POST/CONTAINERS/
+        # EXEC/IMAGES/VOLUMES to function, and that set already permits a
+        # privileged container with / mounted -> same root-equivalence a
+        # proxy would claim to remove. Real control is Access-gating the
+        # vhost plus the loopback-only ports above.
         volumes = [
           "portainer_data:/data"
           "/var/run/docker.sock:/var/run/docker.sock"
