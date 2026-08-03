@@ -130,6 +130,18 @@ _: {
                 annotations:
                   summary: Drive temperature high on {{ $labels.instance }}
                   description: "Drive {{ $labels.device }} is {{ $value }}°C (threshold: 55°C)"
+
+          - name: monitoring-health
+            rules:
+              - alert: MonitoringUnitDown
+                expr: >
+                  node_systemd_unit_state{name=~"(prometheus|alertmanager|alertmanager-ntfy|loki|grafana|alloy)\\.service",state="active"} != 1
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Monitoring component down on {{ $labels.instance }}
+                  description: "{{ $labels.name }} is not active — alerting or log/metric collection may be degraded"
       ''
     ];
   };
