@@ -42,11 +42,6 @@
       type = types.port;
       default = 12345;
     };
-    uptimeKuma = mkOption {
-      type = types.port;
-      default = 3001; # nixpkgs default; 3000 is grafana
-    };
-
     # Exporters (9xxx series)
     exporters = mkOption {
       type = types.submodule {
