@@ -12,7 +12,16 @@ in {
       };
       retentionTime = "30d";
       # Scrape configs and alertmanagers added by individual service modules
-      scrapeConfigs = [];
+      scrapeConfigs = [
+        {
+          job_name = "prometheus";
+          static_configs = [
+            {
+              targets = ["127.0.0.1:${toString ports.prometheus}"];
+            }
+          ];
+        }
+      ];
       alertmanagers = [];
     };
   };
