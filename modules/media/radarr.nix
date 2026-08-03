@@ -3,7 +3,7 @@
   apikey = "45f0ce64ed8b4d34b51908c60b7a70fc";
   service = "radarr";
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.radarr = {
     config,
     lib,
     ...

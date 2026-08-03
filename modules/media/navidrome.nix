@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.media = {config, ...}: {
+  flake.modules.nixos.navidrome = {config, ...}: {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Navidrome";

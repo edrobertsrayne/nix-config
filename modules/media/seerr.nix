@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.seerr = {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Jellyseerr";

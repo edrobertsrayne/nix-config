@@ -3,7 +3,7 @@
   apikey = "c20dce066e08419daaa4c2cbbe4ddcbe";
   service = "prowlarr";
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.prowlarr = {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Prowlarr";

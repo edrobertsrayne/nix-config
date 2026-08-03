@@ -3,7 +3,7 @@
   apikey = "e6619670253d4b17baaa8a640a3aafed";
   service = "sonarr";
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.sonarr = {
     config,
     lib,
     ...

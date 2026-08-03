@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.dlna = {
     services.minidlna = {
       enable = true;
       openFirewall = true; # HTTP + SSDP

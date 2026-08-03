@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) server ports;
 in {
-  flake.modules.nixos.media = {config, ...}: let
+  flake.modules.nixos.sabnzbd = {config, ...}: let
     cfg = config.services.sabnzbd;
     url = "sabnzbd.${server.domain}";
   in {

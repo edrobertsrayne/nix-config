@@ -3,7 +3,7 @@
   downloadDir = "/mnt/ssd/downloads/slskd/complete";
   lidarrApiKey = "f6a4315040e94c7c9eb2aefe5bfc4445"; # must match media/lidarr.nix
 in {
-  flake.modules.nixos.media = {pkgs, ...}: let
+  flake.modules.nixos.soularr = {pkgs, ...}: let
     # slskd auth is disabled, so this value is ignored by slskd; kept valid-length.
     slskdApiKey = "soularr0000000000000000000000000";
     configFile = pkgs.writeText "soularr-config.ini" ''

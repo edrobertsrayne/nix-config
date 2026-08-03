@@ -3,7 +3,7 @@
   apikey = "f6a4315040e94c7c9eb2aefe5bfc4445";
   service = "lidarr";
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.lidarr = {
     config,
     lib,
     ...

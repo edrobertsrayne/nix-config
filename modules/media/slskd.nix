@@ -3,7 +3,7 @@
   service = "slskd";
   downloadDir = "/mnt/ssd/downloads/slskd";
 in {
-  flake.modules.nixos.media = {
+  flake.modules.nixos.slskd = {
     config,
     lib,
     ...
