@@ -160,6 +160,8 @@ in {
       ];
     };
 
+    monitoring.dashboards.system-errors-warnings = ./dashboards/system-errors-warnings.json;
+
     # Loki local ruler expects rules at <storage.local.directory>/<tenant>/<file>.yml
     # With auth_enabled=false the tenant is "fake"
     # L+ (not plain L): plain L only creates the symlink if the path doesn't already

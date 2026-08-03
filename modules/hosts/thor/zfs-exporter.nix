@@ -6,6 +6,9 @@ in {
       enable = true;
       port = ports.exporters.zfs;
     };
+
+    # Spans ZFS, MergerFS and SMART; filed here as the primary owner.
+    monitoring.dashboards.storage-health = ../../dashboards/storage-health.json;
   };
 
   flake.modules.nixos.prometheus = _: {
