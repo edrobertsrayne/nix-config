@@ -1,7 +1,22 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.portainer = {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Portainer";
+        subdomain = "portainer";
+        port = ports.portainer;
+        group = "Infrastructure";
+        description = "Container manager";
+        icon = "portainer.png";
+        extraConfig = ''
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_buffering off;
+        '';
+      })
+    ];
+
     virtualisation.oci-containers = {
       backend = "docker";
       containers.portainer = {
@@ -33,27 +48,5 @@ in {
         ];
       };
     };
-
-    services.nginx.virtualHosts."portainer.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString ports.portainer}";
-        proxyWebsockets = true;
-        extraConfig = ''
-          proxy_set_header X-Forwarded-Port $server_port;
-          proxy_buffering off;
-        '';
-      };
-    };
-
-    homepage.services."Infrastructure" = [
-      {
-        Portainer = {
-          href = "https://portainer.${server.domain}";
-          description = "Container manager";
-          icon = "portainer.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.portainer}";
-        };
-      }
-    ];
   };
 }

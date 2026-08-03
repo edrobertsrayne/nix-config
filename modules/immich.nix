@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.immich = {
     config,
@@ -9,6 +9,18 @@ in {
     cfg = config.services.immich;
     mediaDir = "/mnt/ssd/immich";
   in {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Immich";
+        subdomain = "photos";
+        port = ports.immich;
+        group = "Library";
+        description = "Photo library";
+        icon = "immich.png";
+        host = "127.0.0.1";
+      })
+    ];
+
     services.immich = {
       enable = true;
       port = ports.immich;
@@ -42,24 +54,5 @@ in {
 
     # Ensure mount exists before tmpfiles
     systemd.services.systemd-tmpfiles-setup.after = ["mnt-ssd.mount"];
-
-    # Nginx reverse proxy
-    services.nginx.virtualHosts."photos.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://${cfg.host}:${toString cfg.port}";
-        proxyWebsockets = true;
-      };
-    };
-
-    homepage.services."Library" = [
-      {
-        Immich = {
-          href = "https://photos.${server.domain}";
-          description = "Photo library";
-          icon = "immich.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.immich}";
-        };
-      }
-    ];
   };
 }

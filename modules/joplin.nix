@@ -4,6 +4,17 @@
   port = ports.joplin;
 in {
   flake.modules.nixos.joplin = {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Joplin";
+        subdomain = "joplin";
+        inherit port;
+        group = "Productivity";
+        description = "Note sync server";
+        icon = "joplin.png";
+      })
+    ];
+
     systemd.tmpfiles.rules = [
       "d /srv/joplin 0750 1001 1001 -"
     ];
@@ -21,21 +32,5 @@ in {
       };
       extraOptions = ["--pull=always"];
     };
-
-    services.nginx.virtualHosts."${url}".locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString port}";
-      proxyWebsockets = true;
-    };
-
-    homepage.services."Productivity" = [
-      {
-        Joplin = {
-          href = "https://${url}";
-          description = "Note sync server";
-          icon = "joplin.png";
-          siteMonitor = "http://127.0.0.1:${toString port}";
-        };
-      }
-    ];
   };
 }

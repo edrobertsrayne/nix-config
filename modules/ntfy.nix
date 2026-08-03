@@ -4,6 +4,17 @@
   port = ports.ntfy;
 in {
   flake.modules.nixos.ntfy = {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Ntfy";
+        subdomain = "ntfy";
+        inherit port;
+        group = "Tools";
+        description = "Push notifications";
+        icon = "ntfy.png";
+      })
+    ];
+
     services.ntfy-sh = {
       enable = true;
       settings = {
@@ -12,23 +23,5 @@ in {
         behind-proxy = true;
       };
     };
-
-    services.nginx.virtualHosts."${url}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString port}";
-        proxyWebsockets = true;
-      };
-    };
-
-    homepage.services."Tools" = [
-      {
-        Ntfy = {
-          href = "https://${url}";
-          description = "Push notifications";
-          icon = "ntfy.png";
-          siteMonitor = "http://127.0.0.1:${toString port}";
-        };
-      }
-    ];
   };
 }

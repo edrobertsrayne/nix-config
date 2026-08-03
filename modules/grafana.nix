@@ -2,6 +2,17 @@
   inherit (inputs.self.settings) server ports;
 in {
   flake.modules.nixos.grafana = {config, ...}: {
+    imports = [
+      (inputs.self.lib.mkProxiedService {
+        name = "Grafana";
+        subdomain = "grafana";
+        port = ports.grafana;
+        group = "Infrastructure";
+        description = "Metrics dashboard";
+        icon = "grafana.png";
+      })
+    ];
+
     age.secrets.grafana = {
       file = ../secrets/grafana.age;
       owner = "grafana";
@@ -39,23 +50,5 @@ in {
         ];
       };
     };
-
-    services.nginx.virtualHosts."grafana.${server.domain}" = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString ports.grafana}";
-        proxyWebsockets = true;
-      };
-    };
-
-    homepage.services."Infrastructure" = [
-      {
-        Grafana = {
-          href = "https://grafana.${server.domain}";
-          description = "Metrics dashboard";
-          icon = "grafana.png";
-          siteMonitor = "http://127.0.0.1:${toString ports.grafana}";
-        };
-      }
-    ];
   };
 }
