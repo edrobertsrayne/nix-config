@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) ports;
+  inherit (inputs.self.settings) ports server;
 in {
   flake.modules.nixos.transmission = {
     config,
@@ -32,11 +32,21 @@ in {
       home = lib.mkDefault "/srv/transmission";
       package = pkgs.transmission_4;
       settings = {
-        rpc-bind-address = "0.0.0.0";
+        # Loopback only: reached via nginx (cloudflared -> Access-gated, or
+        # over the tailnet). The firewall already keeps 9091 off br0;
+        # binding narrowly means a firewall regression can't silently
+        # re-expose the RPC socket.
+        rpc-bind-address = "127.0.0.1";
         rpc-port = ports.media.transmission;
         peer-port = ports.media.transmissionPeer;
-        rpc-whitelist-enabled = false;
-        rpc-host-whitelist-enabled = false;
+
+        rpc-whitelist-enabled = true;
+        rpc-whitelist = "127.0.0.1,::1";
+        # DNS-rebinding protection. Transmission always permits IP-literal
+        # Host headers, so homepage's siteMonitor (http://127.0.0.1:9091)
+        # still works.
+        rpc-host-whitelist-enabled = true;
+        rpc-host-whitelist = "transmission.${server.domain}";
 
         download-dir = "/mnt/ssd/downloads/transmission/complete";
         incomplete-dir = "/mnt/ssd/downloads/transmission/incomplete";
