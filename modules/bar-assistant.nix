@@ -6,6 +6,7 @@
 in {
   flake.modules.nixos.bar-assistant = {
     config,
+    lib,
     pkgs,
     ...
   }: {
@@ -38,6 +39,22 @@ in {
         "docker-bar-assistant-server" = {
           after = ["init-bar-assistant-network.service"];
           requires = ["init-bar-assistant-network.service"];
+
+          # The serversideup base image races its nginx s6 longrun against the
+          # oneshot that renders the site config; when it loses, nginx comes up
+          # with no server block, binds nothing, and the unit still looks
+          # active (s6 itself is running fine). Fail the unit instead so
+          # Restart=on-failure (already set by oci-containers) retries the
+          # race, and a persistent failure reaches the SystemdUnitFailed alert.
+          serviceConfig.ExecStartPost = pkgs.writeShellScript "bar-assistant-ready" ''
+            for _ in $(seq 1 60); do
+              ${lib.getExe pkgs.curl} -fsS -o /dev/null \
+                http://127.0.0.1:${toString p.server}/healthcheck && exit 0
+              sleep 2
+            done
+            echo "bar-assistant API never bound ${toString p.server} - nginx likely lost its config race" >&2
+            exit 1
+          '';
         };
       };
     };
