@@ -7,7 +7,6 @@ let
 in {
   "tailscale.age".publicKeys = systems ++ users;
   "homepage.age".publicKeys = systems ++ users;
-  "kavita.age".publicKeys = systems ++ users;
   "cloudflare-thor.age".publicKeys = systems ++ users;
   "karakeep.age".publicKeys = systems ++ users;
   "mealie.age".publicKeys = systems ++ users;
