@@ -134,5 +134,11 @@ in {
         };
       }
     ];
+
+    # Set directly rather than via mkProxiedService, which this module can't
+    # use — it needs subpath routing across three backends. The API is the
+    # component worth probing: Salt Rim is a static frontend that serves fine
+    # with the API behind it dead.
+    monitoring.probeTargets."Bar Assistant" = "http://127.0.0.1:${toString p.server}/api/server/version";
   };
 }

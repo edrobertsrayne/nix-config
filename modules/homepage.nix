@@ -44,5 +44,9 @@ in {
       proxyPass = "http://127.0.0.1:${toString ports.homepage}";
       proxyWebsockets = true;
     };
+
+    # Set directly rather than via mkProxiedService: homepage is the dashboard
+    # the tiles live on, so it has no tile of its own to generate.
+    monitoring.probeTargets.Homepage = "http://127.0.0.1:${toString ports.homepage}";
   };
 }
