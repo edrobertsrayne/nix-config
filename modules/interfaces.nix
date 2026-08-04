@@ -13,9 +13,9 @@ _: {
 
       monitoring = {
         probeTargets = lib.mkOption {
-          type = lib.types.listOf lib.types.str;
-          default = [];
-          description = "HTTP URLs probed by blackbox-exporter; each proxied service appends its backend URL here.";
+          type = lib.types.attrsOf lib.types.str;
+          default = {};
+          description = "HTTP URLs probed by blackbox-exporter, keyed by the display name that becomes each probe's instance label.";
         };
 
         dashboards = lib.mkOption {

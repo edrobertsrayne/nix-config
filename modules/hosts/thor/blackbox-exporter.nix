@@ -3,6 +3,7 @@
 in {
   flake.modules.nixos.thor = {
     config,
+    lib,
     pkgs,
     ...
   }: {
@@ -37,19 +38,25 @@ in {
         scrape_timeout = "15s";
         metrics_path = "/probe";
         params.module = ["http_2xx"];
-        static_configs = [
-          {
-            targets = config.monitoring.probeTargets;
-          }
-        ];
+        static_configs =
+          lib.mapAttrsToList (name: url: {
+            targets = [url];
+            # Prometheus only derives instance from __address__ when nothing
+            # else has set it, so this survives the rewrite below.
+            labels.instance = name;
+          })
+          config.monitoring.probeTargets;
         relabel_configs = [
           {
             source_labels = ["__address__"];
             target_label = "__param_target";
           }
+          # instance is the service name now, so keep the probed URL as its own
+          # label — alerts still need to name the endpoint that failed. Has to
+          # come before __address__ is rewritten to the exporter.
           {
-            source_labels = ["__param_target"];
-            target_label = "instance";
+            source_labels = ["__address__"];
+            target_label = "target";
           }
           {
             target_label = "__address__";
