@@ -215,6 +215,9 @@ _: {
 
           - name: probe-health
             rules:
+              # instance is the service's display name and target is the exact
+              # URL probed, so these read as "Prowlarr" rather than
+              # "http://127.0.0.1:9696" without losing the endpoint.
               - alert: ProbeFailed
                 expr: probe_success == 0
                 for: 5m
@@ -222,7 +225,7 @@ _: {
                   severity: critical
                 annotations:
                   summary: HTTP probe failing — {{ $labels.instance }}
-                  description: "{{ $labels.instance }} has failed its blackbox HTTP probe for >5m — unreachable, non-2xx, or hung while its unit stays active"
+                  description: "{{ $labels.instance }} has failed its blackbox probe of {{ $labels.target }} for >5m — unreachable, non-2xx, or hung while its unit stays active"
 
               - alert: ProbeSlow
                 expr: probe_duration_seconds > 5
@@ -231,7 +234,7 @@ _: {
                   severity: warning
                 annotations:
                   summary: HTTP probe slow — {{ $labels.instance }}
-                  description: "{{ $labels.instance }} took {{ $value | printf \"%.1f\" }}s to respond (threshold: 5s)"
+                  description: "{{ $labels.instance }} took {{ $value | printf \"%.1f\" }}s to respond to {{ $labels.target }} (threshold: 5s)"
       ''
     ];
   };
