@@ -40,18 +40,19 @@ is what it means in plain terms and where to start.
 | `ContainerRestartLoop` | More than 3 restarts in 15 minutes. | `docker logs <name>` |
 | `HostFilesystemAlmostFull` / `HostFilesystemFillingUp` | A filesystem is below 10% / 20% free. | [Out of disk space](#out-of-disk-space) |
 | `MergerfsLowFreeSpace` | `/mnt/storage` has under 100 GiB left. Downloads will start failing before it hits zero. | [Out of disk space](#out-of-disk-space) |
-| `HostMemoryAlmostFull` | Under 10% RAM available. Something is about to be OOM-killed. | `btop`, then restart the offender |
+| `HostMemoryAlmostFull` / `HostMemoryHighUsage` | Under 10% / 20% RAM available. Something is about to be OOM-killed. | `btop`, then restart the offender |
 | `OomKill` | The kernel already killed something to reclaim memory. | `journalctl -b -g 'Out of memory'` |
+| `SystemdCoredump` | A process crashed hard enough to dump core. | `coredumpctl list` |
 | `SmartSectorErrors` | A drive is developing bad sectors. **This is the early warning — act on it.** | [Disks and ZFS](#disks-and-zfs) |
 | `SmartUnhealthy` | A drive is declaring itself failing. Replace it. | [Disks and ZFS](#disks-and-zfs) |
 | `SmartTemperatureHigh` | A drive is over 55°C. Check airflow before it becomes the alert above. | [Disks and ZFS](#disks-and-zfs) |
 | `ZfsPoolNotOnline` / `ZfsKernelError` | The ZFS mirror is degraded or logging errors. | [Disks and ZFS](#disks-and-zfs) |
 | `HostFanStopped` | The chassis fan is reading 0 RPM. Everything else will follow if this is real. | Check the fan physically; `sensors` |
-| `HostHighCpuTemperature` | CPU over 80°C. Usually follows the fan alert. | `sensors`, `systemctl status fancontrol` |
+| `HostHighCpuTemperature` / `HostHighCpuTemperatureWarn` | CPU over 80°C / 72°C. Usually follows the fan alert. | `sensors`, `systemctl status fancontrol` |
 | `BlockyResolutionErrors` | DNS is failing for the whole house. | [DNS is broken](#dns-is-broken-everywhere) |
 | `BlockyListDownloadsFailing` / `BlockyListRefreshStale` | Ad blocking is quietly degrading; DNS itself still works. | [blocky.md](blocky.md) |
 | `InstanceDown` | A metrics exporter is unreachable. Monitoring is partly blind. | `systemctl status prometheus-<name>-exporter` |
-| `MonitoringUnitDown` / `LogIngestionStopped` / `AlertmanagerNotificationsFailing` | The alerting system itself is broken. Assume you are not being told about other problems. | [monitoring.md runbook](monitoring.md#runbook) |
+| `MonitoringUnitDown` / `LogIngestionStopped` / `AlertmanagerNotificationsFailing` / `PrometheusRuleEvaluationFailures` / `ContainerHealthCollectorStale` | The alerting system itself is broken. Assume you are not being told about other problems. | [monitoring.md runbook](monitoring.md#runbook) |
 | `KernelHardFault` | Kernel panic, hard lockup, or machine check exception. Hardware or a bad kernel. | `journalctl -k -b -1` |
 
 Alerts resolve themselves and send a ✅ follow-up. If you are working on a known
