@@ -33,24 +33,24 @@ in {
       }
     '';
   in {
-    services.alloy = {
-      enable = true;
-      configPath = alloyConfig;
-      extraFlags = ["--disable-reporting"];
-    };
-  };
+    services = {
+      alloy = {
+        enable = true;
+        configPath = alloyConfig;
+        extraFlags = ["--disable-reporting"];
+      };
 
-  flake.modules.nixos.prometheus = _: {
-    services.prometheus.scrapeConfigs = [
-      {
-        job_name = "alloy";
-        static_configs = [
-          {
-            # alloy binds 127.0.0.1 by default (no openFirewall / 0.0.0.0 bind like the other exporters)
-            targets = ["127.0.0.1:${toString ports.alloy}"];
-          }
-        ];
-      }
-    ];
+      prometheus.scrapeConfigs = [
+        {
+          job_name = "alloy";
+          static_configs = [
+            {
+              # alloy binds 127.0.0.1 by default (no openFirewall / 0.0.0.0 bind like the other exporters)
+              targets = ["127.0.0.1:${toString ports.alloy}"];
+            }
+          ];
+        }
+      ];
+    };
   };
 }

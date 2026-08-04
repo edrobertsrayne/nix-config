@@ -7,10 +7,6 @@ in {
       port = ports.exporters.cadvisor;
     };
 
-    monitoring.dashboards.cadvisor = ../../dashboards/cadvisor.json;
-  };
-
-  flake.modules.nixos.prometheus = _: {
     services.prometheus.scrapeConfigs = [
       {
         job_name = "cadvisor";
@@ -21,5 +17,7 @@ in {
         ];
       }
     ];
+
+    monitoring.dashboards.cadvisor = ../../dashboards/cadvisor.json;
   };
 }

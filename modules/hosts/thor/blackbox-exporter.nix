@@ -1,7 +1,11 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.thor = {pkgs, ...}: {
+  flake.modules.nixos.thor = {
+    config,
+    pkgs,
+    ...
+  }: {
     services.prometheus.exporters.blackbox = {
       enable = true;
       port = ports.exporters.blackbox;
@@ -18,10 +22,6 @@ in {
       '';
     };
 
-    monitoring.dashboards.blackbox-http = ../../dashboards/blackbox-http.json;
-  };
-
-  flake.modules.nixos.prometheus = {config, ...}: {
     services.prometheus.scrapeConfigs = [
       {
         job_name = "blackbox-exporter";
@@ -58,5 +58,7 @@ in {
         ];
       }
     ];
+
+    monitoring.dashboards.blackbox-http = ../../dashboards/blackbox-http.json;
   };
 }

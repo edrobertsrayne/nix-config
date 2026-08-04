@@ -13,10 +13,6 @@ in {
       ];
     };
 
-    monitoring.dashboards.node-exporter-full = ../../dashboards/node-exporter-full.json;
-  };
-
-  flake.modules.nixos.prometheus = _: {
     services.prometheus.scrapeConfigs = [
       {
         job_name = "node-exporter";
@@ -27,5 +23,7 @@ in {
         ];
       }
     ];
+
+    monitoring.dashboards.node-exporter-full = ../../dashboards/node-exporter-full.json;
   };
 }

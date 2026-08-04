@@ -143,6 +143,17 @@ in {
         ];
       };
 
+      prometheus.scrapeConfigs = [
+        {
+          job_name = "blocky";
+          static_configs = [
+            {
+              targets = ["127.0.0.1:${toString ports.blocky}"];
+            }
+          ];
+        }
+      ];
+
       grafana.provision.datasources.settings = {
         # Paired with the datasource below; see modules/grafana.nix for why.
         deleteDatasources = [
@@ -215,16 +226,5 @@ in {
       blocky = ./dashboards/blocky.json;
       blocky-query = ./dashboards/blocky-query.json;
     };
-
-    services.prometheus.scrapeConfigs = [
-      {
-        job_name = "blocky";
-        static_configs = [
-          {
-            targets = ["127.0.0.1:${toString ports.blocky}"];
-          }
-        ];
-      }
-    ];
   };
 }

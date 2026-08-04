@@ -7,11 +7,6 @@ in {
       port = ports.exporters.zfs;
     };
 
-    # Spans ZFS, MergerFS and SMART; filed here as the primary owner.
-    monitoring.dashboards.storage-health = ../../dashboards/storage-health.json;
-  };
-
-  flake.modules.nixos.prometheus = _: {
     services.prometheus.scrapeConfigs = [
       {
         job_name = "zfs-exporter";
@@ -22,5 +17,8 @@ in {
         ];
       }
     ];
+
+    # Spans ZFS, MergerFS and SMART; filed here as the primary owner.
+    monitoring.dashboards.storage-health = ../../dashboards/storage-health.json;
   };
 }
