@@ -25,4 +25,27 @@ in {
       alertmanagers = [];
     };
   };
+
+  flake.modules.nixos.grafana = _: {
+    services.grafana.provision.datasources.settings = {
+      # Paired with the datasource below; see modules/grafana.nix for why.
+      deleteDatasources = [
+        {
+          name = "Prometheus";
+          orgId = 1;
+        }
+      ];
+
+      datasources = [
+        {
+          name = "Prometheus";
+          uid = "prometheus";
+          type = "prometheus";
+          access = "proxy";
+          url = "http://thor:${toString ports.prometheus}";
+          isDefault = true;
+        }
+      ];
+    };
+  };
 }
