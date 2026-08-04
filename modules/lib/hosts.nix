@@ -10,6 +10,8 @@
     inputs.nixpkgs.lib.nixosSystem {
       inherit system;
       modules = [
+        inputs.agenix.nixosModules.default
+        inputs.disko.nixosModules.disko
         inputs.self.modules.nixos.common
         inputs.self.modules.nixos.home-manager
         inputs.self.modules.nixos.interfaces
