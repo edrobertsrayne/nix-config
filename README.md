@@ -68,7 +68,15 @@ Home server running NixOS. Services:
 | ZFS Exporter | Filesystem metrics |
 | cAdvisor | Container metrics |
 | Smartctl Exporter | Disk health metrics |
-| Blackbox Exporter | HTTP probes of every proxied service |
+| Blackbox Exporter | HTTP health probes of every proxied service |
+
+Probes are contributed by each service via `monitoring.probeTargets`, keyed by
+the service's display name — that key becomes the probe's `instance` label, so
+Grafana legends and ntfy alerts name the service rather than a loopback port.
+Where a service exposes a health endpoint reachable without an API key, the
+probe targets that (`probePath` on `mkProxiedService`) rather than `/`: hitting
+the root only proves something is listening, which a service with an unopenable
+database will happily keep doing.
 
 Grafana dashboards are provisioned from `modules/dashboards/`, contributed by
 the module owning the metrics each one displays (`monitoring.dashboards`). They
