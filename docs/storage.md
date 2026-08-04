@@ -29,7 +29,7 @@ Pool-wide settings: `ashift=12`, `compression=lz4`, `atime=off`,
 reasoning, and why it cannot be changed without recreating the pool, is in a
 comment in that file.
 
-Four datasets, and the difference between them is the only thing standing
+Five datasets, and the difference between them is the only thing standing
 between you and a bad `rm`:
 
 | Dataset | Mounted at | Snapshotted |
@@ -37,11 +37,16 @@ between you and a bad `rm`:
 | `zroot/root` | `/` | no |
 | `zroot/nix` | `/nix` | no |
 | `zroot/srv` | `/srv` | **yes** |
+| `zroot/persist` | `/persist` | **yes** |
 | `zroot/libvirt` | `/var/lib/libvirt` | **yes** |
 
 `/` and `/nix` are not snapshotted because they do not need to be — they are
 rebuilt from this repo, and generations already roll them back
 ([deploying.md](deploying.md#undoing-a-change)).
+
+`/persist` is reserved for the impermanent-root work in progress (#163) and is
+empty until that work declares what lives in it — that's also why it isn't in
+the "What lives where" table below yet.
 
 ### mergerfs
 
