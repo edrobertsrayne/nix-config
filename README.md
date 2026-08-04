@@ -138,7 +138,6 @@ nixos-rebuild switch --flake github:edrobertsrayne/nix-config#thor \
 - [Grafana dashboards](modules/dashboards/README.md)
 - [Neovim Cheatsheet](docs/NEOVIM_CHEATSHEET.md)
 - [Tmux Cheatsheet](docs/TMUX_CHEATSHEET.md)
-- [CLAUDE.md](CLAUDE.md) - AI agent workflow guidelines
 
 ---
 
