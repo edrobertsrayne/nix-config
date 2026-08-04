@@ -99,7 +99,6 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | Karakeep      | 8081  | Bookmark manager          |
 | Immich        | 2283  | Photo management          |
 | Paperless     | 28981 | Document management       |
-| Joplin        | 22300 | Note-taking sync server   |
 | BentoPDF      | 8085  | PDF manipulation toolkit  |
 | Bar Assistant | 8087  | Cocktail manager          |
 | SearXNG       | 8083  | Metasearch engine         |
@@ -121,7 +120,6 @@ Declared in Nix (`virtualisation.oci-containers`) and inspectable via Portainer
 | bar-assistant-server | Bar Assistant API           |
 | salt-rim             | Bar Assistant frontend      |
 | meilisearch          | Bar Assistant search index  |
-| joplin-server        | Joplin sync server          |
 | soularr              | slskd-to-Lidarr bridge      |
 
 Containers started outside Nix have no systemd unit, so `ContainerStopped`

@@ -103,7 +103,6 @@ are read-only in the browser — edit the JSON and rebuild. See
 | Karakeep | Bookmarking |
 | Immich | Photo management |
 | Paperless | Document management |
-| Joplin | Note-taking sync server |
 | BentoPDF | PDF toolkit |
 | Bar Assistant | Cocktail manager |
 | SearXNG | Metasearch engine |
