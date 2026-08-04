@@ -43,10 +43,16 @@ in {
           };
           blocking = {
             loading.strategy = "fast";
+            # The hagezi lists come from raw.githubusercontent, not jsDelivr:
+            # the repo outgrew jsDelivr's 150 MB per-package cap, so the CDN
+            # now 403s the whole package. Their `domains/` directory is gone
+            # too, so both halves of the old URL had to change. `wildcard/` is
+            # the format hagezi recommends for blocky; the `adblock/` variant
+            # of every list below is ABP syntax, which blocky cannot parse.
             denylists = {
               ads = [
                 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/light.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/light.txt"
                 "https://raw.githubusercontent.com/lassekongo83/Frellwits-filter-lists/master/Frellwits-Swedish-Hosts-File.txt"
                 "https://v.firebog.net/hosts/AdguardDNS.txt"
                 (pkgs.writeText "adblock.txt" ''
@@ -57,15 +63,15 @@ in {
               ];
               trackers = [
                 "https://v.firebog.net/hosts/Easyprivacy.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.amazon.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.apple.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.huawei.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.winoffice.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.tiktok.extended.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.lgwebos.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.vivo.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.oppo-realme.txt"
-                "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/native.xiaomi.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.amazon.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.apple.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.huawei.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.winoffice.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.tiktok.extended.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.lgwebos.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.vivo.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.oppo-realme.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.xiaomi.txt"
                 (pkgs.writeText "trackers.txt" ''
                   api.luckyorange.com
                   cdn.luckyorange.com
