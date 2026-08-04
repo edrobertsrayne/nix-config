@@ -15,6 +15,7 @@ in {
         group = "Infrastructure";
         description = "Metrics dashboard";
         icon = "grafana.png";
+        probePath = "/api/health";
       })
     ];
 

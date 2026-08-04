@@ -8,6 +8,10 @@
     secret,
     dynamicUser ? false,
     umask ? true,
+    # /ping is the only *arr endpoint reachable without an API key, and it
+    # checks database access rather than just answering — a Servarr app whose
+    # database is unopenable keeps serving its UI on / but returns 500 here.
+    probePath ? "/ping",
   }: {
     config,
     lib,
@@ -17,7 +21,7 @@
   in {
     imports = [
       (inputs.self.lib.mkProxiedService {
-        inherit name port description icon;
+        inherit name port description icon probePath;
         subdomain = service;
         group = "Media";
       })

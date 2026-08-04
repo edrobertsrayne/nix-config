@@ -12,6 +12,7 @@ in {
         group = "Productivity";
         description = "Workflow automation";
         icon = "n8n.png";
+        probePath = "/healthz";
       })
     ];
 

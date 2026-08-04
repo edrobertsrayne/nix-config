@@ -12,6 +12,8 @@ in {
         group = "Productivity";
         description = "Document management";
         icon = "paperless-ngx.png";
+        # No probePath: paperless-ngx has no unauthenticated health endpoint.
+        # The root URL 302s to /accounts/login/ and the probe follows it.
       })
     ];
 

@@ -11,6 +11,7 @@ in {
         group = "Media";
         description = "Request manager";
         icon = "jellyseerr.png";
+        probePath = "/api/v1/status";
       })
     ];
 

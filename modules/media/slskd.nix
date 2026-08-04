@@ -18,6 +18,7 @@ in {
         group = "Media";
         description = "Soulseek client";
         icon = "slskd.png";
+        probePath = "/health";
       })
     ];
 

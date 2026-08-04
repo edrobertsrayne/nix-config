@@ -15,6 +15,7 @@ in {
         description = "Photo library";
         icon = "immich.png";
         host = "127.0.0.1";
+        probePath = "/api/server/ping";
       })
     ];
 

@@ -16,6 +16,10 @@ in {
         group = "Media";
         description = "Subtitle manager";
         icon = "bazarr.png";
+        # No probePath: /api/system/status needs X-API-KEY, which can't go in
+        # the blackbox config (a world-readable store path), and the SPA
+        # catch-all answers 200 with HTML for any other path, so a deeper
+        # probe would prove less than the root one does.
       })
     ];
 

@@ -11,6 +11,7 @@ in {
         group = "Tools";
         description = "PDF toolkit";
         icon = "pdf.png";
+        # No probePath: BentoPDF is a static site with no health endpoint.
         extraConfig = "client_max_body_size 100m;";
       })
     ];

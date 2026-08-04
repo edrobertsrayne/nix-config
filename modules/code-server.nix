@@ -11,6 +11,7 @@ in {
         group = "Productivity";
         description = "VS Code in browser";
         icon = "code-server.png";
+        probePath = "/healthz";
       })
     ];
 

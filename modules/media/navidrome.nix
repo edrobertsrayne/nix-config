@@ -10,6 +10,7 @@ in {
         group = "Media";
         description = "Music streaming";
         icon = "navidrome.png";
+        probePath = "/ping";
       })
     ];
 

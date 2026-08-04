@@ -18,6 +18,7 @@ in {
         group = "Productivity";
         description = "Bookmark manager";
         icon = "karakeep.png";
+        probePath = "/api/health";
       })
     ];
 

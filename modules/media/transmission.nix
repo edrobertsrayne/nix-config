@@ -17,6 +17,9 @@ in {
         group = "Media";
         description = "Torrent downloader";
         icon = "transmission.png";
+        # No probePath: /transmission/rpc answers 409 by design (the session-id
+        # handshake). The root URL 301s to /transmission/web/ and the probe
+        # follows it.
       })
     ];
 

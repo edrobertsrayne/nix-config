@@ -13,6 +13,8 @@ in {
         group = "Media";
         description = "Usenet downloader";
         icon = "sabnzbd.png";
+        # mode=version is the one API call SABnzbd exempts from the api key.
+        probePath = "/api?mode=version";
         extraConfig = ''
           proxy_set_header X-Forwarded-Host $host;
         '';

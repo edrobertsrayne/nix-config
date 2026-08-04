@@ -12,6 +12,7 @@ in {
         group = "Tools";
         description = "Push notifications";
         icon = "ntfy.png";
+        probePath = "/v1/health";
       })
     ];
 

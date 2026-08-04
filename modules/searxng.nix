@@ -13,6 +13,7 @@ in {
         description = "Private search engine";
         icon = "searxng.png";
         websockets = false;
+        probePath = "/healthz";
       })
     ];
 

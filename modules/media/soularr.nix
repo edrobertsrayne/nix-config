@@ -71,6 +71,7 @@ in {
         group = "Media";
         description = "Lidarr <-> slskd bridge";
         icon = "soularr.png";
+        # No probePath: soularr exposes no health endpoint.
       })
     ];
 

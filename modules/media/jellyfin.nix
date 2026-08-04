@@ -15,6 +15,7 @@ in {
         group = "Library";
         description = "Media server";
         icon = "jellyfin.png";
+        probePath = "/health";
       })
     ];
 

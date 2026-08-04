@@ -12,6 +12,7 @@ in {
         group = "Tools";
         description = "Password manager";
         icon = "vaultwarden.png";
+        probePath = "/alive";
       })
     ];
 
