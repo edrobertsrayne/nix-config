@@ -13,7 +13,7 @@ Thor serves as the central infrastructure hub:
 - **Home Automation**: Home Assistant VM via libvirt
 - **Monitoring**: Prometheus/Grafana/Loki observability stack
 - **Self-Hosted Apps**: Password manager, documents, bookmarks, photos, etc.
-- **Network Services**: DNS ([Blocky](../../blocky.md)), file sharing (NFS/Samba)
+- **Network Services**: DNS ([Blocky](../../../docs/blocky.md)), file sharing (NFS/Samba)
 
 ---
 

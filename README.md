@@ -20,7 +20,7 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── settings/      # Project options (user.nix, ports.nix, server.nix)
 └── lib/           # Helper functions
 
-docs/              # Reference documentation (cheatsheets)
+docs/              # Reference documentation (all prose lives here)
 secrets/           # Encrypted secrets (agenix)
 ```
 
@@ -81,7 +81,7 @@ database will happily keep doing.
 Grafana dashboards are provisioned from `modules/dashboards/`, contributed by
 the module owning the metrics each one displays (`monitoring.dashboards`). They
 are read-only in the browser — edit the JSON and rebuild. See
-[modules/dashboards/README.md](modules/dashboards/README.md).
+[docs/dashboards.md](docs/dashboards.md).
 
 ### Infrastructure & Applications
 
@@ -133,11 +133,13 @@ nixos-rebuild switch --flake github:edrobertsrayne/nix-config#thor \
 
 ## Documentation
 
-- [Blocky](modules/blocky.md) - DNS: upstream, blocklists, and why there are no
+All reference documentation lives in [docs/](docs).
+
+- [Blocky](docs/blocky.md) - DNS: upstream, blocklists, and why there are no
   local records
-- [Grafana dashboards](modules/dashboards/README.md)
-- [Neovim Cheatsheet](docs/NEOVIM_CHEATSHEET.md)
-- [Tmux Cheatsheet](docs/TMUX_CHEATSHEET.md)
+- [Grafana dashboards](docs/dashboards.md)
+- [Neovim cheatsheet](docs/neovim-cheatsheet.md)
+- [Tmux cheatsheet](docs/tmux-cheatsheet.md)
 
 ---
 

@@ -1,13 +1,14 @@
 # Grafana dashboards
 
-Dashboard JSON provisioned into Grafana by `modules/grafana.nix`. Each file is
-referenced from the module that owns the metrics it displays, via
-`monitoring.dashboards.<stem>` (declared in `modules/interfaces.nix`).
+The JSON lives in [`modules/dashboards/`](../modules/dashboards) and is
+provisioned into Grafana by `modules/grafana.nix`. Each file is referenced from
+the module that owns the metrics it displays, via `monitoring.dashboards.<stem>`
+(declared in `modules/interfaces.nix`).
 
 Provisioned dashboards are read-only in the browser (`allowUiUpdates = false`).
-To change one, edit the JSON here and rebuild. To design a panel interactively,
-build it in a throwaway dashboard in the UI, then use Grafana's *Export → JSON*
-and paste the result back into this directory.
+To change one, edit the JSON and rebuild. To design a panel interactively, build
+it in a throwaway dashboard in the UI, then use Grafana's *Export → JSON* and
+paste the result back into that directory.
 
 ## Datasource UIDs
 

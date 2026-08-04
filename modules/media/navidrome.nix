@@ -19,7 +19,7 @@ in {
       settings = {
         # 0.0.0.0, not 127.0.0.1: Subsonic mobile clients need
         # <tailscale-ip>:4533 directly. Blocky serves no local records at
-        # all and there's no split-horizon DNS (blocky.md), so
+        # all and there's no split-horizon DNS (docs/blocky.md), so
         # navidrome.${domain} resolves publicly for everyone - nothing can
         # route these clients through the Access-gated tunnel instead. No openFirewall is set (and none
         # should be - it opens the port on every interface, not just

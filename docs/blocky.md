@@ -1,6 +1,6 @@
 # Blocky
 
-DNS for the whole network, configured by [`modules/blocky.nix`](blocky.nix) and
+DNS for the whole network, configured by [`modules/blocky.nix`](../modules/blocky.nix) and
 imported only by thor. It is the LAN's resolver, so a failure here is felt
 everywhere — hence `systemd-resolved` is force-disabled rather than left to
 compete for port 53.
@@ -131,7 +131,7 @@ isn't left with a stranded role.
 ## Monitoring
 
 Dashboards `blocky` (metrics) and `blocky-query` (the postgres log) — see
-[dashboards/README.md](dashboards/README.md).
+[dashboards.md](dashboards.md).
 
 Three alerts in `modules/alert-rules.nix`, group `dns-health`:
 

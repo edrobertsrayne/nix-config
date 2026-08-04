@@ -24,7 +24,7 @@ in {
       port = ports.immich;
       # host stays 0.0.0.0, not 127.0.0.1, so the tailnet can reach
       # <tailscale-ip>:2283 directly - see #174. Blocky serves no local
-      # records at all and there's no split-horizon DNS (blocky.md), so
+      # records at all and there's no split-horizon DNS (docs/blocky.md), so
       # photos.${domain} resolves publicly for everyone; the mobile app's
       # backup path can't go through the Access-gated tunnel, and hits the
       # port by tailnet IP instead. The firewall is the actual boundary here, not
