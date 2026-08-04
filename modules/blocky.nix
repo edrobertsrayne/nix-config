@@ -129,18 +129,18 @@ in {
       postgresql = {
         enable = true;
         ensureDatabases = ["blocky"];
-        ensureUsers = [
-          {
-            name = "blocky";
-            ensureDBOwnership = true;
-          }
+        ensureUsers =
+          [
+            {
+              name = "blocky";
+              ensureDBOwnership = true;
+            }
+          ]
           # Grafana reads the query log for the blocky-query dashboard. It
           # connects over the unix socket, so peer auth matches this role to
-          # the grafana system user; no password is involved.
-          {
-            name = "grafana";
-          }
-        ];
+          # the grafana system user; no password is involved. Gated because
+          # an unused role would be stranded state on a host without grafana.
+          ++ lib.optional config.services.grafana.enable {name = "grafana";};
       };
 
       prometheus.scrapeConfigs = [
@@ -184,38 +184,40 @@ in {
       };
     };
 
-    systemd.services = {
-      blocky = {
-        after = ["postgresql.service"];
-        requires = ["postgresql.service"];
-      };
-
-      # ensureUsers creates the role but cannot grant on a table, and
-      # log_entries is created by blocky at runtime rather than by a schema
-      # we control. ALTER DEFAULT PRIVILEGES covers tables blocky creates
-      # later; the plain GRANT covers whatever already exists.
-      blocky-grafana-grants = {
-        description = "Grant Grafana read access to the blocky query log";
-        after = [
-          "postgresql.service"
-          "blocky.service"
-        ];
-        requires = ["postgresql.service"];
-        wantedBy = ["multi-user.target"];
-        serviceConfig = {
-          Type = "oneshot";
-          User = "postgres";
+    systemd.services =
+      {
+        blocky = {
+          after = ["postgresql.service"];
+          requires = ["postgresql.service"];
         };
-        script = ''
-          ${config.services.postgresql.package}/bin/psql -d blocky <<'SQL'
-            GRANT USAGE ON SCHEMA public TO grafana;
-            GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;
-            ALTER DEFAULT PRIVILEGES FOR ROLE blocky IN SCHEMA public
-              GRANT SELECT ON TABLES TO grafana;
-          SQL
-        '';
+      }
+      // lib.optionalAttrs config.services.grafana.enable {
+        # ensureUsers creates the role but cannot grant on a table, and
+        # log_entries is created by blocky at runtime rather than by a schema
+        # we control. ALTER DEFAULT PRIVILEGES covers tables blocky creates
+        # later; the plain GRANT covers whatever already exists.
+        blocky-grafana-grants = {
+          description = "Grant Grafana read access to the blocky query log";
+          after = [
+            "postgresql.service"
+            "blocky.service"
+          ];
+          requires = ["postgresql.service"];
+          wantedBy = ["multi-user.target"];
+          serviceConfig = {
+            Type = "oneshot";
+            User = "postgres";
+          };
+          script = ''
+            ${config.services.postgresql.package}/bin/psql -d blocky <<'SQL'
+              GRANT USAGE ON SCHEMA public TO grafana;
+              GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;
+              ALTER DEFAULT PRIVILEGES FOR ROLE blocky IN SCHEMA public
+                GRANT SELECT ON TABLES TO grafana;
+            SQL
+          '';
+        };
       };
-    };
 
     networking.firewall = {
       allowedTCPPorts = [ports.dns];
