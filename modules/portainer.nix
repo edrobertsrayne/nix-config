@@ -10,7 +10,7 @@ in {
         group = "Infrastructure";
         description = "Container manager";
         icon = "portainer.png";
-        probePath = "/api/status";
+        probePath = "/api/system/status";
         extraConfig = ''
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_buffering off;
