@@ -13,14 +13,15 @@ organizing modules by _what they do_ rather than _where they run_.
 ```
 modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── {aspect}.nix   # Single-purpose modules (ssh.nix, docker.nix)
-├── {feature}/     # Multi-file features (nixvim/)
+├── {feature}/     # Multi-file features (neovim/, utilities/)
 ├── hosts/         # Host-specific configs
 │   └── thor/      # Home server (NixOS)
 ├── media/         # Media stack (*arr apps, jellyfin)
 ├── settings/      # Project options (user.nix, ports.nix, server.nix)
+├── dashboards/    # Grafana dashboard JSON
 └── lib/           # Helper functions
 
-docs/              # Reference documentation (all prose lives here)
+docs/              # Reference documentation
 secrets/           # Encrypted secrets (agenix)
 ```
 
@@ -113,7 +114,8 @@ are read-only in the browser — edit the JSON and rebuild. See
 **Ingress policy:** nginx opens no LAN-reachable port. The only paths in are
 the Cloudflare tunnel (`cloudflared` → `127.0.0.1:80`, gated by Cloudflare
 Access) and the Tailscale interface (trusted for admin access). Services that
-need direct LAN access must open their own port explicitly.
+need direct LAN access must open their own port explicitly — the full list, and
+the reason for each, is in [docs/networking.md](docs/networking.md).
 
 ---
 
@@ -124,25 +126,50 @@ need direct LAN access must open their own port explicitly.
 git clone git@github.com:edrobertsrayne/nix-config.git
 cd nix-config
 
-# Deploy
-sudo nixos-rebuild switch --flake .#thor
+# Check it evaluates
+nix flake check
 
-# Deploy from remote
+# Deploy — pick a verb:
+sudo nixos-rebuild test --flake .#thor     # active now, reverts on reboot
+sudo nixos-rebuild switch --flake .#thor   # active now, and the boot default
+sudo nixos-rebuild boot --flake .#thor     # boot default only (kernel changes)
+
+# Deploy from another machine
 nixos-rebuild switch --flake github:edrobertsrayne/nix-config#thor \
   --target-host thor --use-remote-sudo
 ```
+
+thor also upgrades itself from `main` nightly — see
+[deploying.md](docs/deploying.md).
 
 ---
 
 ## Documentation
 
-All reference documentation lives in [docs/](docs).
+**Running the server**
 
+- [Deploying](docs/deploying.md) - the change lifecycle: build, deploy,
+  roll back, and the nightly auto-upgrade
+- [Troubleshooting](docs/troubleshooting.md) - an alert fired, or something
+  broke: what to type, by symptom
+
+**How it is built**
+
+- [Networking](docs/networking.md) - ingress, trust boundaries, and every
+  LAN-open port
+- [Storage](docs/storage.md) - disks, datasets, what lives where, and what is
+  not backed up
 - [Monitoring](docs/monitoring.md) - metrics, logs, probes, alerts, and what
   catches which failure
 - [Blocky](docs/blocky.md) - DNS: upstream, blocklists, and why there are no
   local records
-- [Grafana dashboards](docs/dashboards.md)
+- [Grafana dashboards](docs/dashboards.md) - provisioning and refreshing them
+- [Secrets](.claude/skills/secrets/SKILL.md) - the agenix workflow
+- [thor host notes](modules/hosts/thor/README.md) - ports, VMs, and the
+  import-tree file conventions
+
+**Personal reference**
+
 - [Neovim cheatsheet](docs/neovim-cheatsheet.md)
 - [Tmux cheatsheet](docs/tmux-cheatsheet.md)
 
