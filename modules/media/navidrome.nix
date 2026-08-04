@@ -5,7 +5,7 @@ in {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Navidrome";
-        subdomain = "navidrome";
+        subdomain = "music";
         port = ports.media.navidrome;
         group = "Media";
         description = "Music streaming";
