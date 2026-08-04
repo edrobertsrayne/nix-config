@@ -89,7 +89,7 @@ are read-only in the browser — edit the JSON and rebuild. See
 |------|-------------|
 | Nginx | Reverse proxy |
 | Cloudflared | Cloudflare tunnel |
-| Blocky | DNS server with ad-blocking |
+| Blocky | DNS server, ad/tracker/malware blocking |
 | Tailscale | Mesh VPN |
 | Docker | Container runtime |
 | Portainer | Container management UI |
@@ -133,6 +133,9 @@ nixos-rebuild switch --flake github:edrobertsrayne/nix-config#thor \
 
 ## Documentation
 
+- [Blocky](modules/blocky.md) - DNS: upstream, blocklists, and why there are no
+  local records
+- [Grafana dashboards](modules/dashboards/README.md)
 - [Neovim Cheatsheet](docs/NEOVIM_CHEATSHEET.md)
 - [Tmux Cheatsheet](docs/TMUX_CHEATSHEET.md)
 - [CLAUDE.md](CLAUDE.md) - AI agent workflow guidelines

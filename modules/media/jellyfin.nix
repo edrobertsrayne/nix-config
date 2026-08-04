@@ -30,9 +30,10 @@ in {
     };
 
     # Deliberate LAN opening (see #174): local players talk to
-    # 192.168.68.128:8096 directly, and there's no split-horizon DNS for
-    # jellyfin.${server.domain} (blocky.nix), so the Access-gated tunnel
-    # path isn't usable from a TV/Kodi app. Unlike the Servarr apps, this
+    # 192.168.68.128:8096 directly. Blocky serves no local records at all
+    # and there's no split-horizon DNS (blocky.md), so
+    # jellyfin.${server.domain} resolves publicly for everyone and the
+    # Access-gated tunnel path isn't usable from a TV/Kodi app. Unlike the Servarr apps, this
     # isn't an auth bypass - Jellyfin requires its own login regardless of
     # source address. 8920 (HTTPS) stays closed: no TLS cert is configured
     # for it.

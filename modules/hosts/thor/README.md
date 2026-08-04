@@ -13,7 +13,7 @@ Thor serves as the central infrastructure hub:
 - **Home Automation**: Home Assistant VM via libvirt
 - **Monitoring**: Prometheus/Grafana/Loki observability stack
 - **Self-Hosted Apps**: Password manager, documents, bookmarks, photos, etc.
-- **Network Services**: DNS (Blocky), file sharing (NFS/Samba)
+- **Network Services**: DNS ([Blocky](../../blocky.md)), file sharing (NFS/Samba)
 
 ---
 
@@ -84,7 +84,7 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | Service      | Port      | Description                    |
 | ------------ | --------- | ------------------------------ |
 | Nginx        | 80/443    | Reverse proxy                  |
-| Blocky       | 4000 (53) | DNS with ad-blocking           |
+| Blocky       | 4000 (53) | DNS with ad/malware blocking   |
 | Cloudflared  | -         | Tunnel to Cloudflare           |
 | Tailscale    | -         | Mesh VPN                       |
 | NFS          | 2049      | Network file sharing (Linux)   |
