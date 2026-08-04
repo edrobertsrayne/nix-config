@@ -274,7 +274,7 @@ _: {
               # Without this the collector could die and take the two Docker
               # rules above with it, silently — no series, no alert.
               - alert: ContainerHealthCollectorStale
-                expr: time() - node_textfile_mtime_seconds{file="docker-health.prom"} > 600
+                expr: time() - node_textfile_mtime_seconds{file=~".*/docker-health\\.prom"} > 600
                 for: 5m
                 labels:
                   severity: warning
