@@ -1,5 +1,6 @@
 {inputs, ...}: let
   inherit (inputs.self.settings.user) username;
+  hm = inputs.self.modules.homeManager;
 in {
   flake.modules.nixos.home-manager = {
     config,
@@ -13,7 +14,12 @@ in {
       useGlobalPkgs = true;
       useUserPackages = true;
       users.${username} = {
-        imports = [(inputs.self.modules.homeManager.${config.networking.hostName} or {})];
+        imports = [
+          hm.utilities
+          hm.bash
+          hm.neovim
+          (hm.${config.networking.hostName} or {})
+        ];
         home = {
           username = lib.mkDefault username;
           homeDirectory = lib.mkDefault "/home/${username}";
