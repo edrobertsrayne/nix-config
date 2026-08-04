@@ -3,6 +3,10 @@
 Everything thor knows about itself, and how a failure becomes a phone
 notification. The stack spans a dozen modules; this is the map.
 
+This page is the design reference — why the pipeline is shaped this way and
+what each alert exists to catch. If one has just fired and you want to know what
+to type, start at [troubleshooting.md](troubleshooting.md).
+
 The governing rule: **every failure class must reach ntfy**. A dashboard nobody
 is looking at is not monitoring. Signals that only feed a dashboard are called
 out as such in [Deliberate omissions](#deliberate-omissions).
@@ -14,7 +18,7 @@ flowchart LR
   subgraph collect[Collection]
     E["exporters<br/>node · zfs · smartctl · cAdvisor · blocky"]
     T["textfile collector<br/>docker health"]
-    B["blackbox-exporter<br/>25 HTTP probes"]
+    B["blackbox-exporter<br/>HTTP probes"]
     J["journald"]
   end
 
@@ -54,7 +58,7 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `smartctl-exporter` | `thor:9633` | `hosts/thor/smartctl-exporter.nix` | per-drive SMART attributes |
 | `cadvisor` | `127.0.0.1:9338` | `hosts/thor/container-metrics.nix` | per-container CPU, memory, start time |
 | `blackbox-exporter` | `127.0.0.1:9115` | `hosts/thor/blackbox-exporter.nix` | the prober itself |
-| `blackbox-http` | 25 service URLs | `hosts/thor/blackbox-exporter.nix` | end-to-end HTTP reachability |
+| `blackbox-http` | every `monitoring.probeTargets` entry | `hosts/thor/blackbox-exporter.nix` | end-to-end HTTP reachability |
 
 `node-exporter` runs the `systemd` collector, which is what makes
 `node_systemd_unit_state` — and therefore per-unit failure alerting — possible
@@ -143,7 +147,7 @@ rules are in `modules/loki.nix`. Both fire into Alertmanager.
 | | `SmartUnhealthy` | crit | drive declares overall SMART failure |
 | | `SmartTemperatureHigh` | warn | drive >55°C for 10m |
 | | `SmartSectorErrors` | warn | reallocated/pending/uncorrectable sectors non-zero — the early warning `SmartUnhealthy` is too late for |
-| `dns-health` | `BlockyResolutionErrors` | crit | resolution failing, usually Mullvad unreachable |
+| `dns-health` ([blocky.md](blocky.md)) | `BlockyResolutionErrors` | crit | resolution failing, usually Mullvad unreachable |
 | | `BlockyListDownloadsFailing` | warn | blocklist downloads failing — Blocky keeps serving, so blocking degrades silently |
 | | `BlockyListRefreshStale` | warn | lists >48h old |
 | `probe-health` | `ProbeFailed` | crit | a service's HTTP probe fails 5m — unreachable, non-2xx, or hung while its unit stays active |
@@ -217,7 +221,7 @@ signal that turns it into a notification.
 | Drive degrading | `SmartSectorErrors` early, `SmartUnhealthy` late, `ZfsPoolNotOnline`, `ZfsKernelError` |
 | Process OOM-killed | `OomKill` |
 | Kernel panic / lockup / MCE | `KernelHardFault` |
-| DNS broken or blocking degraded | `dns-health` group |
+| DNS broken or blocking degraded | `dns-health` group — see [blocky.md](blocky.md) |
 | Alert delivery itself broken | `AlertmanagerNotificationsFailing`, `LogIngestionStopped`, `PrometheusRuleEvaluationFailures`, `ContainerHealthCollectorStale` |
 | **thor down, unpowered, or off the network** | *nothing* — see [Deliberate omissions](#deliberate-omissions) |
 
@@ -226,12 +230,15 @@ systemd perfectly happy.
 
 ## Dashboards
 
-Eight, provisioned read-only from `modules/dashboards/` — `node-exporter-full`,
+Provisioned read-only from `modules/dashboards/` — `node-exporter-full`,
 `cadvisor`, `smartctl`, `storage-health`, `blackbox-http`, `blocky`,
 `blocky-query`, `system-errors-warnings`. Each is contributed by the module
 owning the metrics it displays. See [dashboards.md](dashboards.md).
 
 ## Runbook
+
+This section debugs the monitoring pipeline itself. To debug the *service* an
+alert is complaining about, see [troubleshooting.md](troubleshooting.md).
 
 Only Grafana has a vhost (`grafana.greensroad.uk`, through the tunnel).
 Prometheus binds `0.0.0.0:9090` but its port is not opened in the firewall, so
