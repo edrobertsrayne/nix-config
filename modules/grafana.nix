@@ -58,6 +58,10 @@ in {
               name = "Loki";
               orgId = 1;
             }
+            {
+              name = "Blocky";
+              orgId = 1;
+            }
           ];
 
           datasources.settings.datasources = [
@@ -75,6 +79,23 @@ in {
               type = "loki";
               access = "proxy";
               url = "http://thor:${toString ports.loki}";
+            }
+            # Blocky's query log. The url is a socket directory, not a host:
+            # Grafana's postgres driver treats a leading / as a unix socket
+            # and authenticates by peer, so no secret is needed. The grafana
+            # role and its SELECT grant are declared in modules/blocky.nix.
+            {
+              name = "Blocky";
+              uid = "blocky-postgres";
+              type = "postgres";
+              access = "proxy";
+              url = "/run/postgresql";
+              user = "grafana";
+              jsonData = {
+                database = "blocky";
+                sslmode = "disable";
+                postgresVersion = 1600;
+              };
             }
           ];
 

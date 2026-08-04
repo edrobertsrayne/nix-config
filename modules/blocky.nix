@@ -2,6 +2,7 @@
   inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.blocky = {
+    config,
     pkgs,
     lib,
     ...
@@ -127,13 +128,44 @@ in {
             name = "blocky";
             ensureDBOwnership = true;
           }
+          # Grafana reads the query log for the blocky-query dashboard. It
+          # connects over the unix socket, so peer auth matches this role to
+          # the grafana system user; no password is involved.
+          {
+            name = "grafana";
+          }
         ];
       };
     };
 
-    systemd.services.blocky = {
-      after = ["postgresql.service"];
-      requires = ["postgresql.service"];
+    systemd.services = {
+      blocky = {
+        after = ["postgresql.service"];
+        requires = ["postgresql.service"];
+      };
+
+      # ensureUsers creates the role but cannot grant on a table, and
+      # log_entries is created by blocky at runtime rather than by a schema
+      # we control. ALTER DEFAULT PRIVILEGES covers tables blocky creates
+      # later; the plain GRANT covers whatever already exists.
+      blocky-grafana-grants = {
+        description = "Grant Grafana read access to the blocky query log";
+        after = ["postgresql.service" "blocky.service"];
+        requires = ["postgresql.service"];
+        wantedBy = ["multi-user.target"];
+        serviceConfig = {
+          Type = "oneshot";
+          User = "postgres";
+        };
+        script = ''
+          ${config.services.postgresql.package}/bin/psql -d blocky <<'SQL'
+            GRANT USAGE ON SCHEMA public TO grafana;
+            GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;
+            ALTER DEFAULT PRIVILEGES FOR ROLE blocky IN SCHEMA public
+              GRANT SELECT ON TABLES TO grafana;
+          SQL
+        '';
+      };
     };
 
     networking.firewall = {
@@ -141,7 +173,10 @@ in {
       allowedUDPPorts = [ports.dns];
     };
 
-    monitoring.dashboards.blocky = ./dashboards/blocky.json;
+    monitoring.dashboards = {
+      blocky = ./dashboards/blocky.json;
+      blocky-query = ./dashboards/blocky-query.json;
+    };
   };
 
   flake.modules.nixos.prometheus = _: {
