@@ -3,9 +3,9 @@
     tunnel = "23c4423f-ec30-423b-ba18-ba18904ddb85";
     secret = ../../../secrets/cloudflare-thor.age;
     inherit (inputs.self.settings.server) domain;
-    inherit (inputs.self.lib.hosts) nixosSystem;
+    inherit (inputs.self.lib) mkNixosSystem;
   in {
-    nixosConfigurations.thor = nixosSystem "x86_64-linux" "thor";
+    nixosConfigurations.thor = mkNixosSystem {name = "thor";};
 
     modules.nixos.thor = {
       config,
