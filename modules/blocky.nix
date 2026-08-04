@@ -52,8 +52,7 @@ in {
             denylists = {
               ads = [
                 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/light.txt"
-                "https://raw.githubusercontent.com/lassekongo83/Frellwits-filter-lists/master/Frellwits-Swedish-Hosts-File.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt"
                 "https://v.firebog.net/hosts/AdguardDNS.txt"
                 (pkgs.writeText "adblock.txt" ''
                   mediavisor.doubleclick.net
