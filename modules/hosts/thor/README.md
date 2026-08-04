@@ -78,6 +78,7 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 | ZFS Exporter      | 9134  | ZFS pool/dataset metrics  |
 | cAdvisor          | 9338  | Container metrics         |
 | Smartctl Exporter | 9633  | Disk health metrics       |
+| Blackbox Exporter | 9115  | HTTP probes of every service |
 
 ### Infrastructure
 
@@ -111,13 +112,21 @@ Access Home Assistant at `home.greensroad.uk` or local IP.
 
 ## Docker Containers
 
-Managed via Portainer (port 9000/9443).
+Declared in Nix (`virtualisation.oci-containers`) and inspectable via Portainer
+(port 9000/9443).
 
-| Container  | Purpose                    |
-| ---------- | -------------------------- |
-| portainer  | Container management UI    |
-| cleanuparr | Automated media cleanup    |
-| huntarr    | Missing media hunter       |
+| Container            | Purpose                     |
+| -------------------- | --------------------------- |
+| portainer            | Container management UI     |
+| bar-assistant-server | Bar Assistant API           |
+| salt-rim             | Bar Assistant frontend      |
+| meilisearch          | Bar Assistant search index  |
+| joplin-server        | Joplin sync server          |
+| bentopdf             | PDF toolkit                 |
+| soularr              | slskd-to-Lidarr bridge      |
+
+Containers started outside Nix have no systemd unit, so `ContainerStopped`
+(from `docker_container_running`) is the only thing watching them.
 
 ---
 
@@ -185,6 +194,9 @@ journalctl -u jellyfin -f
 
 ### Monitoring
 
+See [monitoring.md](../../../docs/monitoring.md) for the whole stack: what is
+collected, every alert, and which failure each one catches.
+
 - Grafana dashboards: `grafana.greensroad.uk`
-- Alertmanager: `alertmanager.greensroad.uk`
-- Prometheus targets: `prometheus.greensroad.uk/targets`
+- Prometheus: `thor:9090` — tailnet and host only, no vhost
+- Alertmanager: `127.0.0.1:9093` — host only

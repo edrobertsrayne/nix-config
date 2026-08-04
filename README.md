@@ -69,6 +69,10 @@ Home server running NixOS. Services:
 | cAdvisor | Container metrics |
 | Smartctl Exporter | Disk health metrics |
 | Blackbox Exporter | HTTP health probes of every proxied service |
+| Docker health collector | Container HEALTHCHECK and running state as textfile metrics |
+
+How it all fits together — collection, every alert, and which failure each one
+catches — is in [docs/monitoring.md](docs/monitoring.md).
 
 Probes are contributed by each service via `monitoring.probeTargets`, keyed by
 the service's display name — that key becomes the probe's `instance` label, so
@@ -135,6 +139,8 @@ nixos-rebuild switch --flake github:edrobertsrayne/nix-config#thor \
 
 All reference documentation lives in [docs/](docs).
 
+- [Monitoring](docs/monitoring.md) - metrics, logs, probes, alerts, and what
+  catches which failure
 - [Blocky](docs/blocky.md) - DNS: upstream, blocklists, and why there are no
   local records
 - [Grafana dashboards](docs/dashboards.md)
