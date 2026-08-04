@@ -16,31 +16,28 @@
         ./_hardware.nix
 
         common
-        nginx
-        portainer
-        blocky
-        media
-        libvirt
-        zfs
-        vaultwarden
-        # stirling-pdf
-        karakeep
-        # mealie
-        prometheus
         alertmanager
         alertmanager-ntfy
+        bar-assistant
+        bentopdf
+        blocky
+        code-server
         grafana
+        homepage
+        immich
+        karakeep
+        libvirt
         loki
         n8n
-        immich
+        nginx
         ntfy
-        code-server
-        searxng
-        homepage
+        media
         paperless
-        joplin
-        bentopdf
-        bar-assistant
+        portainer
+        prometheus
+        searxng
+        vaultwarden
+        zfs
       ];
 
       boot = {
