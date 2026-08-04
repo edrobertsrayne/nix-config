@@ -54,6 +54,7 @@ in {
                 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
                 "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt"
                 "https://v.firebog.net/hosts/AdguardDNS.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/popupads.txt"
                 (pkgs.writeText "adblock.txt" ''
                   mediavisor.doubleclick.net
                   affiliationjs.s3.amazonaws.com
@@ -71,6 +72,12 @@ in {
                 "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.vivo.txt"
                 "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.oppo-realme.txt"
                 "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.xiaomi.txt"
+                # Malware, phishing, cryptojacking and scam domains. The full
+                # `tif` list is 2.2M entries; `medium` is the tier that fits a
+                # resolver also holding everything above it.
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/tif.medium.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/dyndns.txt"
+                "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/hoster.txt"
                 (pkgs.writeText "trackers.txt" ''
                   api.luckyorange.com
                   cdn.luckyorange.com
