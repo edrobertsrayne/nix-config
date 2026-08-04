@@ -8,6 +8,7 @@
       inputs.nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
+          inputs.self.modules.nixos.common
           inputs.self.modules.nixos.home-manager
           inputs.self.modules.nixos.interfaces
           (inputs.self.modules.nixos.${name} or {})

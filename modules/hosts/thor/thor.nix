@@ -15,7 +15,6 @@
       imports = with inputs.self.modules.nixos; [
         ./_hardware.nix
 
-        common
         alertmanager
         alertmanager-ntfy
         bar-assistant
