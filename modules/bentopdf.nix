@@ -1,30 +1,49 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
+  inherit (inputs.self.settings.server) domain;
   port = ports.bentopdf;
 in {
   flake.modules.nixos.bentopdf = {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "BentoPDF";
-        subdomain = "pdf";
-        inherit port;
-        group = "Tools";
-        description = "PDF toolkit";
-        icon = "pdf.png";
-        # No probePath: BentoPDF is a static site with no health endpoint.
-        extraConfig = "client_max_body_size 100m;";
-      })
+    services.bentopdf = {
+      enable = true;
+      domain = "pdf.${domain}";
+      nginx = {
+        enable = true;
+        # Upstream serves the static build straight out of the store, so there
+        # is no backend to probe. The extra loopback listener gives blackbox
+        # and the homepage tile something to hit; port 80 has to be restated
+        # because nginx only computes its default listeners when `listen` is
+        # empty.
+        virtualHost.listen = [
+          {
+            addr = "0.0.0.0";
+            port = 80;
+          }
+          {
+            addr = "[::0]";
+            port = 80;
+          }
+          {
+            addr = "127.0.0.1";
+            inherit port;
+          }
+        ];
+      };
+    };
+
+    # Set directly rather than via mkProxiedService: that helper always
+    # proxyPasses, and this vhost serves files from the store instead.
+    homepage.services.Tools = [
+      {
+        BentoPDF = {
+          href = "https://pdf.${domain}";
+          description = "PDF toolkit";
+          icon = "pdf.png";
+          siteMonitor = "http://127.0.0.1:${toString port}";
+        };
+      }
     ];
 
-    virtualisation.oci-containers.containers.bentopdf = {
-      image = "ghcr.io/alam00000/bentopdf-simple:latest";
-      autoStart = true;
-      ports = ["${toString port}:8080"];
-      # :latest + --pull=always is deliberate, not an oversight: personal
-      # server, nixpkgs is already tracked on unstable, rolling container
-      # images are an accepted trade for staying current without manual
-      # version bumps. See #181.
-      extraOptions = ["--pull=always"];
-    };
+    monitoring.probeTargets.BentoPDF = "http://127.0.0.1:${toString port}";
   };
 }

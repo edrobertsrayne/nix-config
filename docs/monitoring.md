@@ -268,7 +268,7 @@ survives a rebuild but not a state wipe. From thor:
 ```sh
 nix shell nixpkgs#prometheus-alertmanager -c amtool \
   --alertmanager.url http://127.0.0.1:9093 silence add \
-  alertname=ContainerStopped name=bentopdf --duration 2h --comment "planned"
+  alertname=ContainerStopped name=soularr --duration 2h --comment "planned"
 ```
 
 Adding things:

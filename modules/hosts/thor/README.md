@@ -122,7 +122,6 @@ Declared in Nix (`virtualisation.oci-containers`) and inspectable via Portainer
 | salt-rim             | Bar Assistant frontend      |
 | meilisearch          | Bar Assistant search index  |
 | joplin-server        | Joplin sync server          |
-| bentopdf             | PDF toolkit                 |
 | soularr              | slskd-to-Lidarr bridge      |
 
 Containers started outside Nix have no systemd unit, so `ContainerStopped`
