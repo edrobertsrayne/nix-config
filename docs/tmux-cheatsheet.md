@@ -1,4 +1,4 @@
-# Tmux Cheatsheet - Niflheim Configuration
+# Tmux Cheatsheet
 
 ## Quick Reference Card
 
@@ -244,12 +244,14 @@ Seamless navigation between Neovim and tmux panes.
 3. **Vim integration**: Use `Ctrl+h/j/k/l` seamlessly between Neovim and tmux
 4. **Mouse works**: Don't forget you can click and drag with mouse support enabled
 5. **Base index 1**: Windows and panes start at 1 (matching keyboard number row)
-6. **Nord theme**: Status bar uses Nord color scheme for consistency with other tools
+6. **Tokyo Night theme**: The status bar uses `tokyo-night-tmux`, matching the Neovim colourscheme
 
 ---
 
 ## Configuration Location
 
-Config managed via: `modules/utilities/tmux.nix`
+Edit: `modules/utilities/tmux.nix`, then rebuild.
 
-Actual config file: `~/.config/tmux/tmux.conf`
+`~/.config/tmux/tmux.conf` is generated from it by home-manager and is a
+read-only symlink into the Nix store — editing it is not possible, and changes
+there would be lost on the next rebuild anyway.

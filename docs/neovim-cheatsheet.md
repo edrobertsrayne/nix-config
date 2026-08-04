@@ -1,28 +1,31 @@
-# Neovim Cheatsheet - Niflheim Configuration
+# Neovim Cheatsheet
 
 ## Quick Reference Card
 
 **Most Used Commands**:
 
 ```text
-<Space>         Leader key
-<leader>w       Save file
-<leader><leader> Find files
-<leader>/       Find text (grep)
-<leader>e       Toggle file tree
-Ctrl+`          Toggle terminal
-K               Hover documentation
-gd              Go to definition
-<leader>ca      Code actions
-jk              Exit insert mode
+<Space>          Leader key
+<leader>w        Save file
+<leader><space>  Find files
+<leader>/        Find text (grep)
+<leader>e        Toggle file explorer
+<leader>gg       LazyGit
+K                Hover documentation
+gd               Go to definition
+<leader>ca       Code actions
+jk               Exit insert mode
 ```
 
 **Important Notes**:
 
 - **Leader Key**: `Space` is the leader key for most commands
 - **Based on nvf**: Uses the Neovim configuration framework
+- **snacks.nvim**: Provides the picker, explorer, terminal and LazyGit —
+  Telescope, NeoTree and toggleterm are all disabled
+- **which-key**: Pause after `<leader>` and the available follow-ups appear
 - **LSP-Powered**: Full language server support with format on save
-- **Tokyo Night Theme**: Consistent with system-wide theming
+- **Tokyo Night Theme**: Matches the tmux status bar
 - **Modal Editing**: Embraces Vim's powerful modal paradigm
 
 ---
@@ -58,8 +61,8 @@ jk              Exit insert mode
 | `<leader>bd` | Delete current buffer |
 | `<leader>bD` | Delete buffer and close window |
 | `<leader>bo` | Delete all other buffers (keep current) |
-| `<leader>,` | Find buffers (Telescope) |
-| `<leader>fb` | Find buffers (Telescope) |
+| `<leader>,` | Find buffers |
+| `<leader>fb` | Find buffers |
 
 ---
 
@@ -133,33 +136,52 @@ jk              Exit insert mode
 
 ---
 
-## Telescope (Fuzzy Finder)
+## Pickers (snacks.nvim)
+
+Fuzzy finding is `Snacks.picker` (`modules/neovim/utility.nix`). Telescope is
+installed by nvf but explicitly disabled.
+
+Most pickers come in a pair: lowercase searches from the **project root**,
+uppercase from the **current working directory**.
 
 ### File Finding
 
 | Shortcut | Action |
 |----------|--------|
-| `<leader><leader>` | Find files |
-| `<leader>ff` | Find files |
-| `<leader>fr` | Find recent files (oldfiles) |
+| `<leader><space>` | Find files (root) |
+| `<leader>ff` | Find files (root) |
+| `<leader>fF` | Find files (cwd) |
+| `<leader>fg` | Git files |
+| `<leader>fr` | Recent files |
+| `<leader>fR` | Recent files (cwd) |
 
 ### Search Operations
 
 | Shortcut | Action |
 |----------|--------|
-| `<leader>/` | Find text (live grep) |
-| `<leader>fg` | Find text (live grep) |
-| `<leader>fs` | Find symbols (LSP document symbols) |
+| `<leader>/` | Grep (root) |
+| `<leader>sg` | Grep (root) |
+| `<leader>sG` | Grep (cwd) |
 
 ### Buffers & History
 
 | Shortcut | Action |
 |----------|--------|
-| `<leader>,` | Find buffers |
-| `<leader>fb` | Find buffers |
+| `<leader>,` | Buffers |
+| `<leader>fb` | Buffers |
 | `<leader>:` | Command history |
+| `<leader>s/` | Search history |
 
-**Telescope Navigation** (when picker is open):
+### GitHub
+
+Requires `gh` to be authenticated.
+
+| Shortcut | Action |
+|----------|--------|
+| `<leader>gi` / `<leader>gI` | GitHub issues — open / all |
+| `<leader>gp` / `<leader>gP` | GitHub pull requests — open / all |
+
+**Picker Navigation** (when open):
 - `Ctrl+n` / `Ctrl+j` - Next item
 - `Ctrl+p` / `Ctrl+k` - Previous item
 - `Enter` - Select item
@@ -175,7 +197,7 @@ jk              Exit insert mode
 |----------|--------|
 | `]h` | Next git hunk |
 | `[h` | Previous git hunk |
-| `<leader>gp` | Preview git hunk |
+| `<leader>gh` | Preview git hunk |
 | `<leader>gr` | Reset hunk |
 | `<leader>gS` | Stage buffer |
 | `<leader>gu` | Undo stage hunk |
@@ -187,44 +209,53 @@ jk              Exit insert mode
 | `<leader>gb` | Git blame line |
 | `<leader>gd` | Git diff |
 
+### LazyGit and Browse
+
+| Shortcut | Action |
+|----------|--------|
+| `<leader>gg` | LazyGit (root) |
+| `<leader>gG` | LazyGit (cwd) |
+| `<leader>gB` | Open this line on GitHub |
+| `<leader>gY` | Copy the GitHub URL for this line |
+
 **Features**:
 - Gitsigns shows added/changed/removed lines in sign column
-- Lazygit integration available via toggleterm
+- LazyGit opens in a snacks float, not a toggleterm
 
 ---
 
 ## Terminal Integration
 
-### Toggleterm
+The terminal is `Snacks.terminal`; toggleterm is disabled.
 
 | Shortcut | Mode | Action |
 |----------|------|--------|
-| `Ctrl+\`` | Normal | Toggle terminal |
-| `Ctrl+\`` | Terminal | Hide terminal |
-| `Esc Esc` | Terminal | Exit terminal mode |
+| `Ctrl+/` | Terminal | Toggle terminal |
+| `Esc Esc` | Terminal | Exit terminal mode (back to normal) |
 
 **Features**:
-- Persistent terminal sessions
-- Lazygit integration available
-- Terminal appears as floating window
+- Terminal appears as a floating window
+- LazyGit has its own binding, `<leader>gg`
 
 ---
 
-## File Tree (NeoTree)
+## File Explorer (snacks.nvim)
+
+NeoTree is installed by nvf but explicitly disabled; the explorer is
+`Snacks.explorer`.
 
 | Shortcut | Action |
 |----------|--------|
-| `<leader>e` | Toggle NeoTree file explorer |
+| `<leader>e` | Explorer (root) |
+| `<leader>E` | Explorer (cwd) |
 
-**NeoTree Navigation** (when open):
+**Explorer Navigation** (when open):
 - `j/k` - Navigate up/down
 - `Enter` - Open file/folder
-- `h` - Collapse folder
-- `l` - Expand folder
 - `a` - Add file/folder
 - `d` - Delete file/folder
 - `r` - Rename file/folder
-- `q` - Close NeoTree
+- `q` - Close explorer
 
 ---
 
@@ -320,9 +351,9 @@ jk              Exit insert mode
 
 ### Theme
 
-- **Tokyo Night** theme (matches system-wide Stylix theme)
-- Style: Default Tokyo Night variant
-- Transparent background: Configured via theme settings
+- **Tokyo Night** theme, `night` style (`modules/neovim/core.nix`) — the same
+  family as the tmux status bar, which uses `tokyo-night-tmux`
+- Transparent background
 - True color (24-bit RGB) support
 
 ### UI Enhancements
@@ -340,13 +371,20 @@ jk              Exit insert mode
 ### Installed Plugins
 
 - **nvf**: Neovim configuration framework
-- **Telescope**: Fuzzy finder and picker
-- **NeoTree**: File explorer
+- **snacks.nvim**: Picker, explorer, terminal, LazyGit, notifier, zen mode,
+  scratch buffers, indent guides, smooth scrolling
 - **Gitsigns**: Git integration
-- **Toggleterm**: Terminal management
+- **which-key**: Shows available keys after a prefix
+- **mini.nvim**: `ai` (textobjects), `surround` (`gsa`/`gsd`/`gsr`), `pairs`,
+  `comment`, `icons`
 - **Tmux Navigator**: Seamless vim-tmux navigation
 - **Grug-far**: Search and replace interface
+- **hop**: Jump-to-anywhere motions
+- **todo-comments**: Highlights TODO/FIXME
 - **LSP/Treesitter**: Language support and syntax highlighting
+
+Installed by nvf but **deliberately disabled**: Telescope, NeoTree, toggleterm —
+snacks.nvim replaces all three.
 
 ---
 
@@ -356,12 +394,13 @@ jk              Exit insert mode
 2. **Leader Mappings**: Most custom commands use `<Space>` as leader - easy to remember and access
 3. **Persistent Undo**: Your undo history persists across sessions - you can undo even after reopening files
 4. **LSP Integration**: Hover with `K`, jump to definition with `gd`, code actions with `<leader>ca`
-5. **Fuzzy Finding**: `<leader><leader>` for files, `<leader>/` for text - fastest way to navigate
-6. **Terminal Access**: `Ctrl+\`` toggles a terminal without leaving Neovim
-7. **Git Workflow**: Use gitsigns for quick hunk operations, staging, and blame
-8. **Tmux Integration**: Navigate seamlessly between vim splits and tmux panes with `Ctrl+h/j/k/l`
-9. **Format on Save**: Code is automatically formatted when you save (`:w`)
-10. **System Clipboard**: Yank and paste work with system clipboard (no need for `"+y`)
+5. **Fuzzy Finding**: `<leader><space>` for files, `<leader>/` for text - fastest way to navigate
+6. **Root vs cwd**: Lowercase picker bindings search the project root, uppercase the current directory
+7. **Git Workflow**: Gitsigns for hunks and blame, `<leader>gg` for LazyGit
+8. **Forgot a binding?**: Press `<leader>` and wait - which-key lists what's available
+9. **Tmux Integration**: Navigate seamlessly between vim splits and tmux panes with `Ctrl+h/j/k/l`
+10. **Format on Save**: Code is automatically formatted when you save (`:w`)
+11. **System Clipboard**: Yank and paste work with system clipboard (no need for `"+y`)
 
 ---
 
@@ -376,14 +415,16 @@ jk              Exit insert mode
 - `languages.nix` - Language-specific settings (Nix, Python, CSS, Bash, Markdown)
 - `telescope.nix` - Fuzzy finder configuration
 - `git.nix` - Git integration (gitsigns)
-- `terminal.nix` - Terminal integration (toggleterm, lazygit)
-- `filetree.nix` - File explorer (NeoTree)
+- `terminal.nix` - Terminal keymaps (toggleterm is disabled here)
+- `filetree.nix` - Disables NeoTree in favour of the snacks explorer
 - `grug-far.nix` - Search and replace
 - `tmux-navigator.nix` - Vim-tmux navigation integration
 - `diagnostics.nix` - Diagnostics and error display
-- `ui.nix`, `visuals.nix`, `editor.nix`, `navigation.nix`, `completion.nix`, `treesitter.nix`, `mini.nix` - Additional features
+- `ui.nix`, `visuals.nix`, `editor.nix`, `navigation.nix`, `completion.nix`, `treesitter.nix`, `mini.nix`, `utility.nix` - Additional features
 
-**Actual config**: Managed by home-manager and nvf framework
+Edit those and rebuild. The generated Neovim config is a read-only symlink into
+the Nix store, written by home-manager from nvf — there is no `init.lua` to
+edit.
 
 ---
 
@@ -391,6 +432,6 @@ jk              Exit insert mode
 
 - **nvf Documentation**: <https://notashelf.github.io/nvf/>
 - **Neovim Docs**: <https://neovim.io/doc/>
-- **Telescope**: <https://github.com/nvim-telescope/telescope.nvim>
-- **NeoTree**: <https://github.com/nvim-neo-tree/neo-tree.nvim>
+- **snacks.nvim**: <https://github.com/folke/snacks.nvim>
+- **mini.nvim**: <https://github.com/echasnovski/mini.nvim>
 - **Learn Vim**: `:Tutor` command for interactive Vim tutorial
