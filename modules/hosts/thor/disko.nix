@@ -86,10 +86,21 @@ _: {
               mountpoint = "/nix";
               options."com.sun:auto-snapshot" = "false";
             };
+            persist = {
+              type = "zfs_fs";
+              mountpoint = "/persist";
+              options."com.sun:auto-snapshot" = "true";
+            };
             root = {
               type = "zfs_fs";
               mountpoint = "/";
               options."com.sun:auto-snapshot" = "false";
+              # Blank snapshot for the wipe-on-boot rollback (#163/#167), taken
+              # at format time while the dataset is genuinely empty. Guarded
+              # because disko runs postCreateHook outside its own
+              # dataset-exists check, so a bare `zfs snapshot` aborts on a
+              # re-run. Form matches disko's own example/zfs.nix.
+              postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^zroot/root@blank$' || zfs snapshot zroot/root@blank";
             };
             libvirt = {
               type = "zfs_fs";
