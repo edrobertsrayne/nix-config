@@ -32,6 +32,8 @@ in {
       };
     };
 
+    services.fail2ban.enable = true;
+
     # Avoid TOFU MITM with github by providing their public key here.
     programs.ssh.knownHosts = {
       "github.com".hostNames = ["github.com"];
