@@ -24,9 +24,7 @@ in {
       ];
       alertmanagers = [];
     };
-  };
 
-  flake.modules.nixos.grafana = _: {
     services.grafana.provision.datasources.settings = {
       # Paired with the datasource below; see modules/grafana.nix for why.
       deleteDatasources = [

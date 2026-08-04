@@ -39,10 +39,10 @@ in {
         dataDir = "/srv/grafana";
         provision = {
           enable = true;
-          # Datasources are contributed by the module that runs the thing
-          # being queried — prometheus.nix, loki.nix, blocky.nix — by adding
-          # to services.grafana.provision.datasources.settings, the same way
-          # scrape jobs are contributed to prometheus. Both lists here are
+          # Datasources are declared by the aspect that runs the thing being
+          # queried — the prometheus, loki and blocky aspects each set
+          # services.grafana.provision.datasources.settings in their own
+          # block, so an aspect stays self-contained. Both lists there are
           # plain listOf, so the definitions concatenate.
           #
           # Two conventions those modules follow. uids are pinned, so the

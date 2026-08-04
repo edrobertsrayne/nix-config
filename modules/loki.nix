@@ -158,6 +158,26 @@ in {
           ];
         }
       ];
+
+      grafana.provision.datasources.settings = {
+        # Paired with the datasource below; see modules/grafana.nix for why.
+        deleteDatasources = [
+          {
+            name = "Loki";
+            orgId = 1;
+          }
+        ];
+
+        datasources = [
+          {
+            name = "Loki";
+            uid = "loki";
+            type = "loki";
+            access = "proxy";
+            url = "http://thor:${toString ports.loki}";
+          }
+        ];
+      };
     };
 
     monitoring.dashboards.system-errors-warnings = ./dashboards/system-errors-warnings.json;
@@ -173,27 +193,5 @@ in {
       "d /srv/loki/rules-temp 0750 loki loki -"
       "L+ /srv/loki/rules/fake/log-alerts.yml - - - - ${logAlertRules}"
     ];
-  };
-
-  flake.modules.nixos.grafana = _: {
-    services.grafana.provision.datasources.settings = {
-      # Paired with the datasource below; see modules/grafana.nix for why.
-      deleteDatasources = [
-        {
-          name = "Loki";
-          orgId = 1;
-        }
-      ];
-
-      datasources = [
-        {
-          name = "Loki";
-          uid = "loki";
-          type = "loki";
-          access = "proxy";
-          url = "http://thor:${toString ports.loki}";
-        }
-      ];
-    };
   };
 }
