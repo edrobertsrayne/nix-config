@@ -40,6 +40,8 @@
             undofile = true; # Persistent undo history across sessions
             swapfile = false; # Disable swap files (we have persistent undo)
             shortmess = "I"; # Disable the introductory message
+            foldlevel = 99; # Open all folds by default (treesitter folding is on)
+            foldlevelstart = 99; # ...including every newly opened buffer
           };
         };
       };
