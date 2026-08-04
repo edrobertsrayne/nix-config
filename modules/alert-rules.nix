@@ -235,6 +235,52 @@ _: {
                 annotations:
                   summary: HTTP probe slow — {{ $labels.instance }}
                   description: "{{ $labels.instance }} took {{ $value | printf \"%.1f\" }}s to respond to {{ $labels.target }} (threshold: 5s)"
+
+          - name: container-health
+            rules:
+              # A container is "active" to systemd whenever its main process
+              # runs, so none of these failures reach SystemdUnitFailed.
+              - alert: ContainerUnhealthy
+                expr: docker_container_health_status{status="unhealthy"} == 1
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Container unhealthy — {{ $labels.name }}
+                  description: "{{ $labels.name }} has failed its Docker HEALTHCHECK for >5m while its unit stays active"
+
+              # cAdvisor labels every cgroup, but only containers carry a name.
+              - alert: ContainerRestartLoop
+                expr: changes(container_start_time_seconds{name=~".+"}[15m]) > 3
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Container restart-looping — {{ $labels.name }}
+                  description: "{{ $labels.name }} ({{ $labels.image }}) has restarted {{ $value }} times in 15m"
+
+              # A container that is deliberately removed leaves the metric set
+              # and stays quiet; one stopped and forgotten keeps nagging. 10m
+              # rides out the restarts a rebuild causes.
+              - alert: ContainerStopped
+                expr: docker_container_running == 0
+                for: 10m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Container stopped — {{ $labels.name }}
+                  description: "{{ $labels.name }} still exists but has not been running for >10m"
+
+              # Without this the collector could die and take the two Docker
+              # rules above with it, silently — no series, no alert.
+              - alert: ContainerHealthCollectorStale
+                expr: time() - node_textfile_mtime_seconds{file="docker-health.prom"} > 600
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Container health metrics stale on {{ $labels.instance }}
+                  description: "docker-health-textfile last wrote {{ $value | humanizeDuration }} ago (threshold: 10m) — container health and running state are no longer being reported"
       ''
     ];
   };
