@@ -106,7 +106,9 @@ mtime raises `ContainerHealthCollectorStale`.
 
 `docker_container_running` is the only signal covering containers started
 outside Nix (via Portainer): they have no systemd unit, so nothing else watches
-them.
+them. Nix-declared containers are covered by their unit instead — stopping one
+runs `oci-containers`' post-stop hook, which `docker rm -f`s it, so it leaves
+the metric set rather than lingering at 0.
 
 ### Logs
 
@@ -148,7 +150,7 @@ rules are in `modules/loki.nix`. Both fire into Alertmanager.
 | | `ProbeSlow` | warn | probe >5s for 10m |
 | `container-health` | `ContainerUnhealthy` | crit | Docker `HEALTHCHECK` failing 5m while the unit stays active |
 | | `ContainerRestartLoop` | crit | >3 restarts in 15m |
-| | `ContainerStopped` | warn | container exists but hasn't run for 10m |
+| | `ContainerStopped` | warn | container still exists but hasn't run for 10m — in practice a non-Nix one, see [Container health](#container-health) |
 | | `ContainerHealthCollectorStale` | warn | the health textfile is >10m old |
 | `monitoring-health` | `MonitoringUnitDown` | crit | prometheus, alertmanager, alertmanager-ntfy, loki, grafana or alloy not active |
 | | `SystemdUnitFailed` | crit | any unit in `failed` for 5m, named |
