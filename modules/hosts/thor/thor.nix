@@ -32,6 +32,7 @@
         ntfy
         media
         paperless
+        persistence
         portainer
         prometheus
         searxng
@@ -125,19 +126,26 @@
         pciutils
       ];
 
-      fileSystems."/boot".options = ["umask=0077"];
+      fileSystems = {
+        "/boot".options = ["umask=0077"];
 
-      fileSystems."/mnt/storage" = {
-        depends = [
-          "/mnt/disk1"
-        ];
-        device = "/mnt/disk*";
-        fsType = "mergerfs";
-        options = [
-          "defaults"
-          "minfreespace=50G"
-          "fsname=mergerfs-storage"
-        ];
+        # Stage-2 activation reads /var/lib/nixos before systemd mounts local
+        # filesystems, and impermanence asserts neededForBoot on every
+        # persistent store. disko (#165) leaves this at its false default.
+        "/persist".neededForBoot = true;
+
+        "/mnt/storage" = {
+          depends = [
+            "/mnt/disk1"
+          ];
+          device = "/mnt/disk*";
+          fsType = "mergerfs";
+          options = [
+            "defaults"
+            "minfreespace=50G"
+            "fsname=mergerfs-storage"
+          ];
+        };
       };
     };
   };

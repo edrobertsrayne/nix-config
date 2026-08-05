@@ -70,6 +70,17 @@ are plain `listOf` defaulting to `[]`, so definitions from many aspects
 concatenate. Check for `nullOr` before assuming this of a new option — `nullOr`
 throws when one definition is null and another isn't.
 
+## Persistence (impermanence)
+
+- `nixos-rebuild test` starts new `systemd.mounts` immediately, so
+  `environment.persistence."/persist"` bind mounts go live under running
+  services. Use `boot` + reboot, not `test`, when adding or changing a
+  persisted path.
+- impermanence creates parent directories with `defaultPerms` (`0755 root`)
+  and chmods them to match the `/persist` counterpart. `/var/lib/private`
+  needs `0700 root:root` or every `DynamicUser` service fails to start —
+  pinned explicitly in `modules/persistence.nix`.
+
 ## Settled Decisions — Don't Re-Litigate
 
 - **Cloudflare Access (Google auth) is the auth layer** for `*.greensroad.uk`.
