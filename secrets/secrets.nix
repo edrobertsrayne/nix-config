@@ -22,6 +22,7 @@ in {
   "sonarr-apikey.age".publicKeys = systems ++ users;
   "lidarr-apikey.age".publicKeys = systems ++ users;
   "prowlarr-apikey.age".publicKeys = systems ++ users;
+  "sabnzbd.age".publicKeys = systems ++ users;
   "user-password.age".publicKeys = systems ++ users;
   "root-password.age".publicKeys = systems ++ users;
 }
