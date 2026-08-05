@@ -64,6 +64,13 @@ the aspect. The exception is a file whose *only* purpose is that aspect
 - Options that would strand a resource (`postgresql.ensureUsers`): gate on
   `config.services.<other>.enable` via `lib.optional` / `lib.mkIf`.
 
+An aspect imported by more than one other aspect (e.g. `postgresql.nix` via
+`blocky.nix`/`immich.nix`, `intel-vaapi.nix` via `immich.nix`/`jellyfin.nix`)
+needs an explicit `key`. Without one, the module system treats each import as
+a distinct module and concatenates its list options across every importer —
+harmless for most options, but it trips impermanence's `duplicateDirs`
+assertion for any aspect that also declares a persistence path.
+
 Merge mechanics: `services.prometheus.scrapeConfigs` and
 `services.grafana.provision.datasources.settings.{datasources,deleteDatasources}`
 are plain `listOf` defaulting to `[]`, so definitions from many aspects

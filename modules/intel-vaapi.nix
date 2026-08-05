@@ -1,5 +1,10 @@
 _: {
   flake.modules.nixos.intel-vaapi = {pkgs, ...}: {
+    # Imported by both immich.nix and jellyfin.nix. Without an explicit key
+    # the module system treats each import as a distinct module and
+    # concatenates list options (e.g. hardware.graphics.extraPackages twice).
+    key = "intel-vaapi-aspect";
+
     hardware.graphics = {
       enable = true;
       extraPackages = with pkgs; [
