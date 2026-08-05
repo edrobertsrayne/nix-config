@@ -93,7 +93,7 @@ in {
               host = "bonus.frugalusenet.com";
               expire_date = "";
               connections = 40;
-              priorty = 10;
+              priority = 10;
             };
             "eunews.blocknews.net" = {
               name = "eunews.blocknews.net";
