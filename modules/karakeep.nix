@@ -51,5 +51,11 @@ in {
       fontconfig.enable = lib.mkForce true;
       packages = [pkgs.noto-fonts];
     };
+
+    environment.persistence."/persist".directories = [
+      "/var/lib/karakeep"
+      "/var/lib/private/karakeep-browser"
+      "/var/lib/private/meilisearch"
+    ];
   };
 }

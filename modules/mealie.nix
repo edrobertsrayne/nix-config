@@ -24,5 +24,7 @@ in {
       inherit port;
       credentialsFile = config.age.secrets.mealie.path;
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/private/mealie"];
   };
 }

@@ -52,5 +52,7 @@ in {
         }
       ];
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/private/alloy"];
   };
 }

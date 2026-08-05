@@ -24,5 +24,7 @@ in {
       # everything through to the app as environment variables.
       environment.SERVER_PORT = ports.stirlingPdf;
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/private/stirling-pdf"];
   };
 }

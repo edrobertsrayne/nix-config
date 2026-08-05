@@ -38,5 +38,7 @@ in {
     # parity with other media services (music tree is world-readable, so this
     # is belt-and-braces in case perms ever tighten)
     users.users.${config.services.navidrome.user}.extraGroups = ["tank"];
+
+    environment.persistence."/persist".directories = ["/var/lib/navidrome"];
   };
 }

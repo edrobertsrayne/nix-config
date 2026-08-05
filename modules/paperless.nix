@@ -36,5 +36,7 @@ in {
       };
       environmentFile = config.age.secrets.paperless.path;
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/redis-paperless"];
   };
 }

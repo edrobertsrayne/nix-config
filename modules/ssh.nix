@@ -47,5 +47,9 @@ in {
     };
 
     networking.firewall.allowedTCPPorts = [ports.ssh];
+
+    # fail2ban.sqlite3 is the ban database — without it every reboot forgives
+    # every attacker.
+    environment.persistence."/persist".directories = ["/var/lib/fail2ban"];
   };
 }
