@@ -7,6 +7,8 @@ in {
     lib,
     ...
   }: {
+    imports = [inputs.self.modules.nixos.postgresql];
+
     services = {
       resolved.enable = lib.mkForce false;
 
@@ -139,7 +141,6 @@ in {
       };
 
       postgresql = {
-        enable = true;
         ensureDatabases = ["blocky"];
         ensureUsers =
           [

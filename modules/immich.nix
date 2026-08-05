@@ -7,6 +7,7 @@ in {
   in {
     imports = [
       inputs.self.modules.nixos.intel-vaapi
+      inputs.self.modules.nixos.postgresql
       (inputs.self.lib.mkProxiedService {
         name = "Immich";
         subdomain = "photos";
