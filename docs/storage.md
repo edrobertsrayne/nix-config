@@ -44,9 +44,16 @@ between you and a bad `rm`:
 rebuilt from this repo, and generations already roll them back
 ([deploying.md](deploying.md#undoing-a-change)).
 
-`/persist` is reserved for the impermanent-root work in progress (#163) and is
-empty until that work declares what lives in it — that's also why it isn't in
-the "What lives where" table below yet.
+`/persist` holds the state that survives thor's root being wiped on every boot
+(#163 — the wipe itself lands in #167/#168; today the root still isn't wiped,
+so this is inert). Each aspect declares its own paths directly via
+`environment.persistence."/persist"` (`modules/persistence.nix` for core
+system/identity state, e.g. `/var/lib/nixos`, `/etc/ssh/ssh_host_*`; every
+other service aspect that has real state, e.g. `modules/vaultwarden.nix`,
+`modules/tailscale.nix`, `modules/media/prowlarr.nix`, declares its own
+directories alongside its service config). There's no aggregation list to read
+— `nix eval .#nixosConfigurations.thor.config.environment.persistence.'"/persist"'.directories`
+shows the merged result.
 
 ### mergerfs
 
@@ -65,6 +72,7 @@ the difference from plain ext4 is only that a second disk's files would survive.
 | `/srv/<service>` | Service state and databases — Jellyfin, the \*arr apps, Grafana, Loki, Paperless, Transmission, Bar Assistant, Soularr | zroot | **yes** |
 | `/srv/docker` | Docker images, volumes, container state | zroot | **yes** |
 | `/var/lib/libvirt` | VM disk images (Home Assistant) | zroot | **yes** |
+| `/persist` | Per-aspect service/identity state, bind-mounted back to its usual path | zroot | **yes** |
 | `/mnt/ssd/immich` | **Photos and videos** | SSD | no |
 | `/mnt/ssd/music` | Music library | SSD | no |
 | `/mnt/ssd/downloads` | In-progress and completed downloads (usenet, transmission, slskd) | SSD | no |
@@ -111,7 +119,8 @@ The rationale for that split is in the comments in `nfs.nix` and `samba.nix`.
 
 ## Snapshots
 
-`modules/zfs.nix` keeps automatic snapshots of `/srv` and `/var/lib/libvirt`:
+`modules/zfs.nix` keeps automatic snapshots of every dataset with
+`com.sun:auto-snapshot=true` — `/srv`, `/var/lib/libvirt`, and `/persist`:
 
 | Frequency | Kept | Covers |
 |---|---|---|
@@ -187,8 +196,8 @@ protect. They defend against deletion, corruption by an application, and bad
 config — all common. They do nothing about a fire, a theft, both NVMe drives
 failing, or a filesystem-level disaster.
 
-**Two thirds of the data has neither.** Snapshots cover `/srv` and
-`/var/lib/libvirt` only. Everything on the SSD and on mergerfs — photos, music,
+**Most of the bulk data has neither.** Snapshots cover `/srv`, `/var/lib/libvirt`,
+and `/persist` only. Everything on the SSD and on mergerfs — photos, music,
 media, and the backup share itself — has no snapshots and no redundancy.
 
 What each loss would actually cost:
@@ -201,6 +210,7 @@ What each loss would actually cost:
 | `/mnt/ssd/downloads` | Gone | Yes, it is transient by nature |
 | `/srv/*` service state | Rolled back to a snapshot, if the pool survives | Config comes from this repo; history does not |
 | `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot | Same |
+| `/persist` per-aspect state | Rolled back to a snapshot, if the pool survives | Same |
 | `/` and `/nix` | Rebuilt by `nixos-rebuild` from this repo | Yes, completely |
 
 The single-sentence summary: **an SSD failure loses the photo library
