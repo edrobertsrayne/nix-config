@@ -68,5 +68,7 @@ in {
       # with ReadWritePaths for the same directory.
       ReadOnlyPaths = lib.mkForce [];
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/slskd"];
   };
 }

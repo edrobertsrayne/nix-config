@@ -48,5 +48,7 @@ in {
 
     # Ensure mount exists before tmpfiles
     systemd.services.systemd-tmpfiles-setup.after = ["mnt-ssd.mount"];
+
+    environment.persistence."/persist".directories = ["/var/lib/redis-immich"];
   };
 }

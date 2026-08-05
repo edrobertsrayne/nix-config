@@ -24,5 +24,7 @@ in {
         behind-proxy = true;
       };
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/private/ntfy-sh"];
   };
 }

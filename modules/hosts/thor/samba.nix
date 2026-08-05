@@ -36,5 +36,7 @@ _: {
     };
 
     services.samba-wsdd.enable = true;
+
+    environment.persistence."/persist".directories = ["/var/lib/samba"];
   };
 }

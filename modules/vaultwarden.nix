@@ -26,5 +26,7 @@ in {
         EXTENDED_LOGGING = true;
       };
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/vaultwarden"];
   };
 }

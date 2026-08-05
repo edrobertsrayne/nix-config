@@ -16,5 +16,7 @@ in {
     ];
 
     services.seerr.enable = true;
+
+    environment.persistence."/persist".directories = ["/var/lib/private/jellyseerr"];
   };
 }

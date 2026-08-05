@@ -24,5 +24,7 @@ _: {
       allowedUDPPorts = [config.services.tailscale.port];
       checkReversePath = "loose";
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/tailscale"];
   };
 }

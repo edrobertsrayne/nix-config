@@ -39,5 +39,7 @@ in {
         N8N_ENCRYPTION_KEY_FILE = config.age.secrets.n8n.path;
       };
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/private/n8n"];
   };
 }

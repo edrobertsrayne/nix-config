@@ -49,5 +49,7 @@ _: {
     # No allowedTCPPorts/allowedUDPPorts here: tailscale0 is already a
     # trusted interface (modules/tailscale.nix), so tailnet peers reach
     # these ports without opening them on the untrusted LAN bridge too.
+
+    environment.persistence."/persist".directories = ["/var/lib/nfs"];
   };
 }
