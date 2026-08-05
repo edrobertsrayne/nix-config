@@ -6,6 +6,7 @@
   ];
 
   languages.nix.enable = true;
+  languages.python.enable = true;
 
   git-hooks.hooks = {
     alejandra = {
