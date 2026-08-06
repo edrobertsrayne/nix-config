@@ -163,6 +163,8 @@ thor also upgrades itself from `main` nightly — see
   catches which failure
 - [Blocky](docs/blocky.md) - DNS: upstream, blocklists, and why there are no
   local records
+- [Paperless AI tagging](docs/paperless-ai.md) - local ollama tagging, CPU
+  containment, and why the AI settings page must not be used
 - [Grafana dashboards](docs/dashboards.md) - provisioning and refreshing them
 - [Secrets](.claude/skills/secrets/SKILL.md) - the agenix workflow
 - [thor host notes](modules/hosts/thor/README.md) - ports, VMs, and the
