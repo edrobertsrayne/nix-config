@@ -1,22 +1,34 @@
 _: {
   flake.modules.nixos.thor = {
-    fileSystems = {
-      "/export/media" = {
-        device = "/mnt/storage/media";
-        fsType = "none";
-        options = ["bind"];
+    config,
+    lib,
+    ...
+  }: {
+    fileSystems =
+      {
+        "/export/media" = {
+          device = "/mnt/storage/media";
+          fsType = "none";
+          options = ["bind"];
+        };
+        "/export/downloads" = {
+          device = "/mnt/ssd/downloads";
+          fsType = "none";
+          options = ["bind"];
+        };
+        "/export/backup" = {
+          device = "/mnt/storage/backup";
+          fsType = "none";
+          options = ["bind"];
+        };
+      }
+      // lib.optionalAttrs config.services.paperless.enable {
+        "/export/paperless" = {
+          device = config.services.paperless.consumptionDir;
+          fsType = "none";
+          options = ["bind"];
+        };
       };
-      "/export/downloads" = {
-        device = "/mnt/ssd/downloads";
-        fsType = "none";
-        options = ["bind"];
-      };
-      "/export/backup" = {
-        device = "/mnt/storage/backup";
-        fsType = "none";
-        options = ["bind"];
-      };
-    };
 
     services.nfs.server = {
       enable = true;
@@ -37,12 +49,17 @@ _: {
       #   port checks add nothing on top of host/range-based trust here,
       #   and dropping it risks silently breaking a client mount that
       #   happens to use a high source port.
-      exports = ''
-        /export         100.64.0.0/10(insecure,rw,sync,no_subtree_check,crossmnt,fsid=0)
-        /export/media    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=1)
-        /export/downloads    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=2)
-        /export/backup    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=3)
-      '';
+      exports =
+        ''
+          /export         100.64.0.0/10(insecure,rw,sync,no_subtree_check,crossmnt,fsid=0)
+          /export/media    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=1)
+          /export/downloads    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=2)
+          /export/backup    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=3)
+        ''
+        # fsid=4 continues the sequence above; bump for the next export added here.
+        + lib.optionalString config.services.paperless.enable ''
+          /export/paperless    100.64.0.0/10(insecure,rw,sync,no_subtree_check,nohide,fsid=4)
+        '';
     };
 
     services.rpcbind.enable = true;

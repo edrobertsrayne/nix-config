@@ -97,13 +97,14 @@ what to check.
 
 ## Sharing over the network
 
-Bind mounts in `modules/hosts/thor/nfs.nix` expose three trees under `/export`:
+Bind mounts in `modules/hosts/thor/nfs.nix` expose trees under `/export`:
 
 | Export | Real path |
 |---|---|
 | `/export/media` | `/mnt/storage/media` |
 | `/export/downloads` | `/mnt/ssd/downloads` |
 | `/export/backup` | `/mnt/storage/backup` |
+| `/export/paperless` | Paperless's `consumptionDir` (`/srv/paperless/consume`) — only exported when `services.paperless.enable` is true |
 
 Two protocols with deliberately different trust levels:
 
