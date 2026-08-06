@@ -34,7 +34,7 @@ in {
         PAPERLESS_OCR_LANGUAGE = "eng";
         PAPERLESS_TIME_ZONE = "Europe/London";
       };
-      environmentFile = config.age.secrets.paperless.path;
+      passwordFile = config.age.secrets.paperless.path;
     };
 
     environment.persistence."/persist".directories = ["/var/lib/redis-paperless"];
