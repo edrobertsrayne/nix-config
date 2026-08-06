@@ -5,26 +5,30 @@ auto-loads every git-tracked `.nix` file under `modules/`.
 
 ## Core Rules
 
-1. **`git add` new `.nix` files immediately** — import-tree only loads tracked
-   files; an untracked file plus its auto-generated option collide as "option
-   defined multiple times".
-2. Run the checks below before committing.
-3. Multi-commit work: commit each logical change (edit → check → commit) before
-   editing for the next. Never batch edits across commits then split after.
-4. Be concise — sacrifice grammar for brevity, in chat and commits.
+1. `git add` new `.nix` files immediately — untracked files aren't loaded, so
+   an untracked file plus its auto-generated option collide as "option defined
+   multiple times".
+2. Run Quality Checks before committing.
+3. Multi-commit work: edit → check → commit, one logical change at a time.
+   Never batch edits then split into commits after.
+4. Be concise — brevity over grammar, in chat and commits.
 5. Use Context7 for flake-input docs (nvf, agenix, home-manager, disko,
    flake-parts, import-tree) — don't rely on trained knowledge.
+6. Planning issue-tracked work ends by writing the plan into the issue
+   (`gh issue edit --body-file`), not by executing it. Propagate findings to
+   parent/downstream issues too. Only edit `.nix` files once asked to implement.
 
 ## Applying Changes
 
-Use `sudo nixos-rebuild test --flake .#thor`. **Never `switch`.** `test`
-activates without touching the boot default, so a reboot recovers the box;
-`switch` removes that escape hatch on a host running the household's services.
-Use `nix flake check` as the pre-commit gate.
+Bash runs directly on thor — no SSH hop needed.
 
-This constrains commands the agent runs or tells the user to run. It is not a
-house rule about the repo: README and `docs/deploying.md` present `test`,
-`switch` and `boot` neutrally with their real trade-offs. Keep it that way.
+`sudo nixos-rebuild test --flake .#thor`. **Never `switch`** — `test` doesn't
+touch the boot default, so a reboot recovers the box; `switch` removes that
+escape hatch on a host running household services. `nix flake check` is the
+pre-commit gate.
+
+This binds agent commands only, not the repo's docs — README and
+`docs/deploying.md` present `test`/`switch`/`boot` neutrally.
 
 ## Module Placement
 
@@ -38,77 +42,67 @@ house rule about the repo: README and `docs/deploying.md` present `test`,
 | Prose docs       | `docs/{name}.md`              | `docs/monitoring.md`               |
 | Dashboard JSON   | `modules/dashboards/`         | `modules/dashboards/blocky.json`   |
 
-Name files by aspect/purpose (`ssh.nix`, `development-tools.nix`), not by host.
+Name files by aspect/purpose (`ssh.nix`), not by host.
 
-Docs are lowercase-kebab and live in `docs/` — never beside the module they
-describe, never SHOUTING_CASE. `modules/` holds Nix and data only. When a doc
-moves, `git mv` it and repoint every inbound link (root README, host READMEs,
-doc-to-doc links, paths named in Nix comments).
+Docs: lowercase-kebab, live in `docs/` only — never beside the module, never
+SHOUTING_CASE. `modules/` holds Nix and data only. Moving a doc: `git mv` it
+and repoint every inbound link (README, host READMEs, doc-to-doc, Nix
+comments).
 
-`_name.nix` — tracked but excluded from import-tree auto-load; the parent module
-must `imports = [ ./_name.nix ];` explicitly. Use for host-specific or
+`_name.nix` — tracked but excluded from import-tree; parent must
+`imports = [ ./_name.nix ];` explicitly. Use for host-specific or
 side-effecting config that must not auto-load elsewhere.
 
 ## Aspect Conventions
 
 Each file contributes **one** `flake.modules.nixos.<aspect>` block. All
-cross-aspect wiring goes inside that block — a Prometheus scrape job, a Grafana
-datasource, an nginx vhost, a homepage entry, a postgres user. Splitting a
-secondary `flake.modules.nixos.prometheus = ...` block into the same file is
-wrong; so is putting a scrape job in the exporter's own module file instead of
-the aspect. The exception is a file whose *only* purpose is that aspect
+cross-aspect wiring (Prometheus scrape job, Grafana datasource, nginx vhost,
+homepage entry, postgres user) goes inside that block, not a second block or
+the exporter's own file. Exception: a file whose only purpose is that aspect
 (`modules/alert-rules.nix`).
 
-- Options that no-op when the consumer is disabled (`scrapeConfigs`, Grafana
-  `datasources`): set unconditionally.
+- Options that no-op when disabled (`scrapeConfigs`, Grafana `datasources`):
+  set unconditionally.
 - Options that would strand a resource (`postgresql.ensureUsers`): gate on
-  `config.services.<other>.enable` via `lib.optional` / `lib.mkIf`.
+  `config.services.<other>.enable`.
 
-An aspect imported by more than one other aspect (e.g. `postgresql.nix` via
-`blocky.nix`/`immich.nix`, `intel-vaapi.nix` via `immich.nix`/`jellyfin.nix`)
-needs an explicit `key`. Without one, the module system treats each import as
-a distinct module and concatenates its list options across every importer —
-harmless for most options, but it trips impermanence's `duplicateDirs`
-assertion for any aspect that also declares a persistence path.
+An aspect imported by more than one other aspect (e.g. `postgresql.nix`,
+`intel-vaapi.nix`) needs an explicit `key` — otherwise the module system
+treats each import as distinct and concatenates list options across
+importers, tripping impermanence's `duplicateDirs` assertion for any aspect
+that also declares a persistence path.
 
-Merge mechanics: `services.prometheus.scrapeConfigs` and
+`services.prometheus.scrapeConfigs` and
 `services.grafana.provision.datasources.settings.{datasources,deleteDatasources}`
-are plain `listOf` defaulting to `[]`, so definitions from many aspects
-concatenate. Check for `nullOr` before assuming this of a new option — `nullOr`
-throws when one definition is null and another isn't.
+are plain `listOf []`, so definitions from many aspects concatenate safely.
+Check for `nullOr` before assuming this of a new option — it throws if one
+definition is null and another isn't.
 
 ## Persistence (impermanence)
 
 - `nixos-rebuild test` starts new `systemd.mounts` immediately, so
   `environment.persistence."/persist"` bind mounts go live under running
-  services. Use `boot` + reboot, not `test`, when adding or changing a
-  persisted path.
-- impermanence creates parent directories with `defaultPerms` (`0755 root`)
-  and chmods them to match the `/persist` counterpart. `/var/lib/private`
-  needs `0700 root:root` or every `DynamicUser` service fails to start —
-  pinned explicitly in `modules/persistence.nix`.
+  services. Use `boot` + reboot instead when adding/changing a persisted path.
+- impermanence chmods parent dirs to match `/persist`. `/var/lib/private`
+  needs `0700 root:root` or `DynamicUser` services fail to start — pinned in
+  `modules/persistence.nix`.
 
 ## Settled Decisions — Don't Re-Litigate
 
-- **Cloudflare Access (Google auth) is the auth layer** for `*.greensroad.uk`.
-  Don't propose basicAuth, oauth2-proxy, `auth_request`, per-app logins, or
-  standalone exposure-policy docs. Real security bugs here are LAN bypasses —
-  `openFirewall = true`, or Docker port publishes that skip the NixOS firewall
-  via `DOCKER-USER`.
-- **Container images are unpinned on purpose.** `:latest` + `--pull=always`
-  repo-wide is deliberate on a personal server already tracking nixpkgs
-  unstable. Don't pin tags or digests, and don't "fix" it when a hardening
-  review flags it.
-- **Bind address follows the client, not habit.** No split-horizon DNS exists,
-  so `*.greensroad.uk` resolves to Cloudflare even on the tailnet. A service
-  with a mobile/non-browser client that can't do Google SSO binds `0.0.0.0` and
-  relies on the firewall as the boundary (immich, navidrome); an admin-only
-  browser UI binds `127.0.0.1` (transmission, searxng, n8n). `openFirewall` is
-  not the answer either way. See `docs/networking.md`.
-- **Drop the setting rather than override upstream.** When a nixpkgs module
-  fights the config, stop setting the option and take its default instead of
-  `mkForce`-ing its tmpfiles/systemd output back into shape. A one-off data
-  migration beats an override that must track upstream forever.
+- **Cloudflare Access (Google auth)** is the auth layer for `*.greensroad.uk`.
+  No basicAuth, oauth2-proxy, `auth_request`, per-app logins, or
+  exposure-policy docs. Real bugs here are LAN bypasses — `openFirewall`, or
+  Docker port publishes skipping the firewall via `DOCKER-USER`.
+- **Container images are unpinned on purpose** — `:latest` + `--pull=always`
+  everywhere. Don't pin tags/digests, don't "fix" this in a hardening review.
+- **Bind address follows the client.** No split-horizon DNS, so
+  `*.greensroad.uk` resolves to Cloudflare even on the tailnet. Mobile/non-SSO
+  clients → bind `0.0.0.0`, rely on the firewall (immich, navidrome).
+  Admin-only browser UI → bind `127.0.0.1` (transmission, searxng, n8n).
+  `openFirewall` is never the answer. See `docs/networking.md`.
+- **Drop the setting, don't override upstream.** When a nixpkgs module fights
+  the config, stop setting the option rather than `mkForce`-ing its output
+  back into shape.
 
 ## Quality Checks
 
@@ -116,16 +110,15 @@ throws when one definition is null and another isn't.
 nix flake check   # evaluates thor; failure is usually a missing `git add`
 ```
 
-Formatting and lint (alejandra, statix, deadnix) run automatically — devenv git
-hooks, a PostToolUse hook in `.claude/hooks/nix-lint.sh`, and CI. Don't invoke
-them by hand.
+Formatting/lint (alejandra, statix, deadnix) run automatically via devenv git
+hooks, a PostToolUse hook, and CI. Don't invoke by hand.
 
 ## Commit Format
 
-Conventional Commits, aspect name as scope: `<type>(<aspect>): <description>`.
+Conventional Commits, aspect as scope: `<type>(<aspect>): <description>`.
 Types: `feat`, `fix`, `refactor`, `style`, `docs`, `chore`.
 
-One commit per logical change; split refactor from feature, refactor first.
+One commit per logical change; refactor before feature.
 
 - `feat(neovim): add LSP support for Rust`
 - `fix(blocky): correct upstream resolver timeout`
@@ -133,22 +126,22 @@ One commit per logical change; split refactor from feature, refactor first.
 ## Anti-Patterns
 
 - Host-centric organization → use aspect modules.
-- Package-centric modules → group by purpose; only create a module that carries
-  configuration.
+- Package-centric modules → group by purpose.
 - Manual import management → trust import-tree.
 - Interdependent feature modules → use aggregators or custom options.
 
 ## Maintaining This File
 
-Operational content only: rules, paths, commands, formats — things acted on.
-No project overview, no background prose, no further-reading links, no
-restating a rule that already appears above. Descriptive material belongs in
-`README.md` or `docs/`. Rationale is allowed as a short inline clause where it
-prevents a concrete failure, never as its own section.
+Operational only: rules, paths, commands, formats. No overview, no prose, no
+links. Rationale allowed as a short inline clause when it prevents a concrete
+failure.
 
-**Write down what cost you time.** If working something out took several
-attempts — a wrong option name, a non-obvious eval failure, a merge behaviour
-that surprised you, a service that needed an undocumented step — add the
-resolved fact here in the same commit as the fix. The test is whether a fresh
-agent with no memory of this session would repeat the detour. Add the answer,
-not the story of finding it.
+**Write down what cost you time** — a wrong option name, a non-obvious eval
+failure, a surprising merge behavior, an undocumented required step. Add the
+resolved fact here, same commit as the fix. Test: would a fresh agent repeat
+the detour? Add the answer, not the story.
+
+**This repo is the single source of truth.** Learnings, decisions, and
+corrections go here or in `docs/` — never only in a local Claude instance's
+memory. Memory is fine for this assistant's own tooling/behavior; anything
+about the project must live in the repo so any agent or human can read it.
