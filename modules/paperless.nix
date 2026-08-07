@@ -62,6 +62,14 @@ in {
     services.paperless = {
       enable = true;
       inherit port;
+      # address stays 0.0.0.0, not 127.0.0.1 (the module default), so the
+      # tailnet can reach <tailscale-ip>:${toString port} directly — same
+      # reasoning as immich.nix (#174). No openFirewall: the bind address
+      # plus tailscale0 being a trusted interface (tailscale.nix) is the
+      # boundary. LAN (br0) still can't reach this port, only loopback
+      # (nginx) and the tailnet can. Paperless's own login is the only gate
+      # on that path — Cloudflare Access never sees tailnet-direct traffic.
+      address = "0.0.0.0";
       dataDir = "/srv/paperless";
       consumptionDir = "/srv/paperless/consume";
       consumptionDirIsPublic = true;
