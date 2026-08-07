@@ -14,15 +14,6 @@ in {
         icon = "paperless-ngx.png";
         # No probePath: paperless-ngx has no unauthenticated health endpoint.
         # The root URL 302s to /accounts/login/ and the probe follows it.
-
-        # AI tag suggestions run inline in the HTTP request (documents/views.py
-        # `ai_suggestions`), ~115s on this hardware. nginx.nix sets
-        # recommendedProxySettings with no proxyTimeout, so the default 60s
-        # would 504 first. Matched to PAPERLESS_AI_LLM_REQUEST_TIMEOUT so
-        # paperless's own error surfaces instead of a gateway one.
-        # Cloudflare still caps the end-to-end request at 100s — see
-        # docs/paperless-ai.md.
-        extraConfig = "proxy_read_timeout 600s;";
       })
     ];
 
