@@ -17,24 +17,35 @@ in {
       })
     ];
 
-    # CPU-only local AI tagging (no GPU on thor; iGPU is committed to VAAPI).
-    # See docs/paperless-ai.md for the operational detail.
+    # Embeddings only. Classification runs on a remote model — no GPU on thor
+    # and the iGPU is committed to VAAPI, so 4B-class generation on the
+    # Gracemont cores took ~115s/doc, past Cloudflare's 100s request cap.
+    # A 300M embedding pass is a single forward pass and stays local.
+    #
+    # Keeping an embedding backend set is not just for chat: ai_classifier.py
+    # picks build_prompt_with_rag over build_prompt_without_rag whenever one
+    # exists, so the Suggest button sends the 5 nearest documents as few-shot
+    # context. That is the main quality lever on suggestions — without it the
+    # model invents tag names absent from the library.
+    #
+    # loadModels only ever adds; it never prunes. Models pulled by hand stay
+    # in the persisted store until `ollama rm`.
     services.ollama = {
       enable = true; # binds 127.0.0.1:11434 by default
-      loadModels = [
-        "embeddinggemma:300m" # embeddings, paperless's own default
-        "gemma3:4b" # classification; beats paperless's llama3.1 default (8B, ~2x slower here, no tagging-quality gain)
-      ];
+      loadModels = ["embeddinggemma:300m"]; # paperless's own default
     };
 
     systemd.services.ollama.serviceConfig = {
+      # Indexing is async celery work fired by the consumption handler, so it
+      # runs exactly when OCR does. Both settings are about yielding to that,
+      # not about inference latency — nothing here is user-facing.
       CPUWeight = 20; # soft priority: full speed when idle, yields under contention
       # llama.cpp busy-waits every worker thread in a barrier, so spanning all
-      # 4 cores starves the scheduler whatever CPUWeight says. Ollama has no
+      # 4 cores starves the scheduler whatever CPUWeight says — a bulk
+      # re-index walks the whole library, not one document. Ollama has no
       # thread-count env var; the cpuset is the lever — cgroup v2 restricts
       # sched_getaffinity, so ollama sizes its thread pool to 3 on its own.
       AllowedCPUs = "0-2";
-      MemoryHigh = "6G";
     };
 
     # Scope of paperless's built-in AI, as of 3.0.4:
