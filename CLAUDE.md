@@ -137,7 +137,8 @@ links. Rationale allowed as a short inline clause when it prevents a concrete
 failure.
 
 **Write down what cost you time — but only if it is _generally applicable_.**
-This file holds rules that bind every aspect: repo conventions, module-system
+This file holds rules that bind every aspect, so growing it with per-service
+trivia makes those rules harder to find: repo conventions, module-system
 behavior, deploy commands, formats. A wrong option name, a non-obvious eval
 failure, a surprising merge behavior, an undocumented required step — add the
 resolved fact here, same commit as the fix. Add the answer, not the story.
@@ -156,9 +157,6 @@ reader already is:
 | Why this module sets a surprising value      | Comment beside the setting |
 | How a service is wired, operational caveats  | `docs/{name}.md`           |
 | Binds every aspect                           | Here                       |
-
-Growing this file with per-service trivia makes the rules that _do_ bind
-everything harder to find.
 
 **This repo is the single source of truth.** Learnings, decisions, and
 corrections go here or in `docs/` — never only in a local Claude instance's
