@@ -57,9 +57,8 @@ in {
     #     instead: set a tag's matching algorithm to Auto and it learns from
     #     the already-tagged corpus. No LLM involved.
     #   - Embedding indexing is automatic, via the consumption signal handler.
-    # Suggestions run inline in the HTTP request, and every route to paperless
-    # crosses Cloudflare (no split-horizon DNS), which hard-caps a request at
-    # 100s. That rules out slow models whatever the paperless-side timeout says.
+    # Suggestions run inline in the HTTP request, so they're bound by the same
+    # Cloudflare 100s cap noted above.
     services.paperless = {
       enable = true;
       inherit port;
