@@ -1,7 +1,7 @@
 _: {
   flake.modules.homeManager.utilities = {pkgs, ...}: {
     home.shellAliases = {
-      tmux = "tmux a || tmux";
+      t = "tmux a || tmux";
     };
 
     programs.tmux = {
