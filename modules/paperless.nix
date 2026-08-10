@@ -3,7 +3,7 @@
   url = "paperless.${server.domain}";
   port = ports.paperless;
 in {
-  flake.modules.nixos.paperless = {
+  flake.modules.nixos.paperless = {pkgs, ...}: {
     imports = [
       (inputs.self.lib.mkProxiedService {
         name = "Paperless";
@@ -33,6 +33,10 @@ in {
     services.ollama = {
       enable = true; # binds 127.0.0.1:11434 by default
       loadModels = ["embeddinggemma:300m"]; # paperless's own default
+      package = pkgs.ollama-vulkan;
+      environmentVariables = {
+        OLLAMA_IGPU_ENABLE = "1";
+      };
     };
 
     systemd.services.ollama.serviceConfig = {
