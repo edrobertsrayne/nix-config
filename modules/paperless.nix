@@ -51,7 +51,7 @@ in {
         PAPERLESS_URL = "https://${url}";
         PAPERLESS_OCR_LANGUAGE = "eng";
         PAPERLESS_TIME_ZONE = "Europe/London";
-        PAPERLESS_AI_ENABLED = "true";
+        PAPERLESS_AI_ENABLED = true;
         PAPERLESS_AI_LLM_BACKEND = "ollama";
         PAPERLESS_AI_LLM_MODEL = "gemma4:e2b";
         PAPERLESS_AI_LLM_ENDPOINT = "http://127.0.0.1:11434";
