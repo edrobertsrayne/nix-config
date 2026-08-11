@@ -48,9 +48,12 @@ in {
       consumptionDir = "/srv/paperless/consume";
       consumptionDirIsPublic = true;
       # Config resolves as `app_config.<x> or settings.<X>` — a populated DB
-      # column wins over env, so string fields below only seed a fresh
-      # install. This DB predates this block and was hand-updated to match;
-      # ai_enabled is a bool so `False or env` still takes live effect.
+      # column wins over env, so string fields below only take effect on a
+      # fresh install. This box's DB predates this block (remote
+      # openai-like backend) and has not been updated to match — do that by
+      # hand after deploying, or these settings stay seed-only. ai_enabled
+      # is a bool, so `False or env` is the one field that does take live
+      # effect regardless.
       #   sqlite3 /srv/paperless/db.sqlite3 \
       #     'select ai_enabled, llm_backend, llm_model, llm_embedding_backend, llm_embedding_model from paperless_applicationconfiguration;'
       settings = {
