@@ -13,11 +13,10 @@ in {
           addSSL = true;
           useACMEHost = domain;
           # Upstream serves the static build straight out of the store, so
-          # there is no backend to probe. The extra loopback listener gives
-          # blackbox and the homepage tile something to hit; :80 and :443
-          # both have to be restated because nginx only computes its default
-          # listeners when `listen` is empty — addSSL alone does not add a
-          # :443 socket once `listen` is set explicitly.
+          # there's no backend to probe - the loopback listener is for
+          # blackbox/homepage instead. :80 and :443 both have to be restated:
+          # nginx only computes default listeners when `listen` is empty, so
+          # addSSL alone won't add a :443 socket here.
           listen = [
             {
               addr = "0.0.0.0";

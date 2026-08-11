@@ -38,12 +38,8 @@ in {
               "2a07:e340::2"
             ];
           };
-          # Tailnet devices resolve the public names straight to thor rather
-          # than round-tripping through Cloudflare. customDNS.mapping is
-          # global (no client-group variant) and subdomains inherit the
-          # parent entry, so this one line covers every *.greensroad.uk
-          # vhost. Safe because blocky's only clients are tailnet peers and
-          # thor's own loopback - see docs/blocky.md.
+          # Resolves *.greensroad.uk straight to thor for tailnet clients -
+          # see docs/blocky.md#split-horizon-greensroaduk.
           customDNS.mapping."greensroad.uk" = "100.84.196.40";
           queryLog = {
             type = "postgresql";
