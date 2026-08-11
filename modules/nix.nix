@@ -59,8 +59,12 @@ in {
     # a generation won't boot), and auto-snapshotted /srv + /persist (#163)
     # roll back data. Same trade as floating container tags (#181): personal
     # server, stay current without manual bumps. See #178.
+    # Paused for the #163 impermanence migration (#167): an unattended `switch`
+    # mid-migration could race the dry-run steps or silently bind-mount an
+    # empty /persist dir over live service state. Re-enabled at #167 commit 4,
+    # with `operation = "boot"` so future persistence lines never apply live.
     system.autoUpgrade = {
-      enable = true;
+      enable = false;
       flake = "github:edrobertsrayne/nix-config";
       flags = [];
       dates = "04:00";
