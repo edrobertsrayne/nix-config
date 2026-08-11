@@ -138,6 +138,7 @@ the only gate; Cloudflare Access never sees tailnet-direct traffic.
 |---|---|
 | A browser, anywhere | `https://<service>.greensroad.uk` — through the tunnel, Access login |
 | A browser, on the tailnet | Same hostname now resolves straight to thor over `:443` — no Access login, no tunnel hop |
+| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, transmission, sabnzbd, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx |
 | A mobile app | `100.84.196.40:<port>` over the tailnet — same availability as the hostname, but fails clean (timeout, not an Access login page) if Tailscale drops |
 | Admin tools with no vhost (Prometheus, Alertmanager) | `thor:<port>` from a tailnet device |
 | A LAN appliance that can't do either | Only the ports in the table above |
