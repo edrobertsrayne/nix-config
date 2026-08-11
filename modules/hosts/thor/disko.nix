@@ -91,6 +91,11 @@ _: {
               mountpoint = "/persist";
               options."com.sun:auto-snapshot" = "true";
             };
+            home = {
+              type = "zfs_fs";
+              mountpoint = "/home";
+              options."com.sun:auto-snapshot" = "true";
+            };
             root = {
               type = "zfs_fs";
               mountpoint = "/";
