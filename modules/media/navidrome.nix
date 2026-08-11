@@ -18,10 +18,11 @@ in {
       enable = true;
       settings = {
         # 0.0.0.0, not 127.0.0.1: Subsonic mobile clients need
-        # <tailscale-ip>:4533 directly. Blocky serves no local records at
-        # all and there's no split-horizon DNS (docs/blocky.md), so
-        # navidrome.${domain} resolves publicly for everyone - nothing can
-        # route these clients through the Access-gated tunnel instead. No openFirewall is set (and none
+        # <tailscale-ip>:4533 directly. Even though blocky now resolves
+        # navidrome.${domain} straight to thor on the tailnet (#197,
+        # docs/blocky.md), Cloudflare Access's Google login is a browser flow
+        # a native app can't complete, so the hostname still isn't usable for
+        # these clients - they hit the port by tailnet IP instead. No openFirewall is set (and none
         # should be - it opens the port on every interface, not just
         # tailscale0), so the firewall is the actual boundary: br0 and
         # docker0 can't reach this port, only loopback (nginx) and

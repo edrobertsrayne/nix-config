@@ -108,21 +108,23 @@ public answer and goes out to the internet and back through the tunnel, even
 standing next to the server.
 
 This has one consequence worth knowing because it explains several odd-looking
-module settings, and it survives the split-horizon change because the reason
-is about the login flow, not about DNS:
+module settings, and it survives the split-horizon change even though it looks
+at first like it shouldn't:
 
-**Mobile apps cannot use the public hostnames**, because Cloudflare Access's
-Google login is a browser flow that a native app cannot complete — that's true
-whether the hostname resolves to Cloudflare or to thor directly, since an
-Access-gated *hostname* still needs the Access login the first time a client
-without a valid session hits it, and a mis-handled 302 to a login page reads as
-a corrupt session to some mobile clients. So the Immich, Navidrome and Jellyfin
-apps connect to `100.84.196.40:<port>` over the tailnet instead of by hostname.
-That is why those services bind `0.0.0.0` rather than loopback — they need to
-be reachable on the tailnet interface — while still not appearing in the
-firewall table above. Binding `0.0.0.0` with no firewall opening means
-"tailnet-reachable, not LAN-reachable", and that combination is intentional
-wherever you see it.
+**Mobile apps still connect by `100.84.196.40:<port>`, not by hostname**, even
+though the hostname now resolves straight to thor for any tailnet client
+(blocky is the tailnet's global nameserver, reachable from anywhere Tailscale
+is connected — not just at home). Availability is identical either way: both
+paths need Tailscale up. The difference is the *failure* mode when it isn't.
+An IP:port app with Tailscale down gets a clean connection timeout. A
+hostname-based app in the same state falls back to public DNS, resolves to
+Cloudflare, and gets served the Access login page as a 302 — which some mobile
+HTTP clients mishandle as a corrupt session rather than an obvious auth
+failure. So the Immich, Navidrome and Jellyfin apps keep the IP:port config,
+and those services bind `0.0.0.0` rather than loopback so the tailnet
+interface can reach them, while still not appearing in the firewall table
+above. Binding `0.0.0.0` with no firewall opening means "tailnet-reachable,
+not LAN-reachable", and that combination is intentional wherever you see it.
 
 Paperless binds `0.0.0.0` for the same reason, even though it has no mobile
 app in this config — it's the general escape hatch for reaching an
@@ -136,7 +138,7 @@ the only gate; Cloudflare Access never sees tailnet-direct traffic.
 |---|---|
 | A browser, anywhere | `https://<service>.greensroad.uk` — through the tunnel, Access login |
 | A browser, on the tailnet | Same hostname now resolves straight to thor over `:443` — no Access login, no tunnel hop |
-| A mobile app | `100.84.196.40:<port>` over the tailnet — hostname still routes through the Access login flow |
+| A mobile app | `100.84.196.40:<port>` over the tailnet — same availability as the hostname, but fails clean (timeout, not an Access login page) if Tailscale drops |
 | Admin tools with no vhost (Prometheus, Alertmanager) | `thor:<port>` from a tailnet device |
 | A LAN appliance that can't do either | Only the ports in the table above |
 

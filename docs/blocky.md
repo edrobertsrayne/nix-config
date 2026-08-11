@@ -13,7 +13,7 @@ One thing it does not do, deliberate: it never talks to the ISP's resolver. It
 
 | Port | Where | What |
 |---|---|---|
-| `53` tcp+udp (`ports.dns`) | open on `br0`, the untrusted LAN | thor *is* the LAN's DNS server, so this is one of the few deliberate LAN openings — catalogued in `modules/networking.nix` |
+| `53` tcp+udp (`ports.dns`) | open on `br0`, the untrusted LAN | thor *is* the LAN's DNS server, so this is one of the few deliberate LAN openings — catalogued in `modules/networking.nix`. In practice nothing on the LAN uses it: the query log shows zero non-tailnet, non-loopback clients over 30 days' retention (LAN devices take DNS from the router at `192.168.68.1`). Reconciling this stale "LAN's DNS server" framing with that finding is tracked separately, not part of #197. |
 | `4000` (`ports.blocky`) | loopback and tailnet only | Prometheus `/metrics`, and Blocky's REST API |
 
 Port 4000 is not reachable through the Cloudflare tunnel. That is why the
