@@ -113,6 +113,8 @@ in {
     # single vhost, subpath routing. Trailing slashes strip /bar and /search
     # prefixes before forwarding, as required by Bar Assistant.
     services.nginx.virtualHosts."${url}" = {
+      addSSL = true;
+      useACMEHost = server.domain;
       extraConfig = "client_max_body_size 100m;";
       locations = {
         "/bar/".proxyPass = "http://127.0.0.1:${toString p.server}/";
