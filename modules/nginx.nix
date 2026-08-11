@@ -1,5 +1,7 @@
-_: {
+{inputs, ...}: {
   flake.modules.nixos.nginx = {
+    imports = [inputs.self.modules.nixos.acme];
+
     services.nginx = {
       enable = true;
       recommendedProxySettings = true;
