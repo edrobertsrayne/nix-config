@@ -115,6 +115,12 @@ firewall table above. Binding `0.0.0.0` with no firewall opening means
 "tailnet-reachable, not LAN-reachable", and that combination is intentional
 wherever you see it.
 
+Paperless binds `0.0.0.0` for the same reason, even though it has no mobile
+app in this config — it's the general escape hatch for reaching an
+Access-gated service's API directly (e.g. from a script or another tailnet
+device) without a browser login flow. On that path paperless's own login is
+the only gate; Cloudflare Access never sees tailnet-direct traffic.
+
 ## Choosing how to reach a service
 
 | From | Use |
