@@ -17,6 +17,9 @@ auto-loads every git-tracked `.nix` file under `modules/`.
 6. Planning issue-tracked work ends by writing the plan into the issue
    (`gh issue edit --body-file`), not by executing it. Propagate findings to
    parent/downstream issues too. Only edit `.nix` files once asked to implement.
+7. No comments by default. Add one only when the WHY is non-obvious — a
+   hidden constraint, a workaround, a surprising value — beside the setting
+   it explains. Never comment WHAT the code does.
 
 ## Applying Changes
 
