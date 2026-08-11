@@ -40,9 +40,13 @@ in {
       ];
     };
 
-    services.nginx.virtualHosts."${url}".locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString ports.homepage}";
-      proxyWebsockets = true;
+    services.nginx.virtualHosts."${url}" = {
+      addSSL = true;
+      useACMEHost = server.domain;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString ports.homepage}";
+        proxyWebsockets = true;
+      };
     };
 
     # Set directly rather than via mkProxiedService: homepage is the dashboard

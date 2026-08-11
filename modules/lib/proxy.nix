@@ -21,6 +21,8 @@
     url = "${subdomain}.${domain}";
     aliasUrls = map (a: "${a}.${domain}") aliases;
     vhostConfig = {
+      addSSL = true;
+      useACMEHost = domain;
       locations."/" =
         {
           proxyPass = "http://${host}:${toString port}";

@@ -24,16 +24,15 @@ in {
       enable = true;
       port = ports.immich;
       # host stays 0.0.0.0, not 127.0.0.1, so the tailnet can reach
-      # <tailscale-ip>:2283 directly - see #174. Blocky serves no local
-      # records at all and there's no split-horizon DNS (docs/blocky.md), so
-      # photos.${domain} resolves publicly for everyone; the mobile app's
-      # backup path can't go through the Access-gated tunnel, and hits the
-      # port by tailnet IP instead. The firewall is the actual boundary here, not
-      # the bind address: no openFirewall means br0 never reaches this
-      # port, only loopback (nginx) and tailscale0 (trusted interface, see
-      # tailscale.nix) can. This is a deliberate divergence from the
-      # loopback-only binds on transmission/searxng/n8n, which are
-      # admin-only UIs with no non-Access client.
+      # <tailscale-ip>:2283 directly - see #174. The hostname resolves
+      # on-tailnet now too (#197) but still isn't enough for the mobile app -
+      # see docs/networking.md#split-horizon-dns-for-the-tailnet-not-the-lan.
+      # The firewall is the actual boundary, not the bind address: no
+      # openFirewall means br0 never reaches this port, only loopback
+      # (nginx) and tailscale0 (trusted interface, see tailscale.nix) can.
+      # This is a deliberate divergence from the loopback-only binds on
+      # transmission/searxng/n8n, which are admin-only UIs with no
+      # non-Access client.
       host = "0.0.0.0";
       mediaLocation = mediaDir;
     };

@@ -5,15 +5,15 @@ imported only by thor. It is the LAN's resolver, so a failure here is felt
 everywhere — hence `systemd-resolved` is force-disabled rather than left to
 compete for port 53.
 
-Two things it does **not** do, both deliberate: it serves no local records (see
-[No local records](#no-local-records)), and it never talks to the ISP's
-resolver.
+One thing it does not do, deliberate: it never talks to the ISP's resolver. It
+*does* serve one local record set now — see
+[Split-horizon: greensroad.uk](#split-horizon-greensroaduk).
 
 ## Ports and reachability
 
 | Port | Where | What |
 |---|---|---|
-| `53` tcp+udp (`ports.dns`) | open on `br0`, the untrusted LAN | thor *is* the LAN's DNS server, so this is one of the few deliberate LAN openings — catalogued in `modules/networking.nix` |
+| `53` tcp+udp (`ports.dns`) | open on `br0`, the untrusted LAN | thor *is* the LAN's DNS server, so this is one of the few deliberate LAN openings — catalogued in `modules/networking.nix`. In practice nothing on the LAN uses it: the query log shows zero non-tailnet, non-loopback clients over 30 days' retention (LAN devices take DNS from the router at `192.168.68.1`). Reconciling this stale "LAN's DNS server" framing with that finding is tracked separately, not part of #197. |
 | `4000` (`ports.blocky`) | loopback and tailnet only | Prometheus `/metrics`, and Blocky's REST API |
 
 Port 4000 is not reachable through the Cloudflare tunnel. That is why the
@@ -98,23 +98,39 @@ look like DNS.
 This is the place to add entries when a legitimate site gets blocked — see
 [Runbook](#runbook).
 
-## No local records
+## Split-horizon: greensroad.uk
 
-Blocky serves **no** records for `greensroad.uk`, and there is no split-horizon
-DNS. A record set was added once and reverted (`32d13d2`, `d8e131f`).
+`customDNS.mapping."greensroad.uk" = "100.84.196.40"` (thor's tailnet address)
+resolves every `*.greensroad.uk` name straight to thor for any client using
+blocky. The mapping is global — blocky has no per-client-group variant — and
+subdomains inherit the parent entry, so this one line covers all 22 vhosts
+plus the apex.
 
-The consequence is load-bearing for several services. A phone or TV on the
-tailnet cannot reach `photos.greensroad.uk` and land on thor directly — that
-name resolves publicly, through the Cloudflare tunnel, and Cloudflare Access
-gates it with a Google login that mobile apps can't complete. So those clients
-connect by **tailnet IP and port** instead, which is why Immich, Jellyfin and
-Navidrome bind `0.0.0.0` rather than loopback.
+A record set was added once and reverted the same day (`32d13d2`, `d8e131f`,
+2025-08-28) with no reason recorded. The most likely cause: nginx was HTTP-only
+at the time, so pointing tailnet clients at thor got them a plaintext `:80`
+response with no TLS, while the public path still had Cloudflare terminating
+TLS at the edge — a visible regression, promptly reverted. `modules/acme.nix`
+(wildcard cert via Cloudflare DNS-01) and `addSSL`/`useACMEHost` on every vhost
+(`modules/lib/proxy.nix`) close that gap, so this attempt keeps both doors:
+`:80` for the tunnel, `:443` for the tailnet, no redirect between them.
 
-Binding `0.0.0.0` is not what makes them reachable — the firewall is the actual
-boundary. None of them set `openFirewall` (which would open the port on *every*
-interface); only loopback (nginx) and `tailscale0` (a trusted interface) can
-reach them. Jellyfin additionally opens `8096` on `br0` for LAN players, scoped
-explicitly.
+This is safe to enable because `tailscale0` is already the only entry in
+`networking.firewall.trustedInterfaces` — every tailnet peer can already reach
+nginx on its own port for every service. The mapping only makes that existing
+path addressable by its proper hostname; it grants no new reachability. It is
+also safe from LAN fallout: the query log shows zero non-tailnet, non-loopback
+clients over the full 30-day retention, so the global mapping never reaches a
+device outside the tailnet.
+
+The auth model narrows, not disappears: Cloudflare Access still gates
+**off-tailnet** access, but tailnet visits no longer round-trip through
+Cloudflare and so stop appearing in the Access audit log.
+
+Immich, Jellyfin and Navidrome still bind `0.0.0.0` and are still reached by
+**tailnet IP and port**, not hostname, despite this change — see
+[docs/networking.md](networking.md#choosing-how-to-reach-a-service) for why
+mobile apps stay on the IP:port path even though the hostname now resolves.
 
 ## Query log
 

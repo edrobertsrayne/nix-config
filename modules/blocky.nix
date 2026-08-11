@@ -38,6 +38,9 @@ in {
               "2a07:e340::2"
             ];
           };
+          # Resolves *.greensroad.uk straight to thor for tailnet clients -
+          # see docs/blocky.md#split-horizon-greensroaduk.
+          customDNS.mapping."greensroad.uk" = "100.84.196.40";
           queryLog = {
             type = "postgresql";
             target = "postgres://blocky@/blocky?host=/run/postgresql&sslmode=disable";
