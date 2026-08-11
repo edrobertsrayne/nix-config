@@ -7,6 +7,16 @@ _: {
     # `tailscale` aspect declares persistence), provides a /persist dataset.
     # Declarations are unconditional under the direct-merge mechanism, so
     # there is no per-host guard. Only thor is impermanent today.
+    # Root is wiped on boot, so /etc/ssh is empty when agenix runs — it is the
+    # third activation snippet, long before impermanence restores /etc/ssh.
+    # /persist is mounted in stage 1 (neededForBoot), so read the identity
+    # from there. This file declares that path as persisted, so the option and
+    # its precondition stay together. ed25519 only: every secrets.nix entry is
+    # keyed to the ed25519 thor key, so the RSA path never decrypted anything,
+    # and a one-entry list makes "identity missing" fail loud rather than
+    # routine. See #167.
+    age.identityPaths = ["/persist/etc/ssh/ssh_host_ed25519_key"];
+
     environment.persistence."/persist" = {
       hideMounts = true;
       directories = [
