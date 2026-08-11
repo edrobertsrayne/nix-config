@@ -89,6 +89,11 @@ definition is null and another isn't.
 - impermanence chmods parent dirs to match `/persist`. `/var/lib/private`
   needs `0700 root:root` or `DynamicUser` services fail to start — pinned in
   `modules/persistence.nix`.
+- Declare a persisted path in the aspect module that needs it (e.g.
+  `environment.persistence."/persist".directories` inside `modules/acme.nix`),
+  not centrally in `modules/persistence.nix`. That file holds only
+  whole-configuration state (uid/gid map, journal, machine-id, ssh host keys)
+  — see its own comment for why.
 
 ## Settled Decisions — Don't Re-Litigate
 
@@ -98,8 +103,9 @@ definition is null and another isn't.
   Docker port publishes skipping the firewall via `DOCKER-USER`.
 - **Container images are unpinned on purpose** — `:latest` + `--pull=always`
   everywhere. Don't pin tags/digests, don't "fix" this in a hardening review.
-- **Bind address follows the client.** No split-horizon DNS, so
-  `*.greensroad.uk` resolves to Cloudflare even on the tailnet. Mobile/non-SSO
+- **Bind address follows the client.** Mobile apps can't complete Access's
+  Google login (a browser flow), so IP:port over the tailnet stays the robust
+  path for them regardless of what hostnames resolve to. Mobile/non-SSO
   clients → bind `0.0.0.0`, rely on the firewall (immich, navidrome).
   Admin-only browser UI → bind `127.0.0.1` (transmission, searxng, n8n).
   `openFirewall` is never the answer. See `docs/networking.md`.

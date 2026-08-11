@@ -96,21 +96,30 @@ nix eval --raw .#nixosConfigurations.thor.config.networking.firewall.allowedTCPP
   --apply 'builtins.toString'
 ```
 
-## No split-horizon DNS
+## Split-horizon DNS for the tailnet, not the LAN
 
-Blocky serves **no local records** for `greensroad.uk`. A device on the LAN
-asking for `photos.greensroad.uk` gets Cloudflare's public answer and goes out
-to the internet and back through the tunnel, even standing next to the server.
+Blocky resolves `*.greensroad.uk` straight to thor's tailnet address
+(`100.84.196.40`) for any client that uses it — see
+[blocky.md](blocky.md#split-horizon-greensroaduk) for the mapping and why it's
+safe. LAN devices don't take DNS from blocky (the router hands out its own
+resolver on `192.168.68.1`), so this split only ever applies on the tailnet; a
+device on the LAN asking for `photos.greensroad.uk` still gets Cloudflare's
+public answer and goes out to the internet and back through the tunnel, even
+standing next to the server.
 
-This is deliberate ([blocky.md](blocky.md) has the reasoning), and it has one
-consequence worth knowing because it explains several odd-looking module
-settings:
+This has one consequence worth knowing because it explains several odd-looking
+module settings, and it survives the split-horizon change because the reason
+is about the login flow, not about DNS:
 
 **Mobile apps cannot use the public hostnames**, because Cloudflare Access's
-Google login is a browser flow that a native app cannot complete. So the Immich,
-Navidrome and Jellyfin apps connect to `100.84.196.40:<port>` over the tailnet
-instead. That is why those services bind `0.0.0.0` rather than loopback — they
-need to be reachable on the tailnet interface — while still not appearing in the
+Google login is a browser flow that a native app cannot complete — that's true
+whether the hostname resolves to Cloudflare or to thor directly, since an
+Access-gated *hostname* still needs the Access login the first time a client
+without a valid session hits it, and a mis-handled 302 to a login page reads as
+a corrupt session to some mobile clients. So the Immich, Navidrome and Jellyfin
+apps connect to `100.84.196.40:<port>` over the tailnet instead of by hostname.
+That is why those services bind `0.0.0.0` rather than loopback — they need to
+be reachable on the tailnet interface — while still not appearing in the
 firewall table above. Binding `0.0.0.0` with no firewall opening means
 "tailnet-reachable, not LAN-reachable", and that combination is intentional
 wherever you see it.
@@ -126,7 +135,8 @@ the only gate; Cloudflare Access never sees tailnet-direct traffic.
 | From | Use |
 |---|---|
 | A browser, anywhere | `https://<service>.greensroad.uk` — through the tunnel, Access login |
-| A mobile app | `100.84.196.40:<port>` over the tailnet |
+| A browser, on the tailnet | Same hostname now resolves straight to thor over `:443` — no Access login, no tunnel hop |
+| A mobile app | `100.84.196.40:<port>` over the tailnet — hostname still routes through the Access login flow |
 | Admin tools with no vhost (Prometheus, Alertmanager) | `thor:<port>` from a tailnet device |
 | A LAN appliance that can't do either | Only the ports in the table above |
 
