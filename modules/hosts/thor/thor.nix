@@ -14,6 +14,7 @@
     }: {
       imports = with inputs.self.modules.nixos; [
         ./_hardware.nix
+        ./_rollback.nix
 
         alertmanager
         alertmanager-ntfy
