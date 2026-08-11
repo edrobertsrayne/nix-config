@@ -6,7 +6,6 @@ in {
       alertmanager = {
         enable = true;
         port = ports.alertmanager;
-        listenAddress = "127.0.0.1";
         # Disable cluster mode — single node, no mesh port needed
         extraFlags = ["--cluster.listen-address="];
         configuration = {
