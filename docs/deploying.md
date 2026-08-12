@@ -184,13 +184,59 @@ Two helpers do the repetitive work:
   an nginx vhost at `<subdomain>.greensroad.uk`, a tile on Homepage, and a
   blackbox HTTP probe that alerts if it stops answering. Pass `probePath` if the
   service has a health endpoint; probing `/` only proves something is listening.
-- **`mkArr`** (`modules/lib/servarr.nix`) — wraps the above for the \*arr apps,
-  and additionally wires the API key secret, disables local auth, and puts the
-  service user in the `tank` group so it can write the shared media trees.
+  `host` defaults to `127.0.0.1`; override it when the service doesn't run on
+  the same host as nginx (see below).
+- **`mkArr`** (`modules/lib/servarr.nix`) — wires the \*arr apps' API key
+  secret, disables local auth, and puts the service user in the `tank` group
+  so it can write the shared media trees. It does **not** call
+  `mkProxiedService` — the vhost is a separate module (below).
 
 Ports go in `modules/settings/ports.nix`, which is the single source of truth —
 never hard-code a port in a service module. Read `modules/searxng.nix` for a
 minimal example and `modules/media/radarr.nix` for the servarr pattern.
+
+### Same-host vs. cross-host services
+
+`flake.modules.nixos.<name>` only lands on a host if that host's own module
+imports it (or it's in `common`, which every host gets). A service module and
+its `mkProxiedService` vhost are two independent things that happen to usually
+live in the same file and get imported together onto the same host — nothing
+stops them from splitting across hosts, and nginx only runs on thor.
+
+For a service that runs on another host (mimir, so far — the download stack,
+moved there in #203), define two separate flake modules in the file instead of
+one:
+
+```nix
+flake.modules.nixos.radarr = inputs.self.lib.mkArr { ... };
+
+# Runs on mimir; this vhost is what actually makes it reachable - it must
+# be imported by thor, the only host with nginx/cloudflared.
+flake.modules.nixos.radarr-proxy = inputs.self.lib.mkProxiedService {
+  ...
+  host = inputs.self.settings.mimir.address;
+};
+```
+
+The service module goes on the host that runs it (via that host's own imports,
+e.g. mimir's `downloads` group). The `-proxy` module goes on thor, grouped with
+its siblings alongside the group it mirrors (e.g. `downloads-proxy` sits next
+to `downloads` in `modules/media/downloads.nix`) and imported from `thor.nix`.
+Getting this wrong is a silent failure, not a build error: the
+service module still evaluates fine on the host running it, it just never gets
+an nginx vhost anywhere, and the mkProxiedService call still evaluates fine if
+placed on the wrong host, it just proxies to a backend that isn't there. Check
+that the `-proxy` module is actually imported by thor, not just that the
+service module is imported somewhere.
+
+Addressing a cross-host backend: prefer a static LAN IP
+(`inputs.self.settings.mimir.address`, `modules/settings/mimir.nix`) over a
+Tailscale hostname when the two hosts already share an L2 segment (mimir's tap
+interface is bridged into thor's own `br0`). `nginx`'s `proxyPass` resolves a
+hostname once at config-load with no `resolver` directive configured, so a
+Tailscale name is one extra moving part for no benefit here — see
+[networking.md](networking.md) for the full rationale and the firewall rule
+that has to accompany it.
 
 ## Secrets
 
