@@ -17,6 +17,6 @@ in {
     icon = "lidarr.png";
     group = "Media";
     probePath = "/ping";
-    host = inputs.self.settings.mimir.tailscaleHost;
+    host = inputs.self.settings.mimir.address;
   };
 }

@@ -8,8 +8,10 @@
       # TODO: confirm this doesn't collide with the router's DHCP pool
       # before actually provisioning mimir - br0 is a /22 shared with LAN
       # DHCP clients and thor is the only other static reservation on it
-      # today (modules/hosts/thor/bridge.nix).
-      ipAddress = "192.168.68.129";
+      # today (modules/hosts/thor/bridge.nix). settings/mimir.nix is the
+      # single source of truth for this address - every proxied service on
+      # thor reads it too.
+      ipAddress = inputs.self.settings.mimir.address;
       mac = "02:00:00:00:00:10";
     in {
       imports = [

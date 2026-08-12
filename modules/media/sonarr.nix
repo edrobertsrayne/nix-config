@@ -21,6 +21,6 @@ in {
     # whose database is unopenable keeps serving its UI on / but returns
     # 500 here.
     probePath = "/ping";
-    host = inputs.self.settings.mimir.tailscaleHost;
+    host = inputs.self.settings.mimir.address;
   };
 }

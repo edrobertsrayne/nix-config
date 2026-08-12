@@ -23,13 +23,14 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            # 100.84.196.40 is thor's tailscale0 address
-            # (modules/hosts/thor/README.md) - nginx's proxy_pass Host header,
-            # now that it's a cross-host call (#203). No explicit bind address
+            # 192.168.68.128 is thor's br0 address
+            # (modules/hosts/thor/bridge.nix) - nginx's proxy_pass source, now
+            # that it's a cross-host call over the LAN bridge mimir and thor
+            # share, not the tailnet (#203). No explicit bind address
             # override was found here to begin with - #201's audit flagged
             # that as unconfirmed, still true after this move; leaving it as
             # nixpkgs' own default rather than guessing.
-            host_whitelist = "localhost, 127.0.0.1, ${url}, 100.84.196.40";
+            host_whitelist = "localhost, 127.0.0.1, ${url}, 192.168.68.128";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
             download_dir = "/mnt/ssd/downloads/usenet/incomplete";
@@ -195,6 +196,6 @@ in {
     extraConfig = ''
       proxy_set_header X-Forwarded-Host $host;
     '';
-    host = inputs.self.settings.mimir.tailscaleHost;
+    host = inputs.self.settings.mimir.address;
   };
 }

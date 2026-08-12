@@ -129,6 +129,6 @@ in {
     description = "Lidarr <-> slskd bridge";
     icon = "soularr.png";
     # No probePath: soularr exposes no health endpoint.
-    host = inputs.self.settings.mimir.tailscaleHost;
+    host = inputs.self.settings.mimir.address;
   };
 }
