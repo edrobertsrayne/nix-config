@@ -103,7 +103,16 @@ in {
         SCRIPT_INTERVAL = "900"; # 15 min
         WEBUI_ENABLED = "true";
       };
-      ports = ["127.0.0.1:${toString ports.media.soularr}:8265"];
+      # Was 127.0.0.1, left over from when nginx was same-host - nginx now
+      # reaches this cross-host from thor (#203), so it has to bind mimir's
+      # own address instead. Unlike transmission/sabnzbd, soularr has no
+      # app-level whitelist of its own, and Docker manages its published
+      # ports via its own iptables DNAT/FORWARD rules (modules/docker.nix
+      # doesn't customise this), which are independent of - and not scoped
+      # by - the NixOS firewall's own allow rules. So this is reachable from
+      # any LAN device that can route to mimir, not just thor, until that's
+      # tightened at the Docker/iptables layer. Known gap, not fixed here.
+      ports = ["${inputs.self.settings.mimir.address}:${toString ports.media.soularr}:8265"];
       volumes = [
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
