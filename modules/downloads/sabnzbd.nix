@@ -23,14 +23,13 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            # 192.168.68.128 is thor's br0 address
-            # (modules/hosts/thor/bridge.nix) - nginx's proxy_pass source, now
-            # that it's a cross-host call over the LAN bridge mimir and thor
-            # share, not the tailnet (#203). No explicit bind address
-            # override was found here to begin with - #201's audit flagged
-            # that as unconfirmed, still true after this move; leaving it as
-            # nixpkgs' own default rather than guessing.
-            host_whitelist = "localhost, 127.0.0.1, ${url}, 192.168.68.128";
+            # thor's br0 address (modules/settings/hosts.nix) - nginx's
+            # proxy_pass source, now that it's a cross-host call over the LAN
+            # bridge mimir and thor share, not the tailnet (#203). No explicit
+            # bind address override was found here to begin with - #201's
+            # audit flagged that as unconfirmed, still true after this move;
+            # leaving it as nixpkgs' own default rather than guessing.
+            host_whitelist = "localhost, 127.0.0.1, ${url}, ${inputs.self.settings.hosts.thor.address}";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
             download_dir = "/mnt/ssd/downloads/usenet/incomplete";
@@ -196,6 +195,6 @@ in {
     extraConfig = ''
       proxy_set_header X-Forwarded-Host $host;
     '';
-    host = inputs.self.settings.mimir.address;
+    host = inputs.self.settings.hosts.mimir.address;
   };
 }

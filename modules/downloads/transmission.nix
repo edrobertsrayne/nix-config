@@ -38,10 +38,10 @@ in {
         peer-port = ports.media.transmissionPeer;
 
         rpc-whitelist-enabled = true;
-        # 192.168.68.128 is thor's br0 address (modules/hosts/thor/bridge.nix)
-        # - nginx's proxy_pass source, now that it's a cross-host call over
-        # the LAN bridge mimir and thor share, not the tailnet.
-        rpc-whitelist = "127.0.0.1,::1,192.168.68.128";
+        # thor's br0 address (modules/settings/hosts.nix) - nginx's
+        # proxy_pass source, now that it's a cross-host call over the LAN
+        # bridge mimir and thor share, not the tailnet.
+        rpc-whitelist = "127.0.0.1,::1,${inputs.self.settings.hosts.thor.address}";
         # DNS-rebinding protection. Transmission always permits IP-literal
         # Host headers, so homepage's siteMonitor (http://127.0.0.1:9091)
         # still works.
@@ -88,6 +88,6 @@ in {
     # No probePath: /transmission/rpc answers 409 by design (the session-id
     # handshake). The root URL 301s to /transmission/web/ and the probe
     # follows it.
-    host = inputs.self.settings.mimir.address;
+    host = inputs.self.settings.hosts.mimir.address;
   };
 }

@@ -68,6 +68,6 @@ in {
     description = "Soulseek client";
     icon = "slskd.png";
     probePath = "/health";
-    host = inputs.self.settings.mimir.address;
+    host = inputs.self.settings.hosts.mimir.address;
   };
 }

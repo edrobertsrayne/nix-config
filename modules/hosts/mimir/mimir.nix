@@ -8,10 +8,10 @@
       # TODO: confirm this doesn't collide with the router's DHCP pool
       # before actually provisioning mimir - br0 is a /22 shared with LAN
       # DHCP clients and thor is the only other static reservation on it
-      # today (modules/hosts/thor/bridge.nix). settings/mimir.nix is the
+      # today (modules/hosts/thor/bridge.nix). settings/hosts.nix is the
       # single source of truth for this address - every proxied service on
       # thor reads it too.
-      ipAddress = inputs.self.settings.mimir.address;
+      ipAddress = inputs.self.settings.hosts.mimir.address;
       mac = "02:00:00:00:00:10";
 
       # thor's br0 address (modules/hosts/thor/bridge.nix) - the only host
@@ -19,7 +19,7 @@
       # so it applies to mimir too) treats br0 as untrusted, same as the WAN;
       # this is the one exception, scoped to thor specifically rather than
       # opened to the whole LAN.
-      thorAddress = "192.168.68.128";
+      thorAddress = inputs.self.settings.hosts.thor.address;
 
       # nginx on thor reaches each of these cross-host now (#203) - loopback
       # traffic used to skip the firewall entirely when nginx was same-host,

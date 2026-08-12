@@ -1,6 +1,6 @@
-_: {
+{inputs, ...}: {
   flake.modules.nixos.thor = {lib, ...}: let
-    ipAddress = "192.168.68.128";
+    ipAddress = inputs.self.settings.hosts.thor.address;
   in {
     networking = {
       networkmanager.enable = lib.mkForce false;

@@ -112,7 +112,7 @@ in {
       # by - the NixOS firewall's own allow rules. So this is reachable from
       # any LAN device that can route to mimir, not just thor, until that's
       # tightened at the Docker/iptables layer. Known gap, not fixed here.
-      ports = ["${inputs.self.settings.mimir.address}:${toString ports.media.soularr}:8265"];
+      ports = ["${inputs.self.settings.hosts.mimir.address}:${toString ports.media.soularr}:8265"];
       volumes = [
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
@@ -138,6 +138,6 @@ in {
     description = "Lidarr <-> slskd bridge";
     icon = "soularr.png";
     # No probePath: soularr exposes no health endpoint.
-    host = inputs.self.settings.mimir.address;
+    host = inputs.self.settings.hosts.mimir.address;
   };
 }

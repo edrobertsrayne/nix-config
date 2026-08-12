@@ -214,7 +214,7 @@ flake.modules.nixos.radarr = inputs.self.lib.mkArr { ... };
 # be imported by thor, the only host with nginx/cloudflared.
 flake.modules.nixos.radarr-proxy = inputs.self.lib.mkProxiedService {
   ...
-  host = inputs.self.settings.mimir.address;
+  host = inputs.self.settings.hosts.mimir.address;
 };
 ```
 
@@ -230,7 +230,7 @@ that the `-proxy` module is actually imported by thor, not just that the
 service module is imported somewhere.
 
 Addressing a cross-host backend: prefer a static LAN IP
-(`inputs.self.settings.mimir.address`, `modules/settings/mimir.nix`) over a
+(`inputs.self.settings.hosts.mimir.address`, `modules/settings/hosts.nix`) over a
 Tailscale hostname when the two hosts already share an L2 segment (mimir's tap
 interface is bridged into thor's own `br0`). `nginx`'s `proxyPass` resolves a
 hostname once at config-load with no `resolver` directive configured, so a
