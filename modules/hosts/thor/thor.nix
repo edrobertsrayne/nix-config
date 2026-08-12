@@ -23,22 +23,25 @@
         bentopdf
         blocky
         code-server
+        dlna
         downloads-proxy
         grafana
         homepage
         immich
+        jellyfin
         karakeep
         libvirt
         loki
         n8n
+        navidrome
         nginx
         ntfy
-        media
         paperless
         persistence
         portainer
         prometheus
         searxng
+        seerr
         vaultwarden
         zfs
       ];
