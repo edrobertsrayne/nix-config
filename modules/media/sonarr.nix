@@ -8,5 +8,6 @@ in {
     description = "TV series manager";
     icon = "sonarr.png";
     secret = ../../secrets/sonarr-apikey.age;
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }

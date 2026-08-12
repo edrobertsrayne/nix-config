@@ -29,16 +29,22 @@ Pool-wide settings: `ashift=12`, `compression=lz4`, `atime=off`,
 reasoning, and why it cannot be changed without recreating the pool, is in a
 comment in that file.
 
-Five datasets, and the difference between them is the only thing standing
+Seven datasets, and the difference between them is the only thing standing
 between you and a bad `rm`:
 
 | Dataset | Mounted at | Snapshotted |
 |---|---|---|
 | `zroot/root` | `/` | no |
 | `zroot/nix` | `/nix` | no |
+| `zroot/home` | `/home` | **yes** |
 | `zroot/srv` | `/srv` | **yes** |
 | `zroot/persist` | `/persist` | **yes** |
 | `zroot/libvirt` | `/var/lib/libvirt` | **yes** |
+| `zroot/microvms` | `/var/lib/microvms` | **yes** |
+
+`zroot/microvms` holds mimir's disk images (#203) — same shape as
+`zroot/libvirt`, one dataset per hypervisor holding its guests' image files
+rather than one dataset per guest.
 
 `/` and `/nix` are not snapshotted because they do not need to be — they are
 rebuilt from this repo, and generations already roll them back
@@ -69,14 +75,15 @@ the difference from plain ext4 is only that a second disk's files would survive.
 
 | Path | Contents | On | Snapshotted |
 |---|---|---|---|
-| `/srv/<service>` | Service state and databases — Jellyfin, the \*arr apps, Grafana, Loki, Paperless, Transmission, Bar Assistant, Soularr | zroot | **yes** |
-| `/srv/docker` | Docker images, volumes, container state | zroot | **yes** |
+| `/srv/<service>` (thor) | Service state and databases — Jellyfin, Grafana, Loki, Paperless, Bar Assistant | zroot | **yes** |
+| `/srv/docker` (thor) | Docker images, volumes, container state | zroot | **yes** |
 | `/var/lib/libvirt` | VM disk images (Home Assistant) | zroot | **yes** |
+| `/var/lib/microvms` | mimir's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/var` (#203) | zroot | **yes** |
 | `/persist` | Per-aspect service/identity state, bind-mounted back to its usual path | zroot | **yes** |
 | `/mnt/ssd/immich` | **Photos and videos** | SSD | no |
 | `/mnt/ssd/music` | Music library | SSD | no |
-| `/mnt/ssd/downloads` | In-progress and completed downloads (usenet, transmission, slskd) | SSD | no |
-| `/mnt/storage/media` | Films and TV — the Jellyfin library | mergerfs | no |
+| `/mnt/ssd/downloads` | In-progress and completed downloads (usenet, transmission, slskd) — physically on thor's SSD, virtiofs-shared into mimir | SSD | no |
+| `/mnt/storage/media` | Films and TV — the Jellyfin library — physically on thor, virtiofs-shared into mimir (read-write, for \*arr import) | mergerfs | no |
 | `/mnt/storage/backup` | Where *other* machines put their backups | mergerfs | no |
 
 Downloads land on the SSD and are moved to `/mnt/storage/media` by the \*arr
@@ -121,7 +128,8 @@ The rationale for that split is in the comments in `nfs.nix` and `samba.nix`.
 ## Snapshots
 
 `modules/zfs.nix` keeps automatic snapshots of every dataset with
-`com.sun:auto-snapshot=true` — `/srv`, `/var/lib/libvirt`, and `/persist`:
+`com.sun:auto-snapshot=true` — `/srv`, `/var/lib/libvirt`, `/var/lib/microvms`,
+`/home`, and `/persist`:
 
 | Frequency | Kept | Covers |
 |---|---|---|
@@ -211,6 +219,7 @@ What each loss would actually cost:
 | `/mnt/ssd/downloads` | Gone | Yes, it is transient by nature |
 | `/srv/*` service state | Rolled back to a snapshot, if the pool survives | Config comes from this repo; history does not |
 | `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot | Same |
+| `/var/lib/microvms` — mimir (the download stack, #203) | Rolled back to a snapshot, if the pool survives | Same - and note this is thor's pool, so a thor disk failure takes mimir's state down with it too |
 | `/persist` per-aspect state | Rolled back to a snapshot, if the pool survives | Same |
 | `/` and `/nix` | Rebuilt by `nixos-rebuild` from this repo | Yes, completely |
 

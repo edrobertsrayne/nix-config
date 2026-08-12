@@ -130,6 +130,12 @@ systemctl status nginx
 systemctl status 'cloudflared-tunnel-*'
 ```
 
+**Download-stack services (transmission, sabnzbd, sonarr, radarr, lidarr,
+prowlarr, bazarr, slskd, soularr) run on mimir, not thor** (#203). Steps 1 and
+2 need `ssh mimir` first — nginx (step 3) still runs on thor and proxies to
+mimir's tailscale hostname (thor resolves MagicDNS names - see
+[networking.md](networking.md)), so steps 3 and 4 are unchanged.
+
 Where it stops tells you what is wrong:
 
 - **Fails at 1** — a service problem. Read its logs.
@@ -145,7 +151,9 @@ Where it stops tells you what is wrong:
 **The tailnet is the way in when the tunnel is the broken part.** Every service
 is reachable from any tailnet device at `thor:<port>` regardless of Cloudflare's
 state, and SSH always works there. If `grafana.greensroad.uk` is dead but
-`thor:3000` is fine, stop debugging thor and go look at Cloudflare.
+`thor:3000` is fine, stop debugging thor and go look at Cloudflare. The
+download-stack services are the exception — they're at `mimir:<port>`, not
+`thor:<port>`, since #203 moved them off thor.
 
 ## DNS is broken everywhere
 
@@ -193,11 +201,13 @@ Only `/` and `/nix` filling up will actually break the system. A full
 
 ## Containers
 
-Five containers run on thor, all declared in Nix and therefore managed by
-systemd. **`systemctl` is the right tool, not `docker`:**
+Four containers run on thor; Soularr runs on mimir instead since #203 (it
+moved with the rest of the download stack it bridges). All are declared in Nix
+and therefore managed by systemd. **`systemctl` is the right tool, not
+`docker`:**
 
 ```sh
-systemctl restart docker-soularr    # correct
+systemctl restart docker-soularr    # correct - run this on mimir, not thor
 docker restart soularr              # works, but systemd may undo it
 ```
 
@@ -249,6 +259,12 @@ sudo virsh console hoas             # serial console; Ctrl-] to exit
 
 `hoas` is Home Assistant and autostarts. Its disk lives on
 `/var/lib/libvirt`, which *is* snapshotted — see [storage.md](storage.md).
+
+**mimir is not one of these.** It's a [microvm.nix](https://microvm-nix.github.io/microvm.nix/)
+guest (#203), declared in Nix rather than run through `virsh` — `virsh list`
+will not show it. Use `systemctl status microvm@mimir` on thor instead, and
+`ssh mimir` for anything inside it. Its disk images live on
+`/var/lib/microvms`, which is snapshotted the same way `/var/lib/libvirt` is.
 
 ## When you can't reach thor at all
 

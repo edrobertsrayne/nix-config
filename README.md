@@ -2,9 +2,13 @@
 
 > Aspect-oriented NixOS configuration following dendritic principles
 
-Single-host server configuration built around
+Server configuration built around
 [**dendritic architecture**](https://github.com/mightyiam/dendritic) —
-organizing modules by _what they do_ rather than _where they run_.
+organizing modules by _what they do_ rather than _where they run_. Two
+`nixosConfigurations`: thor (the physical host) and mimir (a
+[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest hypervised by
+thor, running the download stack behind its own Mullvad exit node — see
+issue #203).
 
 ---
 
@@ -15,7 +19,8 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── {aspect}.nix   # Single-purpose modules (ssh.nix, docker.nix)
 ├── {feature}/     # Multi-file features (neovim/, utilities/)
 ├── hosts/         # Host-specific configs
-│   └── thor/      # Home server (NixOS)
+│   ├── thor/      # Home server (NixOS)
+│   └── mimir/     # Download-stack microvm, hypervised by thor
 ├── media/         # Media stack (*arr apps, jellyfin)
 ├── settings/      # Project options (user.nix, ports.nix, server.nix)
 ├── dashboards/    # Grafana dashboard JSON
@@ -44,6 +49,22 @@ Home server running NixOS. Services:
 |------|-------------|
 | Jellyfin | Media server |
 | Jellyseerr | Media request management |
+| Navidrome | Music streaming server |
+| MiniDLNA | DLNA media streaming |
+
+The download stack (below) runs on mimir instead — no privacy requirement for
+the services above, and some want LAN-local/mobile access. See
+[docs/networking.md](docs/networking.md).
+
+## Host: mimir
+
+A [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest hypervised
+by thor. Runs only the download stack, behind its own Mullvad exit node, so
+the rest of thor doesn't pay for Mullvad's reliability/routing quirks
+(issue #203).
+
+| Name | Description |
+|------|-------------|
 | Sonarr | TV show management |
 | Radarr | Movie management |
 | Lidarr | Music management |
@@ -53,8 +74,6 @@ Home server running NixOS. Services:
 | Sabnzbd | Usenet client |
 | slskd | Soulseek P2P client |
 | Soularr | Bridges slskd downloads to Lidarr |
-| Navidrome | Music streaming server |
-| MiniDLNA | DLNA media streaming |
 
 ### Monitoring
 

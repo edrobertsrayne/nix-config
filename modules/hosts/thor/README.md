@@ -20,6 +20,10 @@ box is built and run is in [`docs/`](../../../docs):
 | br0        | 192.168.68.128/22 | Bridge for VMs and LAN |
 | tailscale0 | 100.84.196.40/32  | Mesh VPN (Tailscale)   |
 
+mimir, a microvm.nix guest hypervised by thor, has its own `br0` address
+(`192.168.68.129/22`, `modules/hosts/mimir/mimir.nix`) and its own tailnet
+node — see [../mimir/README.md](../mimir/README.md).
+
 **Domain**: `greensroad.uk` via Cloudflare Tunnel. Services are reached at
 `{service}.greensroad.uk` through nginx, or at `100.84.196.40:{port}` from the
 tailnet — see [networking.md](../../../docs/networking.md).
@@ -37,6 +41,12 @@ interface.
 | openclaw | shut off | 4    | 8GB | no        | Scratch VM     |
 
 Their disk images live on `/var/lib/libvirt`, which is snapshotted.
+
+**mimir is not one of these.** It's declared in Nix as its own
+`nixosConfiguration` and run via microvm.nix
+(`_microvm-host.nix` + `modules/hosts/mimir/mimir.nix`), not through `virsh` -
+`systemctl status microvm@mimir` is the equivalent of `virsh list` for it. See
+[../mimir/README.md](../mimir/README.md).
 
 ---
 
@@ -124,7 +134,7 @@ Files with `_` prefix are:
 - Manually imported by `thor.nix` for explicit dependencies
 - Host-specific implementations not meant for reuse
 
-Currently just `_hardware.nix`.
+Currently `_hardware.nix`, `_microvm-host.nix` and `_rollback.nix`.
 
 ### Auto-Loaded Files
 

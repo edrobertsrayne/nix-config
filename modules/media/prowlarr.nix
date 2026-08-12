@@ -18,6 +18,7 @@ in {
         # the directory away from the DynamicUser and locks the running service
         # out of its own databases (#194). The default generates neither.
         dataDir = null;
+        host = inputs.self.settings.mimir.tailscaleHost;
       })
     ];
 

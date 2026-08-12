@@ -18,6 +18,7 @@ in {
         extraConfig = ''
           proxy_set_header X-Forwarded-Host $host;
         '';
+        host = inputs.self.settings.mimir.tailscaleHost;
       })
     ];
 
@@ -39,7 +40,13 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            host_whitelist = "localhost, 127.0.0.1, ${url}";
+            # 100.84.196.40 is thor's tailscale0 address
+            # (modules/hosts/thor/README.md) - nginx's proxy_pass Host header,
+            # now that it's a cross-host call (#203). No explicit bind address
+            # override was found here to begin with - #201's audit flagged
+            # that as unconfirmed, still true after this move; leaving it as
+            # nixpkgs' own default rather than guessing.
+            host_whitelist = "localhost, 127.0.0.1, ${url}, 100.84.196.40";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
             download_dir = "/mnt/ssd/downloads/usenet/incomplete";
@@ -189,7 +196,5 @@ in {
       "d /mnt/ssd/downloads/usenet/complete 0755 ${cfg.user} tank -"
       "d /mnt/ssd/downloads/usenet/incomplete 0755 ${cfg.user} tank -"
     ];
-
-    environment.persistence."/persist".directories = ["/var/lib/sabnzbd"];
   };
 }

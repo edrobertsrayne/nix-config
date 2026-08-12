@@ -22,6 +22,12 @@ Step 2 catches typos and type errors without building anything, in seconds.
 Step 3 is where the real work happens: Nix builds every package the new
 configuration needs, then activates it.
 
+**mimir (#203) is a second `nixosConfiguration`, not a service inside thor's.**
+Everything below applies to it too, with `#mimir` in place of `#thor` - but
+run it *on mimir* (`ssh mimir` first), not on thor. A `nixos-rebuild
+--flake .#mimir --target-host mimir` from thor also works, since thor already
+has SSH access as mimir's hypervisor.
+
 ### Choosing `test`, `switch`, or `boot`
 
 These three verbs are the only meaningful difference between deploys. They vary

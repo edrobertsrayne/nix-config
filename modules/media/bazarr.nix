@@ -20,6 +20,7 @@ in {
         # the blackbox config (a world-readable store path), and the SPA
         # catch-all answers 200 with HTML for any other path, so a deeper
         # probe would prove less than the root one does.
+        host = inputs.self.settings.mimir.tailscaleHost;
       })
     ];
 

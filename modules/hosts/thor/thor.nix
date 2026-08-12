@@ -14,6 +14,7 @@
     }: {
       imports = with inputs.self.modules.nixos; [
         ./_hardware.nix
+        (import ./_microvm-host.nix {inherit inputs;})
         ./_rollback.nix
 
         alertmanager
@@ -93,13 +94,10 @@
           };
         };
 
-        tailscale = {
-          useRoutingFeatures = "client";
-          extraSetFlags = [
-            "--exit-node=se-sto-wg-201.mullvad.ts.net"
-            "--exit-node-allow-lan-access=true"
-          ];
-        };
+        # No exit node: moved to mimir (#203) so only the download stack
+        # pays for Mullvad's reliability/routing quirks, not every service
+        # on thor.
+        tailscale.useRoutingFeatures = "client";
 
         fstrim.enable = true;
       };

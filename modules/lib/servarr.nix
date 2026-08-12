@@ -16,6 +16,10 @@
     # checks database access rather than just answering — a Servarr app whose
     # database is unopenable keeps serving its UI on / but returns 500 here.
     probePath ? "/ping",
+    # 127.0.0.1 (mkProxiedService's own default) is right for anything still
+    # running on thor. The five *arr services moved to mimir (#203) pass
+    # mimir's tailscale IP instead, since nginx stays on thor.
+    host ? "127.0.0.1",
   }: {
     config,
     lib,
@@ -25,7 +29,7 @@
   in {
     imports = [
       (inputs.self.lib.mkProxiedService {
-        inherit name port description icon probePath;
+        inherit name port description icon probePath host;
         subdomain = service;
         group = "Media";
       })

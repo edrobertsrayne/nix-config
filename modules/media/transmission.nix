@@ -20,6 +20,7 @@ in {
         # No probePath: /transmission/rpc answers 409 by design (the session-id
         # handshake). The root URL 301s to /transmission/web/ and the probe
         # follows it.
+        host = inputs.self.settings.mimir.tailscaleHost;
       })
     ];
 
@@ -40,16 +41,18 @@ in {
       # off) - it's reached only via nginx on loopback.
       openPeerPorts = true;
       settings = {
-        # Loopback only: reached via nginx (cloudflared -> Access-gated, or
-        # over the tailnet). The firewall already keeps 9091 off br0;
-        # binding narrowly means a firewall regression can't silently
-        # re-expose the RPC socket.
-        rpc-bind-address = "127.0.0.1";
+        # 0.0.0.0, not loopback: nginx now reaches this over the tailnet from
+        # thor (#203 - transmission moved to mimir), so tailscale0 being the
+        # only trusted interface is what keeps this from being LAN-reachable,
+        # not the bind address. rpc-whitelist below is the second layer.
+        rpc-bind-address = "0.0.0.0";
         rpc-port = ports.media.transmission;
         peer-port = ports.media.transmissionPeer;
 
         rpc-whitelist-enabled = true;
-        rpc-whitelist = "127.0.0.1,::1";
+        # 100.84.196.40 is thor's tailscale0 address (modules/hosts/thor/README.md)
+        # - nginx's proxy_pass source, now that it's a cross-host call.
+        rpc-whitelist = "127.0.0.1,::1,100.84.196.40";
         # DNS-rebinding protection. Transmission always permits IP-literal
         # Host headers, so homepage's siteMonitor (http://127.0.0.1:9091)
         # still works.

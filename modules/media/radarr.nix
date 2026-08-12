@@ -8,5 +8,6 @@ in {
     description = "Movie manager";
     icon = "radarr.png";
     secret = ../../secrets/radarr-apikey.age;
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }

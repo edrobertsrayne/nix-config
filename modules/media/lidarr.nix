@@ -8,5 +8,6 @@ in {
     description = "Music manager";
     icon = "lidarr.png";
     secret = ../../secrets/lidarr-apikey.age;
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }

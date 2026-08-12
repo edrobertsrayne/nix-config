@@ -33,11 +33,14 @@ Prometheus, Alertmanager and the rest need no vhost.
 the Tailscale admin console, out of band). thor's tailnet address is
 `100.84.196.40`.
 
-thor also uses a Mullvad exit node (`se-sto-wg-201.mullvad.ts.net`) with
-`--exit-node-allow-lan-access`. A routing policy rule named `40-br0`
-(`modules/hosts/thor/bridge.nix`) keeps traffic originating from the LAN address
-on the main routing table, so LAN service traffic does not get pushed through
-Sweden.
+thor itself uses no Tailscale exit node — every service on it pays no Mullvad
+tax. The Mullvad exit node (`se-sto-wg-201.mullvad.ts.net`) lives on **mimir**
+instead (`modules/hosts/mimir/mimir.nix`), a [microvm.nix](https://microvm-nix.github.io/microvm.nix/)
+guest hypervised by thor that runs only the download stack — the one part of
+the estate that actually needs VPN'd traffic (see issue #203). mimir carries
+its own `40-eth`-equivalent routing policy rule for the
+same reason thor's `40-br0` rule used to exist: keeping return traffic for
+inbound P2P peers (transmission, slskd) off the exit-node's routing table.
 
 ### nginx sits behind both
 
@@ -52,14 +55,24 @@ probe from one call.
 
 ## The LAN
 
-`br0` bridges thor's four NICs (`enp2s0`–`enp5s0`) into one interface at a
-static `192.168.68.128/22`, gateway `192.168.68.1`
-(`modules/hosts/thor/bridge.nix`). The bridge exists so libvirt VMs get real
-addresses on the home network rather than being NAT-ed behind thor.
+`br0` bridges thor's four NICs (`enp2s0`–`enp5s0`) plus mimir's tap interface
+(`vm-mimir`) into one interface at a static `192.168.68.128/22`, gateway
+`192.168.68.1` (`modules/hosts/thor/bridge.nix`). The bridge exists so libvirt
+VMs and mimir get real addresses on the home network rather than being NAT-ed
+behind thor.
 
-thor's own upstream resolvers are Mullvad, Cloudflare and Google
-(`194.242.2.2`, `1.1.1.1`, `8.8.8.8`) — deliberately not Blocky, so that a
-Blocky outage does not also stop thor from resolving names to fix itself.
+`services.blocky.settings.upstreams`/`bootstrapDns` hardcode Mullvad,
+Cloudflare and Google (`194.242.2.2`, `1.1.1.1`, `8.8.8.8`) as *Blocky's own*
+upstream resolvers — that part is real. But thor's own OS-level DNS is a
+separate layer, and it is **not** insulated from a Blocky outage the way this
+doc used to claim: thor never sets `--accept-dns=false`, so it takes the
+tailnet's pushed DNS config same as any other node, which routes thor's own
+queries through MagicDNS straight to Blocky. A Blocky outage on thor can
+currently strand thor's own name resolution. Confirmed live via
+`tailscale debug prefs | grep CorpDNS` (`true`) and `/etc/resolv.conf`
+pointing at the Tailscale stub resolver — see the correction on #203. Fixing
+this (a fallback resolver for "Blocky is down") is still open, tracked
+against #197/#203.
 
 ## What is open on the LAN, and why
 
@@ -74,16 +87,19 @@ policy behind it.
 | 137,138/udp · 139,445/tcp | Samba | Guest read-only media/music for appliances (Sonos) |
 | 1900/udp · 8200/tcp | MiniDLNA | DLNA discovery is link-local by design |
 | 5353/udp | Avahi | mDNS service discovery is link-local |
-| 51413/tcp+udp | Transmission | Inbound BitTorrent peers, forwarded at the router |
-| 50300/tcp | slskd | Inbound Soulseek peers, forwarded at the router |
 | 41641/udp | Tailscale | Tailnet transport |
 
-Two openings are scoped to a single interface rather than being global:
+One opening is scoped to a single interface rather than being global:
 
 | Port | Interface | Why |
 |---|---|---|
 | 8096/tcp · 1900,7359/udp | `br0` | Jellyfin for LAN players; Jellyfin does its own auth |
-| 5030, 8686/tcp | `docker0` | Lets the Soularr container reach slskd and Lidarr via `host.docker.internal` |
+
+**Transmission (51413/tcp+udp), slskd (50300/tcp) and the Soularr↔slskd/Lidarr
+`docker0` opening (5030, 8686/tcp) moved to mimir's own firewall config**
+(`modules/hosts/mimir/mimir.nix`) along with the rest of the download stack —
+see #203. They're still forwarded at the router the same way, just to mimir's
+`br0` address instead of thor's.
 
 **NFS is not in either list.** Port 2049 is closed on the LAN; NFS is
 tailnet-only, and reachable there only because `tailscale0` is trusted. See
@@ -138,7 +154,7 @@ the only gate; Cloudflare Access never sees tailnet-direct traffic.
 |---|---|
 | A browser, anywhere | `https://<service>.greensroad.uk` — through the tunnel, Access login |
 | A browser, on the tailnet | Same hostname now resolves straight to thor over `:443` — no Access login, no tunnel hop |
-| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, transmission, sabnzbd, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx |
+| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx. The same is true for the download stack (transmission, sabnzbd, the *arr apps, slskd, soularr) since #203 moved it to mimir — nginx still runs on thor, it just proxies to `mimir` (MagicDNS, resolved the same way `ssh mimir` is) instead of loopback; the client-facing path is identical |
 | A mobile app | `100.84.196.40:<port>` over the tailnet — same availability as the hostname, but fails clean (timeout, not an Access login page) if Tailscale drops |
 | Admin tools with no vhost (Prometheus, Alertmanager) | `thor:<port>` from a tailnet device |
 | A LAN appliance that can't do either | Only the ports in the table above |

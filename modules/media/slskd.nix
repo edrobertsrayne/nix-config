@@ -19,6 +19,7 @@ in {
         description = "Soulseek client";
         icon = "slskd.png";
         probePath = "/health";
+        host = inputs.self.settings.mimir.tailscaleHost;
       })
     ];
 
@@ -68,7 +69,5 @@ in {
       # with ReadWritePaths for the same directory.
       ReadOnlyPaths = lib.mkForce [];
     };
-
-    environment.persistence."/persist".directories = ["/var/lib/slskd"];
   };
 }
