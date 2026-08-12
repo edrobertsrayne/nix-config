@@ -128,13 +128,25 @@
       # shared/block store.
       nix.optimise.automatic = false;
 
-      # impermanence's own assertion (modules/persistence.nix,
-      # modules/tailscale.nix declare paths under /var/lib/*): every
-      # filesystem a persisted path lives on needs neededForBoot=true, same
-      # reasoning as thor's "/persist".neededForBoot - here it's /var itself
-      # since that's its own microvm.volumes-backed filesystem, not part of
-      # root.
+      # impermanence's own assertion: every filesystem a persisted path
+      # lives on needs neededForBoot=true, same reasoning as thor's
+      # "/persist".neededForBoot - here it's /var itself since that's its
+      # own microvm.volumes-backed filesystem, not part of root.
       fileSystems."/var".neededForBoot = true;
+
+      # modules/tailscale.nix is in `common` (every host gets it, including
+      # mimir) and unconditionally declares
+      # environment.persistence."/persist".directories = ["/var/lib/tailscale"].
+      # mimir has no /persist dataset at all - it's a plain persistent root,
+      # not impermanent (see the microvm.volumes comment above). Left alone,
+      # that directive would still "work" syntactically but silently redirect
+      # /var/lib/tailscale from the genuinely-persistent /var volume it
+      # already lives on onto a bind-mount source under mimir's *ephemeral*
+      # squashfs root - actively breaking tailscale's node identity across
+      # restarts instead of leaving it alone. Disabling the whole "/persist"
+      # root is correct here: nothing else on mimir declares a persistence
+      # directive under it.
+      environment.persistence."/persist".enable = false;
     };
   };
 }
