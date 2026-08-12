@@ -4,7 +4,7 @@
   in {
     nixosConfigurations.mimir = mkNixosSystem {name = "mimir";};
 
-    modules.nixos.mimir = _: let
+    modules.nixos.mimir = {lib, ...}: let
       # TODO: confirm this doesn't collide with the router's DHCP pool
       # before actually provisioning mimir - br0 is a /22 shared with LAN
       # DHCP clients and thor is the only other static reservation on it
@@ -13,18 +13,62 @@
       # thor reads it too.
       ipAddress = inputs.self.settings.mimir.address;
       mac = "02:00:00:00:00:10";
+
+      # thor's br0 address (modules/hosts/thor/bridge.nix) - the only host
+      # allowed through the ports below. modules/networking.nix (in `common`,
+      # so it applies to mimir too) treats br0 as untrusted, same as the WAN;
+      # this is the one exception, scoped to thor specifically rather than
+      # opened to the whole LAN.
+      thorAddress = "192.168.68.128";
+
+      # nginx on thor reaches each of these cross-host now (#203) - loopback
+      # traffic used to skip the firewall entirely when nginx was same-host,
+      # so none of these were ever opened. soularr isn't here: its port is
+      # Docker-published, governed by Docker's own iptables rules instead of
+      # this chain (see media/soularr.nix).
+      proxiedPorts = with inputs.self.settings.ports.media; [
+        sonarr
+        radarr
+        lidarr
+        bazarr
+        prowlarr
+        sabnzbd
+        transmission
+        slskd
+      ];
+      proxiedPortsList = lib.concatMapStringsSep "," toString proxiedPorts;
     in {
       imports = [
         inputs.microvm.nixosModules.microvm
         inputs.self.modules.nixos.downloads
       ];
 
-      # microvm.nix's own module sets a mkDefault hostId too, which
-      # conflicts with mkNixosSystem's (modules/lib/hosts.nix) at the same
-      # priority. A plain assignment outranks both mkDefaults, so this wins
-      # cleanly instead of needing mkForce. Not used for anything - mimir
-      # doesn't run ZFS itself - just needs to be a valid 8-hex-digit value.
-      networking.hostId = "10000001";
+      networking = {
+        # microvm.nix's own module sets a mkDefault hostId too, which
+        # conflicts with mkNixosSystem's (modules/lib/hosts.nix) at the same
+        # priority. A plain assignment outranks both mkDefaults, so this
+        # wins cleanly instead of needing mkForce. Not used for anything -
+        # mimir doesn't run ZFS itself - just needs to be a valid
+        # 8-hex-digit value.
+        hostId = "10000001";
+
+        # networking.nix's firewall.enable=true (via `common`) blocks these
+        # by default on br0, same as every other untrusted-interface port on
+        # any host. extraCommands/extraStopCommands is the standard NixOS
+        # escape hatch for a source-scoped rule the declarative
+        # allowedTCPPorts/interfaces options can't express (those only gate
+        # by port or by whole interface, not by peer address) - this inserts
+        # the accept rule into nixos-fw right before its own default-refuse
+        # jump, same chain the declarative options populate.
+        firewall = {
+          extraCommands = ''
+            iptables -A nixos-fw -s ${thorAddress} -p tcp -m multiport --dports ${proxiedPortsList} -j nixos-fw-accept
+          '';
+          extraStopCommands = ''
+            iptables -D nixos-fw -s ${thorAddress} -p tcp -m multiport --dports ${proxiedPortsList} -j nixos-fw-accept 2>/dev/null || true
+          '';
+        };
+      };
 
       # qemu: the only microvm.nix hypervisor backend that supports tap
       # networking, virtiofs shares and image-backed volumes together -

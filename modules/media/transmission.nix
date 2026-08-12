@@ -22,14 +22,17 @@ in {
       package = pkgs.transmission_4;
       # Opens peer-port on TCP *and* UDP; the previous hand-rolled
       # allowedTCPPorts missed UDP, which dht-enabled/utp-enabled need for
-      # inbound peer discovery. RPC port stays closed (openRPCPort defaults
-      # off) - it's reached only via nginx on loopback.
+      # inbound peer discovery. RPC port itself stays off (openRPCPort
+      # defaults off) - it's reached over the LAN bridge from thor's nginx,
+      # via the source-scoped firewall rule in hosts/mimir/mimir.nix, not a
+      # blanket port opening.
       openPeerPorts = true;
       settings = {
-        # 0.0.0.0, not loopback: nginx now reaches this over the tailnet from
-        # thor (#203 - transmission moved to mimir), so tailscale0 being the
-        # only trusted interface is what keeps this from being LAN-reachable,
-        # not the bind address. rpc-whitelist below is the second layer.
+        # 0.0.0.0, not loopback: nginx reaches this cross-host from thor over
+        # br0 now (#203 - transmission moved to mimir), so mimir's own
+        # firewall (hosts/mimir/mimir.nix, scoped to thor's br0 address only)
+        # is what keeps this from being LAN-reachable, not the bind address.
+        # rpc-whitelist below is the second layer.
         rpc-bind-address = "0.0.0.0";
         rpc-port = ports.media.transmission;
         peer-port = ports.media.transmissionPeer;
