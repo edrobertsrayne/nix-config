@@ -15,11 +15,15 @@ is in [docs/networking.md](../../../docs/networking.md).
 
 | Interface  | Address            | Purpose              |
 | ---------- | ------------------ | --------------------- |
-| br0 (tap)  | 192.168.68.129/22  | LAN + inbound P2P peers |
-| tailscale0 | (registers on first boot) | Mesh VPN, and how nginx on thor reaches this host |
+| br0 (tap)  | 192.168.68.129/22  | LAN, inbound P2P peers, and how nginx on thor reaches this host (`modules/settings/mimir.nix`) |
+| tailscale0 | (registers on first boot) | Mesh VPN, for anything else on the tailnet reaching this host directly by its MagicDNS name |
 
 mimir carries its own Mullvad exit node
 (`se-sto-wg-201.mullvad.ts.net`) — thor does not.
+
+Only thor's own br0 address is let through mimir's firewall on the ports
+nginx proxies (`modules/hosts/mimir/mimir.nix`) — the rest of the LAN is
+blocked from these the same way it's blocked from everything on thor.
 
 ---
 

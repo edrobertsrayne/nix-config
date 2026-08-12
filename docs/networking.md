@@ -95,11 +95,21 @@ One opening is scoped to a single interface rather than being global:
 |---|---|---|
 | 8096/tcp · 1900,7359/udp | `br0` | Jellyfin for LAN players; Jellyfin does its own auth |
 
-**Transmission (51413/tcp+udp), slskd (50300/tcp) and the Soularr↔slskd/Lidarr
-`docker0` opening (5030, 8686/tcp) moved to mimir's own firewall config**
-(`modules/hosts/mimir/mimir.nix`) along with the rest of the download stack —
-see #203. They're still forwarded at the router the same way, just to mimir's
-`br0` address instead of thor's.
+**Transmission (51413/tcp+udp) and slskd (50300/tcp) moved to mimir's own
+firewall config** (`modules/hosts/mimir/mimir.nix`) along with the rest of
+the download stack — see #203. They're still forwarded at the router the
+same way, just to mimir's `br0` address instead of thor's. The
+Soularr↔slskd/Lidarr `docker0` opening (5030, 8686/tcp) moved with it too,
+but stays where it's always lived — `modules/media/soularr.nix`, not
+mimir.nix — since it's specific to that one service's container networking.
+
+nginx on thor reaches mimir's 8 proxied services (everything above except
+Soularr, which is Docker-published and not gated this way) over `br0` too,
+but that traffic doesn't get a LAN-wide opening: mimir's firewall admits
+only thor's own `br0` address (`192.168.68.128`) on those specific ports,
+the same trust boundary as everywhere else in this doc, just enforced with
+a source-scoped rule instead of the declarative options — see the
+`networking.firewall.extraCommands` comment in `mimir.nix` for why.
 
 **NFS is not in either list.** Port 2049 is closed on the LAN; NFS is
 tailnet-only, and reachable there only because `tailscale0` is trusted. See
@@ -154,7 +164,7 @@ the only gate; Cloudflare Access never sees tailnet-direct traffic.
 |---|---|
 | A browser, anywhere | `https://<service>.greensroad.uk` — through the tunnel, Access login |
 | A browser, on the tailnet | Same hostname now resolves straight to thor over `:443` — no Access login, no tunnel hop |
-| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx. The same is true for the download stack (transmission, sabnzbd, the *arr apps, slskd, soularr) since #203 moved it to mimir — nginx still runs on thor, it just proxies to `mimir` (MagicDNS, resolved the same way `ssh mimir` is) instead of loopback; the client-facing path is identical |
+| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx. The same is true for the download stack (transmission, sabnzbd, the *arr apps, slskd, soularr) since #203 moved it to mimir — nginx still runs on thor, it just proxies to mimir's static `br0` address (`modules/settings/mimir.nix`) instead of loopback, over the LAN bridge they already share rather than the tailnet; the client-facing path is identical |
 | A mobile app | `100.84.196.40:<port>` over the tailnet — same availability as the hostname, but fails clean (timeout, not an Access login page) if Tailscale drops |
 | Admin tools with no vhost (Prometheus, Alertmanager) | `thor:<port>` from a tailnet device |
 | A LAN appliance that can't do either | Only the ports in the table above |

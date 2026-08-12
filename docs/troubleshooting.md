@@ -133,8 +133,12 @@ systemctl status 'cloudflared-tunnel-*'
 **Download-stack services (transmission, sabnzbd, sonarr, radarr, lidarr,
 prowlarr, bazarr, slskd, soularr) run on mimir, not thor** (#203). Steps 1 and
 2 need `ssh mimir` first — nginx (step 3) still runs on thor and proxies to
-mimir's tailscale hostname (thor resolves MagicDNS names - see
-[networking.md](networking.md)), so steps 3 and 4 are unchanged.
+mimir's static `br0` address (`modules/settings/mimir.nix`) over the LAN
+bridge they share, not the tailnet, so steps 3 and 4 are unchanged. If step 3
+passes locally on mimir but nginx on thor still can't reach it, check mimir's
+firewall next — it only admits thor's own `br0` address on these ports
+(`modules/hosts/mimir/mimir.nix`), so a wrong or changed thor address would
+fail exactly this way.
 
 Where it stops tells you what is wrong:
 
