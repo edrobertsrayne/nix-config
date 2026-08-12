@@ -10,19 +10,6 @@ in {
   }: let
     cfg = config.services.${service};
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "Slskd";
-        subdomain = "slskd";
-        port = ports.media.slskd;
-        group = "Media";
-        description = "Soulseek client";
-        icon = "slskd.png";
-        probePath = "/health";
-        host = inputs.self.settings.mimir.tailscaleHost;
-      })
-    ];
-
     age.secrets.slskd.file = ../../secrets/slskd.age;
 
     users.users.${cfg.user}.extraGroups = ["tank"];
@@ -69,5 +56,18 @@ in {
       # with ReadWritePaths for the same directory.
       ReadOnlyPaths = lib.mkForce [];
     };
+  };
+
+  # Runs on mimir (#203); this vhost is what actually makes it reachable -
+  # it must be imported by thor, the only host with nginx/cloudflared.
+  flake.modules.nixos.slskd-proxy = inputs.self.lib.mkProxiedService {
+    name = "Slskd";
+    subdomain = "slskd";
+    port = ports.media.slskd;
+    group = "Media";
+    description = "Soulseek client";
+    icon = "slskd.png";
+    probePath = "/health";
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }

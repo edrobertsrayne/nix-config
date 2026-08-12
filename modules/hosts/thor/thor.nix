@@ -23,6 +23,7 @@
         bentopdf
         blocky
         code-server
+        downloads-proxy
         grafana
         homepage
         immich

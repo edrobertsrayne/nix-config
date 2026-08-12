@@ -9,21 +9,6 @@ in {
   }: let
     cfg = config.services.transmission;
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "Transmission";
-        subdomain = "transmission";
-        port = ports.media.transmission;
-        group = "Media";
-        description = "Torrent downloader";
-        icon = "transmission.png";
-        # No probePath: /transmission/rpc answers 409 by design (the session-id
-        # handshake). The root URL 301s to /transmission/web/ and the probe
-        # follows it.
-        host = inputs.self.settings.mimir.tailscaleHost;
-      })
-    ];
-
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
@@ -85,5 +70,20 @@ in {
         blocklist-enabled = false;
       };
     };
+  };
+
+  # Runs on mimir (#203); this vhost is what actually makes it reachable -
+  # it must be imported by thor, the only host with nginx/cloudflared.
+  flake.modules.nixos.transmission-proxy = inputs.self.lib.mkProxiedService {
+    name = "Transmission";
+    subdomain = "transmission";
+    port = ports.media.transmission;
+    group = "Media";
+    description = "Torrent downloader";
+    icon = "transmission.png";
+    # No probePath: /transmission/rpc answers 409 by design (the session-id
+    # handshake). The root URL 301s to /transmission/web/ and the probe
+    # follows it.
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }

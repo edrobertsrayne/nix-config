@@ -5,23 +5,6 @@ in {
     cfg = config.services.sabnzbd;
     url = "sabnzbd.${server.domain}";
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "SABnzbd";
-        subdomain = "sabnzbd";
-        port = ports.media.sabnzbd;
-        group = "Media";
-        description = "Usenet downloader";
-        icon = "sabnzbd.png";
-        # mode=version is the one API call SABnzbd exempts from the api key.
-        probePath = "/api?mode=version";
-        extraConfig = ''
-          proxy_set_header X-Forwarded-Host $host;
-        '';
-        host = inputs.self.settings.mimir.tailscaleHost;
-      })
-    ];
-
     # owner is required: the nixpkgs module's preStart (which merges this
     # secret into sabnzbd.ini) runs as User=sabnzbd, not root.
     age.secrets.sabnzbd = {
@@ -196,5 +179,22 @@ in {
       "d /mnt/ssd/downloads/usenet/complete 0755 ${cfg.user} tank -"
       "d /mnt/ssd/downloads/usenet/incomplete 0755 ${cfg.user} tank -"
     ];
+  };
+
+  # Runs on mimir (#203); this vhost is what actually makes it reachable -
+  # it must be imported by thor, the only host with nginx/cloudflared.
+  flake.modules.nixos.sabnzbd-proxy = inputs.self.lib.mkProxiedService {
+    name = "SABnzbd";
+    subdomain = "sabnzbd";
+    port = ports.media.sabnzbd;
+    group = "Media";
+    description = "Usenet downloader";
+    icon = "sabnzbd.png";
+    # mode=version is the one API call SABnzbd exempts from the api key.
+    probePath = "/api?mode=version";
+    extraConfig = ''
+      proxy_set_header X-Forwarded-Host $host;
+    '';
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }

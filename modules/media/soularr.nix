@@ -63,19 +63,6 @@ in {
       backup_count = 3
     '';
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "Soularr";
-        subdomain = "soularr";
-        port = ports.media.soularr;
-        group = "Media";
-        description = "Lidarr <-> slskd bridge";
-        icon = "soularr.png";
-        # No probePath: soularr exposes no health endpoint.
-        host = inputs.self.settings.mimir.tailscaleHost;
-      })
-    ];
-
     # writable /data for lock + log files, owned to match container user 306:992
     systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
 
@@ -130,5 +117,18 @@ in {
         "--add-host=host.docker.internal:host-gateway"
       ];
     };
+  };
+
+  # Runs on mimir (#203); this vhost is what actually makes it reachable -
+  # it must be imported by thor, the only host with nginx/cloudflared.
+  flake.modules.nixos.soularr-proxy = inputs.self.lib.mkProxiedService {
+    name = "Soularr";
+    subdomain = "soularr";
+    port = ports.media.soularr;
+    group = "Media";
+    description = "Lidarr <-> slskd bridge";
+    icon = "soularr.png";
+    # No probePath: soularr exposes no health endpoint.
+    host = inputs.self.settings.mimir.tailscaleHost;
   };
 }
