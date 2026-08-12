@@ -56,7 +56,7 @@ so this is inert). Each aspect declares its own paths directly via
 `environment.persistence."/persist"` (`modules/persistence.nix` for core
 system/identity state, e.g. `/var/lib/nixos`, `/etc/ssh/ssh_host_*`; every
 other service aspect that has real state, e.g. `modules/vaultwarden.nix`,
-`modules/tailscale.nix`, `modules/media/prowlarr.nix`, declares its own
+`modules/tailscale.nix`, `modules/downloads/prowlarr.nix`, declares its own
 directories alongside its service config). There's no aggregation list to read
 — `nix eval .#nixosConfigurations.thor.config.environment.persistence.'"/persist"'.directories`
 shows the merged result.

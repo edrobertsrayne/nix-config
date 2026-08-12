@@ -100,7 +100,7 @@ firewall config** (`modules/hosts/mimir/mimir.nix`) along with the rest of
 the download stack — see #203. They're still forwarded at the router the
 same way, just to mimir's `br0` address instead of thor's. The
 Soularr↔slskd/Lidarr `docker0` opening (5030, 8686/tcp) moved with it too,
-but stays where it's always lived — `modules/media/soularr.nix`, not
+but stays where it's always lived — `modules/downloads/soularr.nix`, not
 mimir.nix — since it's specific to that one service's container networking.
 
 nginx on thor reaches mimir's 8 proxied services (everything above except

@@ -193,7 +193,7 @@ Two helpers do the repetitive work:
 
 Ports go in `modules/settings/ports.nix`, which is the single source of truth —
 never hard-code a port in a service module. Read `modules/searxng.nix` for a
-minimal example and `modules/media/radarr.nix` for the servarr pattern.
+minimal example and `modules/downloads/radarr.nix` for the servarr pattern.
 
 ### Same-host vs. cross-host services
 
@@ -221,7 +221,7 @@ flake.modules.nixos.radarr-proxy = inputs.self.lib.mkProxiedService {
 The service module goes on the host that runs it (via that host's own imports,
 e.g. mimir's `downloads` group). The `-proxy` module goes on thor, grouped with
 its siblings alongside the group it mirrors (e.g. `downloads-proxy` sits next
-to `downloads` in `modules/media/downloads.nix`) and imported from `thor.nix`.
+to `downloads` in `modules/downloads/downloads.nix`) and imported from `thor.nix`.
 Getting this wrong is a silent failure, not a build error: the
 service module still evaluates fine on the host running it, it just never gets
 an nginx vhost anywhere, and the mkProxiedService call still evaluates fine if
