@@ -158,6 +158,8 @@ thor also upgrades itself from `main` nightly — see
 
 **How it is built**
 
+- [Dendritic architecture](docs/dendritic.md) - how modules are organized,
+  auto-loaded, and composed into the host
 - [Networking](docs/networking.md) - ingress, trust boundaries, and every
   LAN-open port
 - [Storage](docs/storage.md) - disks, datasets, what lives where, and what is
