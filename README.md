@@ -36,7 +36,10 @@ secrets/           # Encrypted secrets (agenix)
 
 ## Host: thor
 
-Home server running NixOS. Services:
+Home server running NixOS, with an impermanent (wipe-on-boot) root and
+declared persistence (see
+[storage.md](docs/storage.md#impermanence-wipe-on-boot-root)). PostgreSQL is a
+shared aspect (`modules/postgresql.nix`) used by Immich and Blocky. Services:
 
 ### Media
 

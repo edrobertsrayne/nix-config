@@ -29,31 +29,66 @@ Pool-wide settings: `ashift=12`, `compression=lz4`, `atime=off`,
 reasoning, and why it cannot be changed without recreating the pool, is in a
 comment in that file.
 
-Five datasets, and the difference between them is the only thing standing
+Six datasets, and the difference between them is the only thing standing
 between you and a bad `rm`:
 
 | Dataset | Mounted at | Snapshotted |
 |---|---|---|
-| `zroot/root` | `/` | no |
+| `zroot/root` | `/` | no — wiped every boot instead |
 | `zroot/nix` | `/nix` | no |
 | `zroot/srv` | `/srv` | **yes** |
 | `zroot/persist` | `/persist` | **yes** |
+| `zroot/home` | `/home` | **yes** |
 | `zroot/libvirt` | `/var/lib/libvirt` | **yes** |
 
-`/` and `/nix` are not snapshotted because they do not need to be — they are
-rebuilt from this repo, and generations already roll them back
-([deploying.md](deploying.md#undoing-a-change)).
+`/nix` is not snapshotted because it does not need to be — it is rebuilt from
+this repo, and generations already roll it back
+([deploying.md](deploying.md#undoing-a-change)). `/root` is not snapshotted
+for a different reason: it is wiped on every boot regardless, so there is
+nothing on it worth protecting between boots. See below.
 
-`/persist` holds the state that survives thor's root being wiped on every boot
-(#163 — the wipe itself lands in #167/#168; today the root still isn't wiped,
-so this is inert). Each aspect declares its own paths directly via
-`environment.persistence."/persist"` (`modules/persistence.nix` for core
-system/identity state, e.g. `/var/lib/nixos`, `/etc/ssh/ssh_host_*`; every
-other service aspect that has real state, e.g. `modules/vaultwarden.nix`,
-`modules/tailscale.nix`, `modules/media/prowlarr.nix`, declares its own
-directories alongside its service config). There's no aggregation list to read
-— `nix eval .#nixosConfigurations.thor.config.environment.persistence.'"/persist"'.directories`
+### Impermanence (wipe-on-boot root)
+
+`zroot/root` is rolled back to a blank snapshot (`zroot/root@blank`) on every
+boot, by a stage-1 initrd oneshot service (`rollback-root`, declared in
+`modules/hosts/thor/_rollback.nix`). Nothing on `/` is expected to survive a
+reboot — anything that needs to is declared as persisted instead.
+
+The rollback is **fail-open**: no unit depends on it, so a failed rollback
+boots a stale root rather than stranding a headless box in an initrd emergency
+shell it has no access to. Check with `journalctl -b -u rollback-root`, or
+confirm directly with `touch /canary && sudo reboot` — if `/canary` is gone
+afterwards, the wipe fired.
+
+What persists lives on `zroot/persist` (`/persist`), bind-mounted back onto
+the ephemeral root by [nix-community/impermanence][impermanence] via
+`environment.persistence."/persist"`. Each aspect declares its own paths
+directly, next to the service config that needs them: `modules/persistence.nix`
+covers core system/identity state (`/var/lib/nixos`, `/etc/machine-id`,
+`/etc/ssh/ssh_host_*`); every service aspect with real state (e.g.
+`modules/vaultwarden.nix`, `modules/tailscale.nix`, `modules/media/prowlarr.nix`,
+`modules/postgresql.nix`) declares its own directories alongside its service
+config. There's no aggregation list to read — `nix eval
+.#nixosConfigurations.thor.config.environment.persistence.'"/persist"'.directories`
 shows the merged result.
+
+agenix decrypts host secrets *before* impermanence restores `/etc/ssh` on a
+freshly wiped root, so `age.identityPaths` reads the SSH host key straight
+from `/persist` instead of `/etc/ssh` — `/persist` is available in stage 1
+(`neededForBoot = true`), `/etc/ssh` is not yet. See `modules/persistence.nix`.
+
+`zroot/home` (`/home`) is unaffected by any of this: it mounts normally and is
+never wiped, same as `/srv` and `/var/lib/libvirt`.
+
+**Further reading:**
+
+- [nix-community/impermanence][impermanence] — the module this repo uses
+- ["Erase your darlings"][erase-your-darlings] — the post that named this pattern
+- [NixOS Wiki: Impermanence][nixos-wiki-impermanence] — general background and alternative approaches
+
+[impermanence]: https://github.com/nix-community/impermanence
+[erase-your-darlings]: https://grahamc.com/blog/erase-your-darlings/
+[nixos-wiki-impermanence]: https://nixos.wiki/wiki/Impermanence
 
 ### mergerfs
 
@@ -212,7 +247,9 @@ What each loss would actually cost:
 | `/srv/*` service state | Rolled back to a snapshot, if the pool survives | Config comes from this repo; history does not |
 | `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot | Same |
 | `/persist` per-aspect state | Rolled back to a snapshot, if the pool survives | Same |
-| `/` and `/nix` | Rebuilt by `nixos-rebuild` from this repo | Yes, completely |
+| `/home` — user files | Rolled back to a snapshot, if the pool survives | Same |
+| `/` | Wiped to blank on every boot, by design | N/A — nothing there is meant to persist |
+| `/nix` | Rebuilt by `nixos-rebuild` from this repo | Yes, completely |
 
 The single-sentence summary: **an SSD failure loses the photo library
 permanently.** That is the gap worth closing first if backups are ever added.
