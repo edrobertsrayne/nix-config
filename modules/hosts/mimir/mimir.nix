@@ -41,6 +41,7 @@
       imports = [
         inputs.microvm.nixosModules.microvm
         inputs.self.modules.nixos.downloads
+        inputs.self.modules.nixos.persistence
       ];
 
       networking = {
@@ -112,18 +113,24 @@
           }
         ];
 
-        # Two volumes, not one: docker's data-root and every *arr dataDir
-        # default to /srv (modules/lib/servarr.nix, mirrored from thor.nix),
-        # while tailscale/systemd/NixOS's own uid-gid map (/var/lib/nixos)
-        # live under /var. microvm.nix's default root is a squashfs rebuilt
-        # from the Nix store on every generation - fine for /nix, but both
-        # /var and /srv hold real state that must survive a VM restart
-        # (mimir is a plain persistent root, not impermanent - see #203
-        # decision log), so each gets its own image-backed volume instead.
+        # Two volumes, not one - same split as thor's own ZFS datasets
+        # (modules/hosts/thor/disko.nix: separate "persist" and "srv"
+        # datasets alongside root). microvm.nix's default root is a squashfs
+        # rebuilt from the Nix store on every generation, so it's already
+        # ephemeral by construction - unlike thor, mimir needs no equivalent
+        # of the rollback-root unit (modules/hosts/thor/_rollback.nix) to get
+        # a clean root back on restart.
+        #
+        # What does need to survive a restart is split the same way as
+        # thor: the small set of paths modules/persistence.nix bind-mounts
+        # back onto root (ssh host keys, machine-id, /var/lib/nixos,
+        # tailscale's identity, ...) live on /persist, while docker's
+        # data-root and every *arr dataDir (modules/lib/servarr.nix,
+        # mirrored from thor.nix) default to /srv.
         volumes = [
           {
-            image = "var.img";
-            mountPoint = "/var";
+            image = "persist.img";
+            mountPoint = "/persist";
             size = 4096;
           }
           {
@@ -172,25 +179,11 @@
       # shared/block store.
       nix.optimise.automatic = false;
 
-      # impermanence's own assertion: every filesystem a persisted path
-      # lives on needs neededForBoot=true, same reasoning as thor's
-      # "/persist".neededForBoot - here it's /var itself since that's its
-      # own microvm.volumes-backed filesystem, not part of root.
-      fileSystems."/var".neededForBoot = true;
-
-      # modules/tailscale.nix is in `common` (every host gets it, including
-      # mimir) and unconditionally declares
-      # environment.persistence."/persist".directories = ["/var/lib/tailscale"].
-      # mimir has no /persist dataset at all - it's a plain persistent root,
-      # not impermanent (see the microvm.volumes comment above). Left alone,
-      # that directive would still "work" syntactically but silently redirect
-      # /var/lib/tailscale from the genuinely-persistent /var volume it
-      # already lives on onto a bind-mount source under mimir's *ephemeral*
-      # squashfs root - actively breaking tailscale's node identity across
-      # restarts instead of leaving it alone. Disabling the whole "/persist"
-      # root is correct here: nothing else on mimir declares a persistence
-      # directive under it.
-      environment.persistence."/persist".enable = false;
+      # Same reasoning as thor.nix's "/persist".neededForBoot: stage-2
+      # activation reads /var/lib/nixos before systemd mounts local
+      # filesystems, and impermanence asserts neededForBoot on every
+      # persistent store.
+      fileSystems."/persist".neededForBoot = true;
     };
   };
 }

@@ -21,12 +21,11 @@ in {
     services.flaresolverr.enable = true;
 
     # No environment.persistence directive here: prowlarr runs on mimir
-    # (#203), which is a plain persistent root, not impermanent - mimir.nix
-    # forces environment.persistence."/persist".enable = false, so
-    # /var/lib/private/prowlarr already survives restarts by virtue of
-    # living on mimir's own persistent /var volume. This used to declare a
-    # "/persist" directory - leftover from before the move, and actively
-    # wrong on mimir (there is no /persist dataset there).
+    # (#203), which now uses the same modules/persistence.nix aspect as
+    # thor. That aspect already bind-mounts the whole "/var/lib/private"
+    # tree (its DynamicUser comment explains why), so
+    # /var/lib/private/prowlarr survives restarts the same way it would on
+    # thor - no per-service directive needed here.
   };
 
   # Runs on mimir (#203); this vhost is what actually makes it reachable -

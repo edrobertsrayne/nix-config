@@ -179,6 +179,8 @@ in {
       "d /mnt/ssd/downloads/usenet/complete 0755 ${cfg.user} tank -"
       "d /mnt/ssd/downloads/usenet/incomplete 0755 ${cfg.user} tank -"
     ];
+
+    environment.persistence."/persist".directories = ["/var/lib/sabnzbd"];
   };
 
   # Runs on mimir (#203); this vhost is what actually makes it reachable -

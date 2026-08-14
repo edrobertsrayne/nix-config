@@ -56,6 +56,8 @@ in {
       # with ReadWritePaths for the same directory.
       ReadOnlyPaths = lib.mkForce [];
     };
+
+    environment.persistence."/persist".directories = ["/var/lib/slskd"];
   };
 
   # Runs on mimir (#203); this vhost is what actually makes it reachable -
