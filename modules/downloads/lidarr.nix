@@ -7,8 +7,7 @@ in {
     secret = ../../secrets/lidarr-apikey.age;
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.lidarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Lidarr";
     subdomain = "lidarr";

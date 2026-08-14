@@ -7,8 +7,7 @@ in {
     secret = ../../secrets/sonarr-apikey.age;
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.sonarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Sonarr";
     subdomain = "sonarr";
@@ -16,10 +15,9 @@ in {
     description = "TV series manager";
     icon = "sonarr.png";
     group = "Media";
-    # /ping is the only *arr endpoint reachable without an API key, and it
-    # checks database access rather than just answering - a Servarr app
-    # whose database is unopenable keeps serving its UI on / but returns
-    # 500 here.
+    # /ping is the only *arr endpoint reachable without an API key. It checks
+    # database access, rather than only answering. A Servarr app whose database
+    # cannot open still serves its UI on /, but returns 500 here.
     probePath = "/ping";
     host = inputs.self.settings.hosts.mimir.address;
   };

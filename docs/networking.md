@@ -33,14 +33,15 @@ Prometheus, Alertmanager and the rest need no vhost.
 the Tailscale admin console, out of band). thor's tailnet address is
 `100.84.196.40`.
 
-thor itself uses no Tailscale exit node — every service on it pays no Mullvad
+thor itself uses no Tailscale exit node. No service on thor pays the Mullvad
 tax. The Mullvad exit node (`se-sto-wg-201.mullvad.ts.net`) lives on **mimir**
-instead (`modules/hosts/mimir/mimir.nix`), a [microvm.nix](https://microvm-nix.github.io/microvm.nix/)
-guest hypervised by thor that runs only the download stack — the one part of
-the estate that actually needs VPN'd traffic (see issue #203). mimir carries
-its own `40-eth`-equivalent routing policy rule for the
-same reason thor's `40-br0` rule used to exist: keeping return traffic for
-inbound P2P peers (transmission, slskd) off the exit-node's routing table.
+instead (`modules/hosts/mimir/mimir.nix`), a
+[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest that thor
+hypervises. mimir runs only the download stack, the one part of the estate
+that actually needs VPN'd traffic (see issue #203). mimir carries its own
+`40-eth`-equivalent routing policy rule, for the same reason thor's `40-br0`
+rule used to exist: it keeps return traffic for inbound P2P peers
+(transmission, slskd) off the exit-node's routing table.
 
 ### nginx sits behind both
 
@@ -55,24 +56,25 @@ probe from one call.
 
 ## The LAN
 
-`br0` bridges thor's four NICs (`enp2s0`–`enp5s0`) plus mimir's tap interface
-(`vm-mimir`) into one interface at a static `192.168.68.128/22`, gateway
-`192.168.68.1` (`modules/hosts/thor/bridge.nix`). The bridge exists so libvirt
-VMs and mimir get real addresses on the home network rather than being NAT-ed
-behind thor.
+`br0` bridges thor's four NICs (`enp2s0`–`enp5s0`) and mimir's tap interface
+(`vm-mimir`) into one interface, at a static `192.168.68.128/22`, gateway
+`192.168.68.1` (`modules/hosts/thor/bridge.nix`). The bridge exists so that
+libvirt VMs and mimir get real addresses on the home network, instead of
+being NAT-ed behind thor.
 
-`services.blocky.settings.upstreams`/`bootstrapDns` hardcode Mullvad,
-Cloudflare and Google (`194.242.2.2`, `1.1.1.1`, `8.8.8.8`) as *Blocky's own*
-upstream resolvers — that part is real. But thor's own OS-level DNS is a
-separate layer, and it is **not** insulated from a Blocky outage the way this
-doc used to claim: thor never sets `--accept-dns=false`, so it takes the
-tailnet's pushed DNS config same as any other node, which routes thor's own
-queries through MagicDNS straight to Blocky. A Blocky outage on thor can
-currently strand thor's own name resolution. Confirmed live via
-`tailscale debug prefs | grep CorpDNS` (`true`) and `/etc/resolv.conf`
-pointing at the Tailscale stub resolver — see the correction on #203. Fixing
-this (a fallback resolver for "Blocky is down") is still open, tracked
-against #197/#203.
+`services.blocky.settings.upstreams` and `bootstrapDns` hardcode Mullvad,
+Cloudflare, and Google (`194.242.2.2`, `1.1.1.1`, `8.8.8.8`) as *Blocky's own*
+upstream resolvers. That part is accurate. But thor's own OS-level DNS is a
+separate layer, and this doc previously made a false claim: it said this
+layer is insulated from a Blocky outage. thor never sets
+`--accept-dns=false`, so thor takes the tailnet's pushed DNS configuration,
+the same as any other node. This configuration routes thor's own queries
+through MagicDNS straight to Blocky. As a result, a Blocky outage on thor can
+strand thor's own name resolution today. This PR confirmed the fault live,
+with `tailscale debug prefs | grep CorpDNS` (`true`) and with
+`/etc/resolv.conf` pointing at the Tailscale stub resolver. See the
+correction on #203. A fix for this (a fallback resolver for "Blocky is
+down") remains open, tracked against #197 and #203.
 
 ## What is open on the LAN, and why
 
@@ -96,19 +98,20 @@ One opening is scoped to a single interface rather than being global:
 | 8096/tcp · 1900,7359/udp | `br0` | Jellyfin for LAN players; Jellyfin does its own auth |
 
 **Transmission (51413/tcp+udp) and slskd (50300/tcp) moved to mimir's own
-firewall config** (`modules/hosts/mimir/mimir.nix`) along with the rest of
-the download stack — see #203. They're still forwarded at the router the
-same way, just to mimir's `br0` address instead of thor's. The
-Soularr↔slskd/Lidarr `docker0` opening (5030, 8686/tcp) moved with it too,
-but stays where it's always lived — `modules/downloads/soularr.nix`, not
-mimir.nix — since it's specific to that one service's container networking.
+firewall configuration** (`modules/hosts/mimir/mimir.nix`), along with the
+rest of the download stack (see #203). The router still forwards these ports
+the same way, but now to mimir's `br0` address instead of thor's. The
+Soularr-to-slskd-and-Lidarr `docker0` opening (5030, 8686/tcp) moved with the
+rest of the stack too. It stays where it has always lived,
+`modules/downloads/soularr.nix`, not `mimir.nix`, because it is specific to
+that one service's container networking.
 
-nginx on thor reaches mimir's 8 proxied services (everything above except
-Soularr, which is Docker-published and not gated this way) over `br0` too,
-but that traffic doesn't get a LAN-wide opening: mimir's firewall admits
-only thor's own `br0` address (`192.168.68.128`) on those specific ports,
-the same trust boundary as everywhere else in this doc, just enforced with
-a source-scoped rule instead of the declarative options — see the
+nginx on thor also reaches mimir's 8 proxied services (everything above
+except Soularr, which is Docker-published and not gated this way) over
+`br0`. That traffic gets no LAN-wide opening: mimir's firewall admits only
+thor's own `br0` address (`192.168.68.128`) on those specific ports. This is
+the same trust boundary as everywhere else in this document, enforced with a
+source-scoped rule instead of the declarative options. See the
 `networking.firewall.extraCommands` comment in `mimir.nix` for why.
 
 **NFS is not in either list.** Port 2049 is closed on the LAN; NFS is
@@ -164,7 +167,7 @@ the only gate; Cloudflare Access never sees tailnet-direct traffic.
 |---|---|
 | A browser, anywhere | `https://<service>.greensroad.uk` — through the tunnel, Access login |
 | A browser, on the tailnet | Same hostname now resolves straight to thor over `:443` — no Access login, no tunnel hop |
-| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx. The same is true for the download stack (transmission, sabnzbd, the *arr apps, slskd, soularr) since #203 moved it to mimir — nginx still runs on thor, it just proxies to mimir's static `br0` address (`modules/settings/hosts.nix`) instead of loopback, over the LAN bridge they already share rather than the tailnet; the client-facing path is identical |
+| A script or API client, on the tailnet | Same hostname path as the browser row above — any SNI-capable HTTP client gets the Access-free route, not just browsers. This is what lets loopback-bound services (n8n, searxng, portainer, ...) stay loopback-bound and still be scriptable over the tailnet: nginx proxies to the loopback backend regardless of how the client reached nginx. The same is true for the download stack (transmission, sabnzbd, the *arr apps, slskd, soularr), since #203 moved it to mimir. nginx still runs on thor. It proxies to mimir's static `br0` address (`modules/settings/hosts.nix`) instead of to loopback, over the LAN bridge they already share, not over the tailnet. The client-facing path is identical |
 | A mobile app | `100.84.196.40:<port>` over the tailnet — same availability as the hostname, but fails clean (timeout, not an Access login page) if Tailscale drops |
 | Admin tools with no vhost (Prometheus, Alertmanager) | `thor:<port>` from a tailnet device |
 | A LAN appliance that can't do either | Only the ports in the table above |

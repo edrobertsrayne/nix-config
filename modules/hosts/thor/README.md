@@ -20,9 +20,9 @@ box is built and run is in [`docs/`](../../../docs):
 | br0        | 192.168.68.128/22 | Bridge for VMs and LAN |
 | tailscale0 | 100.84.196.40/32  | Mesh VPN (Tailscale)   |
 
-mimir, a microvm.nix guest hypervised by thor, has its own `br0` address
-(`192.168.68.129/22`, `modules/hosts/mimir/mimir.nix`) and its own tailnet
-node — see [../mimir/README.md](../mimir/README.md).
+mimir is a microvm.nix guest that thor hypervises. It has its own `br0`
+address (`192.168.68.129/22`, `modules/hosts/mimir/mimir.nix`) and its own
+tailnet node. See [../mimir/README.md](../mimir/README.md).
 
 **Domain**: `greensroad.uk` via Cloudflare Tunnel. Services are reached at
 `{service}.greensroad.uk` through nginx, or at `100.84.196.40:{port}` from the
@@ -42,10 +42,10 @@ interface.
 
 Their disk images live on `/var/lib/libvirt`, which is snapshotted.
 
-**mimir is not one of these.** It's declared in Nix as its own
-`nixosConfiguration` and run via microvm.nix
-(`_microvm-host.nix` + `modules/hosts/mimir/mimir.nix`), not through `virsh` -
-`systemctl status microvm@mimir` is the equivalent of `virsh list` for it. See
+**mimir is not one of these.** Nix declares mimir as its own
+`nixosConfiguration`, and microvm.nix runs it
+(`_microvm-host.nix` and `modules/hosts/mimir/mimir.nix`), not `virsh`. For
+mimir, `systemctl status microvm@mimir` is the equivalent of `virsh list`. See
 [../mimir/README.md](../mimir/README.md).
 
 ---

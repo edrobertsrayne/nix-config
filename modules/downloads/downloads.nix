@@ -1,6 +1,6 @@
 {inputs, ...}: {
-  # The download stack: needs Mullvad-exit-node traffic for privacy, so it
-  # runs on mimir (a microvm) rather than thor. See #203.
+  # The download stack needs Mullvad exit-node traffic for privacy, so it
+  # runs on mimir (a microvm), not on thor. See #203.
   flake.modules.nixos.downloads.imports = with inputs.self.modules.nixos; [
     bazarr
     lidarr
@@ -13,10 +13,7 @@
     transmission
   ];
 
-  # nginx.virtualHosts entries for the download stack above, which runs on
-  # mimir - not thor. Split out from the service definitions themselves so
-  # this half lands on thor, the only host that runs nginx and holds the
-  # cloudflared tunnel; the service half stays on mimir. See #203.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this split exists.
   flake.modules.nixos.downloads-proxy.imports = with inputs.self.modules.nixos; [
     bazarr-proxy
     lidarr-proxy

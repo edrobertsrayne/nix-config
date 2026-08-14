@@ -17,8 +17,7 @@ in {
     };
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.bazarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Bazarr";
     subdomain = "bazarr";
@@ -26,10 +25,10 @@ in {
     group = "Media";
     description = "Subtitle manager";
     icon = "bazarr.png";
-    # No probePath: /api/system/status needs X-API-KEY, which can't go in
-    # the blackbox config (a world-readable store path), and the SPA
-    # catch-all answers 200 with HTML for any other path, so a deeper
-    # probe would prove less than the root one does.
+    # This module sets no probePath. /api/system/status needs X-API-KEY, and
+    # this key cannot go in the blackbox config, a world-readable store path.
+    # The SPA catch-all answers 200 with HTML for any other path, so a deeper
+    # probe proves less than the root path does.
     host = inputs.self.settings.hosts.mimir.address;
   };
 }

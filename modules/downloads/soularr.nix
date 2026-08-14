@@ -18,7 +18,7 @@ in {
       disable_sync = False
 
       [Slskd]
-      # slskd auth is disabled, so this value is ignored by slskd.
+      # slskd has authentication disabled, so slskd ignores this value.
       api_key = disabled
       host_url = http://host.docker.internal:${toString ports.media.slskd}
       url_base = /
@@ -103,15 +103,16 @@ in {
         SCRIPT_INTERVAL = "900"; # 15 min
         WEBUI_ENABLED = "true";
       };
-      # Was 127.0.0.1, left over from when nginx was same-host - nginx now
-      # reaches this cross-host from thor (#203), so it has to bind mimir's
-      # own address instead. Unlike transmission/sabnzbd, soularr has no
-      # app-level whitelist of its own, and Docker manages its published
-      # ports via its own iptables DNAT/FORWARD rules (modules/docker.nix
-      # doesn't customise this), which are independent of - and not scoped
-      # by - the NixOS firewall's own allow rules. So this is reachable from
-      # any LAN device that can route to mimir, not just thor, until that's
-      # tightened at the Docker/iptables layer. Known gap, not fixed here.
+      # This value was 127.0.0.1, left over from when nginx ran on the same host.
+      # nginx now reaches this service across hosts from thor (#203), so this
+      # value must bind mimir's own address instead. Unlike transmission and
+      # sabnzbd, soularr has no app-level whitelist of its own. Docker also
+      # manages its published ports with its own iptables DNAT and FORWARD rules
+      # (modules/docker.nix does not customize this), independent of the NixOS
+      # firewall's own allow rules and not scoped by them. As a result, any LAN
+      # device that can route to mimir can reach this service, not only thor,
+      # until the Docker/iptables layer is tightened. This is a known gap. This
+      # PR does not fix it.
       ports = ["${inputs.self.settings.hosts.mimir.address}:${toString ports.media.soularr}:8265"];
       volumes = [
         "/srv/soularr:/data"
@@ -128,8 +129,7 @@ in {
     };
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.soularr-proxy = inputs.self.lib.mkProxiedService {
     name = "Soularr";
     subdomain = "soularr";
@@ -137,7 +137,7 @@ in {
     group = "Media";
     description = "Lidarr <-> slskd bridge";
     icon = "soularr.png";
-    # No probePath: soularr exposes no health endpoint.
+    # This module sets no probePath. soularr exposes no health endpoint.
     host = inputs.self.settings.hosts.mimir.address;
   };
 }

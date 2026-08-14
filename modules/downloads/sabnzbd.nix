@@ -23,12 +23,13 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            # thor's br0 address (modules/settings/hosts.nix) - nginx's
-            # proxy_pass source, now that it's a cross-host call over the LAN
-            # bridge mimir and thor share, not the tailnet (#203). No explicit
-            # bind address override was found here to begin with - #201's
-            # audit flagged that as unconfirmed, still true after this move;
-            # leaving it as nixpkgs' own default rather than guessing.
+            # This is thor's br0 address (modules/settings/hosts.nix), the source
+            # of nginx's proxy_pass call. This call now crosses hosts over the LAN
+            # bridge that mimir and thor share, not over the tailnet (#203). No
+            # explicit bind address override existed here to begin with. #201's
+            # audit flagged that as unconfirmed, and it remains unconfirmed after
+            # this move. This setting keeps nixpkgs' own default instead of
+            # guessing at one.
             host_whitelist = "localhost, 127.0.0.1, ${url}, ${inputs.self.settings.hosts.thor.address}";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
@@ -183,8 +184,7 @@ in {
     environment.persistence."/persist".directories = ["/var/lib/sabnzbd"];
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.sabnzbd-proxy = inputs.self.lib.mkProxiedService {
     name = "SABnzbd";
     subdomain = "sabnzbd";

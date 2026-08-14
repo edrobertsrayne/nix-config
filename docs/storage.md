@@ -42,8 +42,8 @@ between you and a bad `rm`:
 | `zroot/libvirt` | `/var/lib/libvirt` | **yes** |
 | `zroot/microvms` | `/var/lib/microvms` | **yes** |
 
-`zroot/microvms` holds mimir's disk images (#203) — same shape as
-`zroot/libvirt`, one dataset per hypervisor holding its guests' image files
+`zroot/microvms` holds mimir's disk images (#203). This has the same shape as
+`zroot/libvirt`: one dataset per hypervisor, holding its guests' image files,
 rather than one dataset per guest.
 
 `/` and `/nix` are not snapshotted because they do not need to be — they are
@@ -60,6 +60,14 @@ other service aspect that has real state, e.g. `modules/vaultwarden.nix`,
 directories alongside its service config). There's no aggregation list to read
 — `nix eval .#nixosConfigurations.thor.config.environment.persistence.'"/persist"'.directories`
 shows the merged result.
+
+Every host that uses `modules/persistence.nix` also sets
+`fileSystems."/persist".neededForBoot = true`. This setting is required, not
+optional: stage-2 activation reads `/var/lib/nixos` before systemd mounts local
+filesystems, and impermanence requires `neededForBoot` on every persistent
+store. disko (#165) leaves this at its `false` default, so each host sets it
+directly — see `modules/hosts/thor/thor.nix` and
+`modules/hosts/mimir/mimir.nix`.
 
 ### mergerfs
 
@@ -78,7 +86,7 @@ the difference from plain ext4 is only that a second disk's files would survive.
 | `/srv/<service>` (thor) | Service state and databases — Jellyfin, Grafana, Loki, Paperless, Bar Assistant | zroot | **yes** |
 | `/srv/docker` (thor) | Docker images, volumes, container state | zroot | **yes** |
 | `/var/lib/libvirt` | VM disk images (Home Assistant) | zroot | **yes** |
-| `/var/lib/microvms` | mimir's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/var` (#203) | zroot | **yes** |
+| `/var/lib/microvms` | mimir's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/persist` (#203) | zroot | **yes** |
 | `/persist` | Per-aspect service/identity state, bind-mounted back to its usual path | zroot | **yes** |
 | `/mnt/ssd/immich` | **Photos and videos** | SSD | no |
 | `/mnt/ssd/music` | Music library | SSD | no |
@@ -219,7 +227,7 @@ What each loss would actually cost:
 | `/mnt/ssd/downloads` | Gone | Yes, it is transient by nature |
 | `/srv/*` service state | Rolled back to a snapshot, if the pool survives | Config comes from this repo; history does not |
 | `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot | Same |
-| `/var/lib/microvms` — mimir (the download stack, #203) | Rolled back to a snapshot, if the pool survives | Same - and note this is thor's pool, so a thor disk failure takes mimir's state down with it too |
+| `/var/lib/microvms` — mimir (the download stack, #203) | Rolled back to a snapshot, if the pool survives | Same. This is thor's pool, so a thor disk failure also takes down mimir's state |
 | `/persist` per-aspect state | Rolled back to a snapshot, if the pool survives | Same |
 | `/` and `/nix` | Rebuilt by `nixos-rebuild` from this repo | Yes, completely |
 

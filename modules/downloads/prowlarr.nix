@@ -20,16 +20,15 @@ in {
 
     services.flaresolverr.enable = true;
 
-    # No environment.persistence directive here: prowlarr runs on mimir
-    # (#203), which now uses the same modules/persistence.nix aspect as
-    # thor. That aspect already bind-mounts the whole "/var/lib/private"
-    # tree (its DynamicUser comment explains why), so
-    # /var/lib/private/prowlarr survives restarts the same way it would on
-    # thor - no per-service directive needed here.
+    # This module has no environment.persistence directive. prowlarr runs on
+    # mimir (#203), which now uses the same modules/persistence.nix aspect as
+    # thor. That aspect already bind-mounts the whole "/var/lib/private" tree
+    # (its DynamicUser comment explains why). As a result,
+    # /var/lib/private/prowlarr survives a restart the same way it does on
+    # thor, with no per-service directive needed here.
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.prowlarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Prowlarr";
     subdomain = "prowlarr";

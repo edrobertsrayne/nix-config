@@ -4,11 +4,11 @@
 
 Server configuration built around
 [**dendritic architecture**](https://github.com/mightyiam/dendritic) —
-organizing modules by _what they do_ rather than _where they run_. Two
-`nixosConfigurations`: thor (the physical host) and mimir (a
-[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest hypervised by
-thor, running the download stack behind its own Mullvad exit node — see
-issue #203).
+organizing modules by _what they do_ rather than _where they run_. It has two
+`nixosConfigurations`: thor, the physical host, and mimir, a
+[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest that thor
+hypervises. mimir runs the download stack behind its own Mullvad exit node
+(issue #203).
 
 ---
 
@@ -21,7 +21,7 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── hosts/         # Host-specific configs
 │   ├── thor/      # Home server (NixOS)
 │   └── mimir/     # Download-stack microvm, hypervised by thor
-├── downloads/     # Download stack (*arr apps, transmission, ...) - runs on mimir
+├── downloads/     # Download stack (*arr apps, transmission, and more), runs on mimir
 ├── settings/      # Project options (user.nix, ports.nix, hosts.nix, server.nix)
 ├── dashboards/    # Grafana dashboard JSON
 └── lib/           # Helper functions
@@ -39,11 +39,11 @@ secrets/           # Encrypted secrets (agenix)
 
 ---
 
-Every service below runs on **thor** except the download stack, which is
-called out separately — it's the one group that runs on **mimir** instead.
-When in doubt about which host a service is actually on, this is the section
-to check: it's grouped by function, not by host, everywhere except that one
-split.
+Every service below runs on **thor**, except the download stack. This guide
+calls out the download stack separately: it is the one group that runs on
+**mimir** instead. Check this section when you are in doubt about which host
+runs a service. This guide groups every service by function, not by host,
+except for that one split.
 
 ## Host: thor
 
@@ -58,8 +58,8 @@ Home server running NixOS. Everything in this section runs here.
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/navidrome.png" width="20" alt=""> | Navidrome | Music streaming |
 | | MiniDLNA | DLNA media streaming |
 
-The download stack has no privacy requirement of its own here — it's on mimir
-instead so only it pays for Mullvad, not the rest of thor. See
+The download stack has no privacy requirement of its own on thor. It runs on
+mimir instead, so only it needs Mullvad, not the rest of thor. See
 [docs/networking.md](docs/networking.md) and "Host: mimir" below.
 
 ### Monitoring
@@ -125,10 +125,10 @@ the reason for each, is in [docs/networking.md](docs/networking.md).
 
 ## Host: mimir
 
-A [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest hypervised
-by thor. Runs only the download stack below, behind its own Mullvad exit node,
-so the rest of thor doesn't pay for Mullvad's reliability/routing quirks
-(issue #203). Nothing in the sections above runs here.
+mimir is a [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest
+that thor hypervises. It runs only the download stack below, behind its own
+Mullvad exit node, so the rest of thor does not need Mullvad's reliability and
+routing quirks (issue #203). Nothing in the sections above runs on mimir.
 
 ### Download stack
 
@@ -144,10 +144,10 @@ so the rest of thor doesn't pay for Mullvad's reliability/routing quirks
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/slskd.png" width="20" alt=""> | slskd | Soulseek client |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/soularr.png" width="20" alt=""> | Soularr | Lidarr ↔ slskd bridge |
 
-nginx still runs on thor for these — it proxies to mimir's static `br0`
-address instead of loopback. See
+nginx still runs on thor for these services. It proxies to mimir's static
+`br0` address, instead of to loopback. See
 [docs/deploying.md](docs/deploying.md#same-host-vs-cross-host-services) for
-how a service and its vhost end up split across two hosts like this.
+how a service and its vhost end up split across two hosts.
 
 ---
 

@@ -20,27 +20,27 @@ in {
       enable = true;
       home = lib.mkDefault "/srv/transmission";
       package = pkgs.transmission_4;
-      # Opens peer-port on TCP *and* UDP; the previous hand-rolled
-      # allowedTCPPorts missed UDP, which dht-enabled/utp-enabled need for
-      # inbound peer discovery. RPC port itself stays off (openRPCPort
-      # defaults off) - it's reached over the LAN bridge from thor's nginx,
-      # via the source-scoped firewall rule in hosts/mimir/mimir.nix, not a
+      # This setting opens peer-port on TCP and UDP. The previous hand-rolled
+      # allowedTCPPorts setting missed UDP, which dht-enabled and utp-enabled need
+      # for inbound peer discovery. The RPC port itself stays closed (openRPCPort
+      # defaults off). nginx on thor reaches it over the LAN bridge, through the
+      # source-scoped firewall rule in hosts/mimir/mimir.nix, not through a
       # blanket port opening.
       openPeerPorts = true;
       settings = {
-        # 0.0.0.0, not loopback: nginx reaches this cross-host from thor over
-        # br0 now (#203 - transmission moved to mimir), so mimir's own
-        # firewall (hosts/mimir/mimir.nix, scoped to thor's br0 address only)
-        # is what keeps this from being LAN-reachable, not the bind address.
-        # rpc-whitelist below is the second layer.
+        # This binds to 0.0.0.0, not loopback. nginx on thor now reaches this
+        # service across hosts, over br0 (#203 moved transmission to mimir).
+        # mimir's own firewall (hosts/mimir/mimir.nix, scoped to thor's br0
+        # address only) is what keeps this service from being LAN-reachable, not
+        # the bind address. rpc-whitelist below is the second layer of protection.
         rpc-bind-address = "0.0.0.0";
         rpc-port = ports.media.transmission;
         peer-port = ports.media.transmissionPeer;
 
         rpc-whitelist-enabled = true;
-        # thor's br0 address (modules/settings/hosts.nix) - nginx's
-        # proxy_pass source, now that it's a cross-host call over the LAN
-        # bridge mimir and thor share, not the tailnet.
+        # This is thor's br0 address (modules/settings/hosts.nix), the source of
+        # nginx's proxy_pass call. This call now crosses hosts over the LAN
+        # bridge that mimir and thor share, not over the tailnet.
         rpc-whitelist = "127.0.0.1,::1,${inputs.self.settings.hosts.thor.address}";
         # DNS-rebinding protection. Transmission always permits IP-literal
         # Host headers, so homepage's siteMonitor (http://127.0.0.1:9091)
@@ -76,8 +76,7 @@ in {
     };
   };
 
-  # Runs on mimir (#203); this vhost is what actually makes it reachable -
-  # it must be imported by thor, the only host with nginx/cloudflared.
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.transmission-proxy = inputs.self.lib.mkProxiedService {
     name = "Transmission";
     subdomain = "transmission";
@@ -85,9 +84,9 @@ in {
     group = "Media";
     description = "Torrent downloader";
     icon = "transmission.png";
-    # No probePath: /transmission/rpc answers 409 by design (the session-id
-    # handshake). The root URL 301s to /transmission/web/ and the probe
-    # follows it.
+    # This module sets no probePath. By design, /transmission/rpc answers 409
+    # (the session-id handshake). The root URL redirects to /transmission/web/
+    # with a 301, and the probe follows this redirect.
     host = inputs.self.settings.hosts.mimir.address;
   };
 }

@@ -98,9 +98,9 @@
           };
         };
 
-        # No exit node: moved to mimir (#203) so only the download stack
-        # pays for Mullvad's reliability/routing quirks, not every service
-        # on thor.
+        # thor sets no exit node. #203 moved the exit node to mimir, so only
+        # the download stack pays for Mullvad's reliability and routing
+        # quirks, not every service on thor.
         tailscale.useRoutingFeatures = "client";
 
         fstrim.enable = true;
@@ -132,9 +132,7 @@
       fileSystems = {
         "/boot".options = ["umask=0077"];
 
-        # Stage-2 activation reads /var/lib/nixos before systemd mounts local
-        # filesystems, and impermanence asserts neededForBoot on every
-        # persistent store. disko (#165) leaves this at its false default.
+        # See docs/storage.md ("The ZFS pool") for why this is required.
         "/persist".neededForBoot = true;
 
         "/mnt/storage" = {
