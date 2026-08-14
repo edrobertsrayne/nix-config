@@ -56,6 +56,24 @@ in {
             exit 1
           '';
         };
+
+        # salt-rim's Requires=+After= on bar-assistant-server (from dependsOn
+        # below) only orders a *simultaneous* start — if bar-assistant-server's
+        # own start attempt fails (e.g. the s6/nginx race above) and its
+        # Restart=on-failure later recovers it, salt-rim's start job has
+        # already failed with a "dependency" result and is never retried.
+        # Wait for the API to actually be healthy instead of trusting the
+        # ordering alone, so a transient bar-assistant-server failure doesn't
+        # permanently strand salt-rim.
+        "docker-salt-rim".serviceConfig.ExecStartPre = pkgs.writeShellScript "salt-rim-wait-for-api" ''
+          for _ in $(seq 1 60); do
+            ${lib.getExe pkgs.curl} -fsS -o /dev/null \
+              http://127.0.0.1:${toString p.server}/healthcheck && exit 0
+            sleep 2
+          done
+          echo "bar-assistant API never came up - salt-rim has nothing to serve" >&2
+          exit 1
+        '';
       };
     };
 
