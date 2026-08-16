@@ -23,46 +23,19 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            # This is thor's br0 address (modules/settings/hosts.nix), the source
-            # of nginx's proxy_pass call. This call now crosses hosts over the LAN
-            # bridge that mimir and thor share, not over the tailnet (#203). No
-            # explicit bind address override existed here to begin with. #201's
-            # audit flagged that as unconfirmed, and it remains unconfirmed after
-            # this move. This setting keeps nixpkgs' own default instead of
-            # guessing at one.
             host_whitelist = "localhost, 127.0.0.1, ${url}, ${inputs.self.settings.hosts.thor.address}";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
             download_dir = "/mnt/ssd/downloads/usenet/incomplete";
             complete_dir = "/mnt/ssd/downloads/usenet/complete";
-            # Was 777 (world-writable). tank-group write is enough - the *arr
-            # services that import from complete_dir are all in tank
-            # (mkArr's extraGroups) and already run with UMask 0002.
             permissions = "775";
-            # Was relying on nixpkgs' default coincidentally matching.
             port = ports.media.sabnzbd;
-            # sabnzbd sets these itself once the incomplete dir benchmarks
-            # >100MB/s; pinning both asserts the SSD passed and skips the
-            # re-test on every start. Revisit if the incomplete dir ever
-            # moves off SSD.
             direct_unpack = true;
             direct_unpack_tested = true;
-            # config_lock 403s the web UI config pages and the
-            # mode=config/set_config API endpoints, but not mode=get_config -
-            # which is what Radarr/Sonarr/Lidarr call - so *arr integration is
-            # unaffected. It also makes save_config() bail early with a log
-            # warning rather than error against the 0400 ini.
             config_lock = true;
-            # nixpkgs defaults this to 4, but sabnzbd 5.x writes 5. Left at 4,
-            # sabnzbd re-runs the 4->5 conversion on every start and can't
-            # record the result against a read-only ini.
             config_conversion_version = 5;
           };
           servers = {
-            # expire_date defaults to null; formats.configobj has no null
-            # handling and writes the literal word `None`, which sabnzbd
-            # then fails to date.fromisoformat() on the next server check.
-            # Set it explicitly to match sabnzbd's own empty-string default.
             "eunews.frugalusenet.com" = {
               name = "eunews.frugalusenet.com";
               displayname = "eunews.frugalusenet.com";
