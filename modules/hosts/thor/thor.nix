@@ -98,19 +98,11 @@
           };
         };
 
-        # thor sets no exit node. #203 moved the exit node to mimir, so only
-        # the download stack pays for Mullvad's reliability and routing
-        # quirks, not every service on thor.
         tailscale.useRoutingFeatures = "client";
 
         fstrim.enable = true;
       };
 
-      # Deliberate: thor is headless, SSH is key-only
-      # (PasswordAuthentication = false in modules/ssh.nix) and the web
-      # surface is behind Cloudflare Access. A shell as `ed` already implies
-      # root here; requiring a password would only gate interactive
-      # convenience, not close an attack path. See issue #183.
       security.sudo.wheelNeedsPassword = false;
 
       virtualisation.docker.daemon.settings = {
