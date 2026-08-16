@@ -7,9 +7,6 @@ in {
     pkgs,
     ...
   }: let
-    # Real key is injected at activation time by soularr-config.service, which
-    # substitutes this placeholder for the lidarr-apikey secret (shared with
-    # media/lidarr.nix - not a second copy) before the container starts.
     configFile = pkgs.writeText "soularr-config.ini" ''
       [Lidarr]
       api_key = @LIDARR_API_KEY@
@@ -63,25 +60,12 @@ in {
       backup_count = 3
     '';
   in {
-    # writable /data for lock + log files, owned to match container user 306:992
     systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
 
-    # slskd's web port isn't otherwise firewall-opened (only its soulseek
-    # listen port is), and lidarr's web UI lost its LAN opening in #182;
-    # soularr reaches both via host.docker.internal, which arrives as
-    # non-loopback traffic on docker0 and needs an explicit allow.
     networking.firewall.interfaces.docker0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
 
-    # reuse of lidarr's own secret - see media/lidarr.nix's age.secrets.lidarr-apikey.
-    # (security#185: old plaintext *arr keys are rotated dead by this change;
-    # no git-history rewrite done - it'd break every clone/CI ref for no
-    # remaining benefit once the keys themselves are inert.)
     age.secrets.lidarr-apikey.file = ../../secrets/lidarr-apikey.age;
 
-    # configFile bakes in a placeholder api_key (not a real secret, so it's
-    # fine in the Nix store); this renders the real config.ini into
-    # /srv/soularr, which is already bind-mounted to /data in the container,
-    # so no separate ro mount for it is needed.
     systemd.services.soularr-config = {
       before = ["docker-soularr.service"];
       requiredBy = ["docker-soularr.service"];
@@ -103,25 +87,11 @@ in {
         SCRIPT_INTERVAL = "900"; # 15 min
         WEBUI_ENABLED = "true";
       };
-      # This value was 127.0.0.1, left over from when nginx ran on the same host.
-      # nginx now reaches this service across hosts from thor (#203), so this
-      # value must bind mimir's own address instead. Unlike transmission and
-      # sabnzbd, soularr has no app-level whitelist of its own. Docker also
-      # manages its published ports with its own iptables DNAT and FORWARD rules
-      # (modules/docker.nix does not customize this), independent of the NixOS
-      # firewall's own allow rules and not scoped by them. As a result, any LAN
-      # device that can route to mimir can reach this service, not only thor,
-      # until the Docker/iptables layer is tightened. This is a known gap. This
-      # PR does not fix it.
       ports = ["${inputs.self.settings.hosts.mimir.address}:${toString ports.media.soularr}:8265"];
       volumes = [
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
       ];
-      # :latest + --pull=always is deliberate, not an oversight: personal
-      # server, nixpkgs is already tracked on unstable, rolling container
-      # images are an accepted trade for staying current without manual
-      # version bumps. See #181.
       extraOptions = [
         "--pull=always"
         "--add-host=host.docker.internal:host-gateway"
