@@ -20,31 +20,14 @@ in {
       enable = true;
       home = lib.mkDefault "/srv/transmission";
       package = pkgs.transmission_4;
-      # This setting opens peer-port on TCP and UDP. The previous hand-rolled
-      # allowedTCPPorts setting missed UDP, which dht-enabled and utp-enabled need
-      # for inbound peer discovery. The RPC port itself stays closed (openRPCPort
-      # defaults off). nginx on thor reaches it over the LAN bridge, through the
-      # source-scoped firewall rule in hosts/mimir/mimir.nix, not through a
-      # blanket port opening.
-      openPeerPorts = true;
+            openPeerPorts = true;
       settings = {
-        # This binds to 0.0.0.0, not loopback. nginx on thor now reaches this
-        # service across hosts, over br0 (#203 moved transmission to mimir).
-        # mimir's own firewall (hosts/mimir/mimir.nix, scoped to thor's br0
-        # address only) is what keeps this service from being LAN-reachable, not
-        # the bind address. rpc-whitelist below is the second layer of protection.
         rpc-bind-address = "0.0.0.0";
         rpc-port = ports.media.transmission;
         peer-port = ports.media.transmissionPeer;
 
         rpc-whitelist-enabled = true;
-        # This is thor's br0 address (modules/settings/hosts.nix), the source of
-        # nginx's proxy_pass call. This call now crosses hosts over the LAN
-        # bridge that mimir and thor share, not over the tailnet.
         rpc-whitelist = "127.0.0.1,::1,${inputs.self.settings.hosts.thor.address}";
-        # DNS-rebinding protection. Transmission always permits IP-literal
-        # Host headers, so homepage's siteMonitor (http://127.0.0.1:9091)
-        # still works.
         rpc-host-whitelist-enabled = true;
         rpc-host-whitelist = "transmission.${server.domain}";
 
@@ -84,9 +67,6 @@ in {
     group = "Media";
     description = "Torrent downloader";
     icon = "transmission.png";
-    # This module sets no probePath. By design, /transmission/rpc answers 409
-    # (the session-id handshake). The root URL redirects to /transmission/web/
-    # with a 301, and the probe follows this redirect.
     host = inputs.self.settings.hosts.mimir.address;
   };
 }
