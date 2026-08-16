@@ -4,9 +4,6 @@ _: {
     port,
     dynamicUser ? false,
     umask ? true,
-    # null leaves the upstream module's default in place. Prowlarr needs that:
-    # a custom dataDir there means a bind mount plus a root-owned tmpfiles rule
-    # that fights its DynamicUser (#194).
     dataDir ? "/srv/${service}",
     secret,
   }: {
@@ -26,18 +23,10 @@ _: {
     services.${service} =
       {
         enable = true;
-        # No openFirewall: reached via cloudflared -> nginx (Access-gated) or
-        # the tailnet; the LAN bridge must not reach it directly.
         settings = {
           server.port = port;
           auth = {
             method = "External";
-            # Deliberate, not an oversight - see #174: with the LAN opening
-            # gone (closed in #182), the only unauthenticated callers left
-            # are nginx on loopback (Access-gated) and soularr over docker0
-            # (soularr.nix), which depends on no-auth here (its api_key is
-            # disabled). Switching to "Forms" would break soularr and add a
-            # password layer that Access is meant to replace, not duplicate.
             type = "DisabledForLocalAddresses";
           };
         };
@@ -45,8 +34,6 @@ _: {
       }
       // lib.optionalAttrs (dataDir != null) {inherit dataDir;};
 
-    # dynamicUser services get "tank" via SupplementaryGroups (no static
-    # user to add to extraGroups); static-user services via extraGroups.
     users.users = lib.optionalAttrs (!dynamicUser) {
       ${cfg.user}.extraGroups = ["tank"];
     };
