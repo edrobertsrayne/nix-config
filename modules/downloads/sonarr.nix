@@ -15,9 +15,6 @@ in {
     description = "TV series manager";
     icon = "sonarr.png";
     group = "Media";
-    # /ping is the only *arr endpoint reachable without an API key. It checks
-    # database access, rather than only answering. A Servarr app whose database
-    # cannot open still serves its UI on /, but returns 500 here.
     probePath = "/ping";
     host = inputs.self.settings.hosts.mimir.address;
   };
