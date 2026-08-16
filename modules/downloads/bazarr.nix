@@ -17,7 +17,6 @@ in {
     };
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.bazarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Bazarr";
     subdomain = "bazarr";
@@ -25,10 +24,6 @@ in {
     group = "Media";
     description = "Subtitle manager";
     icon = "bazarr.png";
-    # This module sets no probePath. /api/system/status needs X-API-KEY, and
-    # this key cannot go in the blackbox config, a world-readable store path.
-    # The SPA catch-all answers 200 with HTML for any other path, so a deeper
-    # probe proves less than the root path does.
     host = inputs.self.settings.hosts.mimir.address;
   };
 }
