@@ -1,11 +1,5 @@
 let
   thor = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfbR2f2V1ytWjQUKe1qOddc4JXqQj611nBnPGSmZHFR";
-  # mimir (#203) is not yet added to `systems`. Its SSH host key exists only
-  # once it is actually provisioned. A placeholder key here silently
-  # produces secrets that no real host can decrypt. After mimir boots once, add
-  # its ssh-ed25519 host public key to `systems` below, then run `agenix -r`
-  # to rekey every secret. This matches this repository's policy that every
-  # machine decrypts every secret - see the #203 decision log.
   systems = [thor];
   users = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINW5tgMzPytrfk373U9EfL5ol6No9lIelF6dL8ZYSe0B ed@thor"
