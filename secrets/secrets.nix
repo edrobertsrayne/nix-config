@@ -1,6 +1,6 @@
 let
   thor = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfbR2f2V1ytWjQUKe1qOddc4JXqQj611nBnPGSmZHFR";
-  mimir = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILFb46rrCo5FrLieo8SE9ALd7PfTXMqBCjPdcvcx3nqr";
+  mimir = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjoqEaJlW/vlhvAgxLt55X2y/aRIk2GFpgo2QjdUaQy";
   systems = [thor];
   mimirSystems = [thor mimir];
   users = [
