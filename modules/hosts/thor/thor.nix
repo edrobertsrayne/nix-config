@@ -109,8 +109,6 @@
         fstrim.enable = true;
       };
 
-      security.sudo.wheelNeedsPassword = false;
-
       virtualisation.docker.daemon.settings = {
         data-root = "/srv/docker";
       };
