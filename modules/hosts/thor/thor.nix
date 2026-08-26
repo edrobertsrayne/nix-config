@@ -79,7 +79,13 @@
         memoryPercent = 25;
       };
 
-      users.groups.tank.members = ["${inputs.self.settings.user.username}"];
+      users.groups.tank = {
+        # Pinned so it can't drift from mimir's tank GID (modules/hosts/mimir/mimir.nix)
+        # — /mnt/ssd/downloads and /mnt/storage are virtiofs shares into mimir,
+        # so raw uid/gid numbers cross that boundary.
+        gid = 992;
+        members = ["${inputs.self.settings.user.username}"];
+      };
 
       # Ensure tmpfiles runs after /mnt/ssd is mounted
       systemd.services.systemd-tmpfiles-setup.after = ["mnt-ssd.mount"];

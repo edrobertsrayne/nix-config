@@ -120,7 +120,36 @@
 
       nix.optimise.automatic = false;
 
-      fileSystems."/persist".neededForBoot = true;
+      # GID must match thor's tank group (modules/hosts/thor/thor.nix) —
+      # /mnt/ssd/downloads and /mnt/storage are virtiofs shares from thor, so
+      # raw uid/gid numbers cross that boundary.
+      users.groups.tank.gid = 992;
+
+      # /srv (srv.img) has no ordering pull on systemd-tmpfiles-setup by
+      # default, so rules targeting /srv/* (e.g. transmission's home dir,
+      # modules/downloads/transmission.nix) can run before /srv is mounted —
+      # they then land on the transient root and get shadowed once the mount
+      # completes. Same fix thor applies for /mnt/ssd (modules/hosts/thor/thor.nix).
+      systemd.services.systemd-tmpfiles-setup.after = ["srv.mount"];
+
+      fileSystems."/persist" = {
+        neededForBoot = true;
+        # persist.img is a small virtio-attached image that's always cleanly
+        # unmounted on shutdown; skipping fsck removes the one big, avoidable
+        # chunk of latency between virtio-blk attach and the mount completing
+        # — see the machine-id race note below.
+        noCheck = true;
+      };
+
+      # Root is tmpfs (wiped every boot), so /persist's bind-mounts (SSH host
+      # keys, /etc/machine-id) must win the race against systemd's own
+      # first-boot machine-id generation. That only happens reliably when the
+      # persistence module's units run inside initrd, alongside thor
+      # (modules/hosts/thor/thor.nix) which already does this for the same
+      # reason. On mimir specifically, /persist sits on a virtio-attached
+      # image (vs. thor's already-imported ZFS pool), so the mount is slower
+      # to become available in initrd — noCheck above narrows that gap.
+      boot.initrd.systemd.enable = true;
     };
   };
 }
