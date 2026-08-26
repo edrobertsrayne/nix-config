@@ -7,6 +7,10 @@ in {
     pkgs,
     ...
   }: let
+    # oci-containers names its systemd unit after the backend (docker-soularr
+    # vs podman-soularr); thor uses docker, mimir uses podman.
+    containerUnit = "${config.virtualisation.oci-containers.backend}-soularr.service";
+
     configFile = pkgs.writeText "soularr-config.ini" ''
       [Lidarr]
       api_key = @LIDARR_API_KEY@
@@ -67,8 +71,8 @@ in {
     age.secrets.lidarr-apikey.file = ../../secrets/lidarr-apikey.age;
 
     systemd.services.soularr-config = {
-      before = ["docker-soularr.service"];
-      requiredBy = ["docker-soularr.service"];
+      before = [containerUnit];
+      requiredBy = [containerUnit];
       serviceConfig.Type = "oneshot";
       script = ''
         apikey=$(${pkgs.gnused}/bin/sed -n 's/^LIDARR__AUTH__APIKEY=//p' ${config.age.secrets.lidarr-apikey.path})
@@ -79,7 +83,9 @@ in {
     };
 
     virtualisation.oci-containers.containers.soularr = {
-      image = "mrusse08/soularr:latest";
+      # Fully qualified so podman (mimir's backend) doesn't need
+      # unqualified-search registries configured to resolve it.
+      image = "docker.io/mrusse08/soularr:latest";
       autoStart = true;
       user = "306:992"; # lidarr uid : tank gid - aligns import perms
       environment = {
