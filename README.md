@@ -47,7 +47,10 @@ except for that one split.
 
 ## Host: thor
 
-Home server running NixOS. Everything in this section runs here.
+Home server running NixOS. Everything in this section runs here, with an
+impermanent (wipe-on-boot) root and declared persistence (see
+[storage.md](docs/storage.md#impermanence-wipe-on-boot-root)). PostgreSQL is a
+shared aspect (`modules/postgresql.nix`) used by Immich and Blocky.
 
 ### Media
 
@@ -187,6 +190,8 @@ thor also upgrades itself from `main` nightly — see
 
 **How it is built**
 
+- [Dendritic architecture](docs/dendritic.md) - how modules are organized,
+  auto-loaded, and composed into the host
 - [Networking](docs/networking.md) - ingress, trust boundaries, and every
   LAN-open port
 - [Storage](docs/storage.md) - disks, datasets, what lives where, and what is

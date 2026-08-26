@@ -26,5 +26,6 @@ in {
   "prowlarr-apikey.age".publicKeys = mimirSystems ++ users;
   "sabnzbd.age".publicKeys = mimirSystems ++ users;
   "user-password.age".publicKeys = systems ++ users;
+  "planner.age".publicKeys = systems ++ users;
   "root-password.age".publicKeys = systems ++ users;
 }
