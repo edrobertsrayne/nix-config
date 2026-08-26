@@ -19,7 +19,7 @@
 
         alertmanager
         alertmanager-ntfy
-        bar-assistant
+        # bar-assistant
         bentopdf
         blocky
         code-server
@@ -29,13 +29,13 @@
         homepage
         immich
         jellyfin
-        karakeep
+        # karakeep
         libvirt
         loki
         n8n
         navidrome
         nginx
-        ntfy
+        # ntfy
         paperless
         persistence
         portainer
