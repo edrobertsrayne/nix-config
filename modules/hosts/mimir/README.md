@@ -39,6 +39,29 @@ systemctl restart microvm@mimir     # restart the whole guest
 ssh mimir                           # everything else is normal NixOS from here
 ```
 
+## Deploying config changes
+
+`nixos-rebuild --target-host` (the normal cross-host deploy path, see
+[docs/deploying.md](../../../docs/deploying.md)) **does not work for mimir.**
+mimir shares thor's `/nix/store` read-only over virtiofs and does not run
+`nix-daemon`, so `nix-copy-closure`/`nix copy` has no working store to land a
+closure on. It fails with a misleading local-looking error —
+`error: creating directory "/nix/var/nix/temproots": Permission denied` /
+`error: cannot connect to '<ip>'` — that is actually the guest rejecting the
+copy, not a local permission or SSH problem. Root SSH login is also disabled
+on mimir (`PermitRootLogin = "no"`, `modules/ssh.nix`), so a `root@<ip>`
+target fails separately with a publickey error.
+
+Deploy with microvm.nix's own host-side CLI instead, from thor:
+
+```sh
+sudo microvm -R -u mimir   # -u <name> rebuilds from thor's current flake
+                            # checkout (uncommitted changes included);
+                            # -R restarts the guest if the update needs one
+                            # (kernel/initrd change) — otherwise it updates
+                            # in place. Flags must come before the name.
+```
+
 ## Storage
 
 - Root: two image-backed volumes (`/persist`, `/srv`) on thor's

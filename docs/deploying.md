@@ -22,11 +22,15 @@ Step 2 catches typos and type errors without building anything, in seconds.
 Step 3 is where the real work happens: Nix builds every package the new
 configuration needs, then activates it.
 
-**mimir (#203) is a second `nixosConfiguration`, not a service inside thor's.**
-Everything below applies to mimir too: use `#mimir` in place of `#thor`. But
-run the command *on mimir* (`ssh mimir` first), not on thor. A `nixos-rebuild
---flake .#mimir --target-host mimir` from thor also works, because thor
-already has SSH access as mimir's hypervisor.
+**mimir (#203) is a second `nixosConfiguration`, not a service inside thor's,
+but it does not deploy like one.** mimir is a microvm.nix guest that shares
+thor's `/nix/store` read-only over virtiofs and does not run `nix-daemon`, so
+neither `nixos-rebuild switch --flake .#mimir` on mimir itself nor
+`--target-host` from thor can land a closure there — both fail, the latter
+with a misleading local-looking error. Deploy mimir with microvm.nix's own
+host-side CLI instead, from thor: `sudo microvm -R -u mimir`. See
+[`modules/hosts/mimir/README.md`](../modules/hosts/mimir/README.md#deploying-config-changes)
+for the full explanation and command reference.
 
 ### Choosing `test`, `switch`, or `boot`
 
