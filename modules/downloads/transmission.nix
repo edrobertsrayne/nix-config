@@ -14,13 +14,18 @@ in {
     systemd.tmpfiles.rules = [
       "d ${cfg.settings.incomplete-dir} 0755 ${cfg.user} tank -"
       "d ${cfg.settings.download-dir} 0755 ${cfg.user} tank -"
+      # cfg.home lives outside the default /var/lib/transmission, so
+      # StateDirectory= doesn't create it — the unit's self BindPaths= onto
+      # this path (to poke a hole in ProtectSystem=strict) requires it to
+      # already exist, or the service fails at NAMESPACE setup.
+      "d ${cfg.home}/.config/transmission-daemon 0750 ${cfg.user} ${cfg.user} -"
     ];
 
     services.transmission = {
       enable = true;
       home = lib.mkDefault "/srv/transmission";
       package = pkgs.transmission_4;
-            openPeerPorts = true;
+      openPeerPorts = true;
       settings = {
         rpc-bind-address = "0.0.0.0";
         rpc-port = ports.media.transmission;
