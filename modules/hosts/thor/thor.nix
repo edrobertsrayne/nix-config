@@ -34,6 +34,7 @@
         media
         paperless
         persistence
+        planner
         portainer
         prometheus
         searxng
