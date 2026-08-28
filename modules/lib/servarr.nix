@@ -38,6 +38,13 @@ _: {
       ${cfg.user}.extraGroups = ["tank"];
     };
 
+    # dataDir lives outside /var/lib, so StateDirectory= doesn't create it, and
+    # /srv is root-owned — the service cannot mkdir its own directory and dies
+    # at startup. Only surfaces on a host where /srv is freshly formatted.
+    systemd.tmpfiles.rules = lib.optionals (dataDir != null) [
+      "d ${dataDir} 0700 ${cfg.user} ${cfg.user} -"
+    ];
+
     systemd.services.${service}.serviceConfig =
       lib.optionalAttrs dynamicUser {SupplementaryGroups = ["tank"];}
       // lib.optionalAttrs umask {UMask = lib.mkForce "0002";};

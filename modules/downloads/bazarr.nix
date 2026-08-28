@@ -24,6 +24,6 @@ in {
     group = "Media";
     description = "Subtitle manager";
     icon = "bazarr.png";
-    host = inputs.self.settings.hosts.mimir.address;
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

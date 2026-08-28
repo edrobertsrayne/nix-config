@@ -32,7 +32,10 @@ in {
         peer-port = ports.media.transmissionPeer;
 
         rpc-whitelist-enabled = true;
-        rpc-whitelist = "127.0.0.1,::1,${inputs.self.settings.hosts.thor.address}";
+        # Proxied from thor, over tailscale0 (mkProxiedService's host is
+        # mimir's MagicDNS name) - thor's tailnet address, not its LAN one,
+        # is what transmission sees the request arrive from.
+        rpc-whitelist = "127.0.0.1,::1,${inputs.self.settings.hosts.thor.address},${inputs.self.settings.hosts.thor.tailnetAddress}";
         rpc-host-whitelist-enabled = true;
         rpc-host-whitelist = "transmission.${server.domain}";
 
@@ -72,6 +75,6 @@ in {
     group = "Media";
     description = "Torrent downloader";
     icon = "transmission.png";
-    host = inputs.self.settings.hosts.mimir.address;
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

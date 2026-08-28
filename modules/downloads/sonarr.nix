@@ -16,6 +16,6 @@ in {
     icon = "sonarr.png";
     group = "Media";
     probePath = "/ping";
-    host = inputs.self.settings.hosts.mimir.address;
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }
