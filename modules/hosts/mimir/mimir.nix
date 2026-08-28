@@ -95,24 +95,53 @@
         ];
       };
 
-      systemd.network.networks."10-eth" = {
-        matchConfig.Type = "ether";
-        networkConfig = {
-          Address = ["${ipAddress}/22"];
-          Gateway = "192.168.68.1";
-          DHCP = "no";
+      systemd = {
+        network.networks."05-container" = {
+          # networkd must never manage container links. netavark enslaves each
+          # container veth to podman0; a few seconds later networkd would
+          # configure the veth with a .network file, which drops it off the
+          # bridge — the container keeps eth0 but loses all reachability
+          # (observed 2026-08-28: soularr unreachable from thor, and unable to
+          # reach lidarr/slskd, on every boot since 2026-08-26). Scoping
+          # 10-eth below to enp0s7 alone is not enough: the 99-*-dhcp
+          # fallback files would then match the veths instead, so they are
+          # explicitly unmanaged here first (this file sorts before both).
+          matchConfig.Name = ["veth*" "podman*" "docker*" "aardvark*"];
+          linkConfig.Unmanaged = "yes";
         };
-        routingPolicyRules = [
-          {
-            From = ipAddress;
-            Table = "main";
-            Priority = 100;
-          }
-        ];
+
+        network.networks."10-eth" = {
+          matchConfig = {
+            Type = "ether";
+            # Scoped by name: Type=ether alone also matches container veths
+            # (their devtype is ether), and networkd managing those breaks
+            # podman networking — see the 05-container block above. mimir's
+            # only real NIC is enp0s7.
+            Name = "enp0s7";
+          };
+          networkConfig = {
+            Address = ["${ipAddress}/22"];
+            Gateway = "192.168.68.1";
+            DHCP = "no";
+          };
+          routingPolicyRules = [
+            {
+              From = ipAddress;
+              Table = "main";
+              Priority = 100;
+            }
+          ];
+        };
+
+        services.systemd-tmpfiles-setup.after = ["srv.mount"];
       };
 
       services.tailscale.extraSetFlags = [
-        "--exit-node=se-sto-wg-201.mullvad.ts.net"
+        # By IP, not hostname: tailscaled-set runs before Tailscale can
+        # resolve MagicDNS names and fails with "cannot resolve exit node by
+        # hostname while Tailscale is starting up". This is
+        # se-sto-wg-201.mullvad.ts.net.
+        "--exit-node=100.84.2.120"
         "--exit-node-allow-lan-access=true"
       ];
 
@@ -130,7 +159,7 @@
       # modules/downloads/transmission.nix) can run before /srv is mounted —
       # they then land on the transient root and get shadowed once the mount
       # completes. Same fix thor applies for /mnt/ssd (modules/hosts/thor/thor.nix).
-      systemd.services.systemd-tmpfiles-setup.after = ["srv.mount"];
+      # Ordered in the systemd block above.
 
       fileSystems."/persist" = {
         neededForBoot = true;

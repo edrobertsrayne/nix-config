@@ -23,7 +23,15 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            host_whitelist = "localhost, 127.0.0.1, ${url}, ${inputs.self.settings.hosts.thor.address}";
+            # Proxied from thor, so loopback-only (the nixpkgs default) is
+            # unreachable. Access is bounded by mimir's firewall, as for
+            # every other service here.
+            host = "0.0.0.0";
+            # "mimir" is listed because the blackbox probe and nginx's
+            # proxyPass reach SABnzbd by tailnet hostname, and its hostname
+            # verification rejects unlisted names (it exempts bare IPs, which
+            # is why the old LAN-IP proxy target never needed this).
+            host_whitelist = "localhost, 127.0.0.1, ${url}, ${inputs.self.settings.hosts.mimir.tailnetName}, ${inputs.self.settings.hosts.thor.address}";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
             download_dir = "/mnt/ssd/downloads/usenet/incomplete";
@@ -170,6 +178,6 @@ in {
     extraConfig = ''
       proxy_set_header X-Forwarded-Host $host;
     '';
-    host = inputs.self.settings.hosts.mimir.address;
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

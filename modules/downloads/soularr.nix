@@ -66,7 +66,15 @@ in {
   in {
     systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
 
+    # The container reaches lidarr/slskd via host.docker.internal (= the
+    # podman bridge gateway, 10.88.0.1), which arrives as INPUT traffic on
+    # the bridge interface. Scoped to the interface rather than opening the
+    # ports LAN-wide. docker0 covers a docker backend; podman0 covers the
+    # podman backend mimir actually uses — without it, nixos-fw drops the
+    # container's API calls (observed as PyarrConnectionError timeouts in
+    # soularr's log on every boot).
     networking.firewall.interfaces.docker0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
+    networking.firewall.interfaces.podman0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
 
     age.secrets.lidarr-apikey.file = ../../secrets/lidarr-apikey.age;
 
@@ -93,7 +101,15 @@ in {
         SCRIPT_INTERVAL = "900"; # 15 min
         WEBUI_ENABLED = "true";
       };
-      ports = ["${inputs.self.settings.hosts.mimir.address}:${toString ports.media.soularr}:8265"];
+      # podman's port publishing DNATs by destination IP and bypasses
+      # networking.firewall entirely, so (unlike every other service here,
+      # which relies on the firewall) the bind address itself is the access
+      # control. Bound to both: mimir's LAN address, and mimir's tailnet
+      # address because nginx's proxyPass now reaches mimir over tailscale0.
+      ports = [
+        "${inputs.self.settings.hosts.mimir.address}:${toString ports.media.soularr}:8265"
+        "${inputs.self.settings.hosts.mimir.tailnetAddress}:${toString ports.media.soularr}:8265"
+      ];
       volumes = [
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
@@ -114,6 +130,6 @@ in {
     description = "Lidarr <-> slskd bridge";
     icon = "soularr.png";
     # This module sets no probePath. soularr exposes no health endpoint.
-    host = inputs.self.settings.hosts.mimir.address;
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }
