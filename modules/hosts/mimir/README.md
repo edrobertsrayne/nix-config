@@ -36,31 +36,59 @@ commands from thor:
 ```sh
 systemctl status microvm@mimir      # is it running
 systemctl restart microvm@mimir     # restart the whole guest
-ssh mimir                           # everything else is normal NixOS from here
+ssh 192.168.68.129                  # everything else is normal NixOS from here
 ```
+
+`ssh mimir` over the tailnet is refused (`tailnet policy does not permit you to SSH
+to this node`) — thor is tagged `tag:server`, mimir is untagged, and neither ACL
+rule matches that combination. Use the LAN address until the tailnet policy is
+updated to allow `tag:server` → `tag:server`.
 
 ## Deploying config changes
 
-`nixos-rebuild --target-host` (the normal cross-host deploy path, see
-[docs/deploying.md](../../../docs/deploying.md)) **does not work for mimir.**
-mimir shares thor's `/nix/store` read-only over virtiofs and does not run
-`nix-daemon`, so `nix-copy-closure`/`nix copy` has no working store to land a
-closure on. It fails with a misleading local-looking error —
-`error: creating directory "/nix/var/nix/temproots": Permission denied` /
-`error: cannot connect to '<ip>'` — that is actually the guest rejecting the
-copy, not a local permission or SSH problem. Root SSH login is also disabled
-on mimir (`PermitRootLogin = "no"`, `modules/ssh.nix`), so a `root@<ip>`
-target fails separately with a publickey error.
-
-Deploy with microvm.nix's own host-side CLI instead, from thor:
+mimir is **fully declarative**: its system is built as part of thor's build —
+`microvm.vms.mimir.evaluatedConfig` (`modules/hosts/thor/_microvm-host.nix`)
+consumes `nixosConfigurations.mimir` directly. Deploying mimir is deploying
+thor:
 
 ```sh
-sudo microvm -R -u mimir   # -u <name> rebuilds from thor's current flake
-                            # checkout (uncommitted changes included);
-                            # -R restarts the guest if the update needs one
-                            # (kernel/initrd change) — otherwise it updates
-                            # in place. Flags must come before the name.
+cd ~/config
+sudo nixos-rebuild test --flake .#thor    # try it; a reboot reverts it
+sudo nixos-rebuild switch --flake .#thor  # make it stick
 ```
+
+When a rebuild changes mimir's configuration, the `microvm@mimir` service
+restarts — the whole guest, not a rolling update (`restartIfChanged`,
+`modules/hosts/thor/_microvm-host.nix`). That includes thor's nightly
+autoUpgrade at 04:00, so **anything merged to `main` reaches mimir within a
+day**, the same "merging is deploying" model as thor
+([docs/deploying.md](../../../docs/deploying.md#the-nightly-upgrade)). Rolling
+thor back to an older generation rolls mimir's config back with it, on the
+next restart or reboot.
+
+Two paths that work for ordinary hosts do **not** apply to mimir, and are not
+needed:
+
+- `nixos-rebuild switch --flake .#mimir` on mimir itself: mimir shares thor's
+  `/nix/store` read-only over virtiofs and does not run `nix-daemon`, so it
+  cannot build or activate a closure on its own behalf.
+- `nixos-rebuild switch --target-host mimir` from thor: fails for the same
+  reason (`nix-copy-closure`/`nix copy` has no working store to land a
+  closure on) with a misleading local-looking error — `error: creating
+  directory "/nix/var/nix/temproots": Permission denied` / `error: cannot
+  connect to '<ip>'` — that is actually the guest rejecting the copy, not a
+  local permission or SSH problem. Root SSH login is also disabled on mimir
+  (`PermitRootLogin = "no"`, `modules/ssh.nix`), so a `root@<ip>` target
+  fails separately with a publickey error.
+
+The old host-side CLI flow (`sudo microvm -R -u mimir`) is obsolete. It was
+the update path while mimir ran in microvm.nix's "declarative deployment"
+mode, where `microvm -u` builds from the flake pointer file
+`/var/lib/microvms/mimir/flake` — a file every thor rebuild re-pinned to a
+frozen store-path snapshot of the flake, which silently deployed stale
+changes (#203). In fully-declarative mode microvm.nix reads no pointer file;
+nothing consumes `microvm -u` anymore. If a leftover `flake` file still
+exists in `/var/lib/microvms/mimir/`, it is dead and safe to delete.
 
 ## Storage
 
@@ -77,3 +105,31 @@ sudo microvm -R -u mimir   # -u <name> rebuilds from thor's current flake
 
 mimir is not yet an agenix recipient. Its SSH host key exists only once it is
 actually provisioned. See the note in `secrets/secrets.nix`.
+
+## State migration (2026-08-26)
+
+The download stack's app state (sonarr/radarr/lidarr/bazarr/prowlarr databases,
+sabnzbd/slskd histories, transmission's torrents, soularr's progress) was copied
+from thor to mimir on 2026-08-26, once the services themselves were confirmed
+reachable but starting from empty databases. Source paths on thor mirrored
+mimir's own layout (`/srv/<app>` for the four *arr apps, `/persist/var/lib/...`
+for the rest); the transfer used a `tar | ssh | tar` pipe, since neither
+`rsync` nor `nix-copy-closure`-style tooling has a working root path here (thor
+root has no SSH key; mimir refuses root logins).
+
+thor's original copies were **left in place**, not deleted — they're the
+fallback if anything about the migrated data turns out wrong.
+
+Two paths are impermanence bind-mounts on mimir (`modules/persistence.nix`):
+`/var/lib/sabnzbd`, `/var/lib/slskd`, and `/var/lib/private` (which holds
+prowlarr). Re-copying into these must clear the directory's *contents*, not
+the directory itself, or the bind mount goes with it.
+
+This migration also surfaced two bugs specific to reaching mimir over
+`tailscale0` instead of `br0` (see `modules/settings/hosts.nix`,
+`thor.tailnetAddress` / `mimir.tailnetAddress`): transmission's
+`rpc-whitelist` is IP-based and only recognized thor's LAN address, and
+soularr's podman port-publish was bound to mimir's LAN address only. Both are
+fixed in the relevant modules; the general pattern — anything that whitelists
+or binds by IP rather than relying on the firewall/Host header — needs thor's
+tailnet address too, now that nginx's `proxyPass` targets resolve there.

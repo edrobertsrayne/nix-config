@@ -22,15 +22,21 @@ Step 2 catches typos and type errors without building anything, in seconds.
 Step 3 is where the real work happens: Nix builds every package the new
 configuration needs, then activates it.
 
-**mimir (#203) is a second `nixosConfiguration`, not a service inside thor's,
-but it does not deploy like one.** mimir is a microvm.nix guest that shares
-thor's `/nix/store` read-only over virtiofs and does not run `nix-daemon`, so
-neither `nixos-rebuild switch --flake .#mimir` on mimir itself nor
-`--target-host` from thor can land a closure there — both fail, the latter
-with a misleading local-looking error. Deploy mimir with microvm.nix's own
-host-side CLI instead, from thor: `sudo microvm -R -u mimir`. See
+**mimir (#203) is a second `nixosConfiguration`, and it deploys with thor.**
+mimir is a fully-declarative [microvm.nix](https://microvm-nix.github.io/microvm.nix/)
+guest: thor's build wires `nixosConfigurations.mimir` into the hypervisor
+(`microvm.vms.mimir.evaluatedConfig`, `modules/hosts/thor/_microvm-host.nix`),
+so step 3 above deploys both machines — and the `microvm@mimir` service
+restarts automatically when mimir's configuration changed, including during
+the nightly upgrade. Rolling thor back to an older generation rolls mimir's
+config back with it.
+
+Mimir's read-only `/nix/store` share and its lack of a `nix-daemon` mean the
+usual per-host paths still do not work for it — `nixos-rebuild switch --flake
+.#mimir` on mimir itself and `--target-host` from thor both fail — but no
+separate deploy step is needed. See
 [`modules/hosts/mimir/README.md`](../modules/hosts/mimir/README.md#deploying-config-changes)
-for the full explanation and command reference.
+for the details.
 
 ### Choosing `test`, `switch`, or `boot`
 
