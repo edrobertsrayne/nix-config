@@ -7,9 +7,10 @@ in {
     pkgs,
     ...
   }: let
-    # Real key is injected at activation time by soularr-config.service, which
-    # substitutes this placeholder for the lidarr-apikey secret (shared with
-    # media/lidarr.nix - not a second copy) before the container starts.
+    # oci-containers names its systemd unit after the backend (docker-soularr
+    # vs podman-soularr); thor uses docker, mimir uses podman.
+    containerUnit = "${config.virtualisation.oci-containers.backend}-soularr.service";
+
     configFile = pkgs.writeText "soularr-config.ini" ''
       [Lidarr]
       api_key = @LIDARR_API_KEY@
@@ -18,7 +19,7 @@ in {
       disable_sync = False
 
       [Slskd]
-      # slskd auth is disabled, so this value is ignored by slskd.
+      # slskd has authentication disabled, so slskd ignores this value.
       api_key = disabled
       host_url = http://host.docker.internal:${toString ports.media.slskd}
       url_base = /
@@ -63,40 +64,23 @@ in {
       backup_count = 3
     '';
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "Soularr";
-        subdomain = "soularr";
-        port = ports.media.soularr;
-        group = "Media";
-        description = "Lidarr <-> slskd bridge";
-        icon = "soularr.png";
-        # No probePath: soularr exposes no health endpoint.
-      })
-    ];
-
-    # writable /data for lock + log files, owned to match container user 306:992
     systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
 
-    # slskd's web port isn't otherwise firewall-opened (only its soulseek
-    # listen port is), and lidarr's web UI lost its LAN opening in #182;
-    # soularr reaches both via host.docker.internal, which arrives as
-    # non-loopback traffic on docker0 and needs an explicit allow.
+    # The container reaches lidarr/slskd via host.docker.internal (= the
+    # podman bridge gateway, 10.88.0.1), which arrives as INPUT traffic on
+    # the bridge interface. Scoped to the interface rather than opening the
+    # ports LAN-wide. docker0 covers a docker backend; podman0 covers the
+    # podman backend mimir actually uses — without it, nixos-fw drops the
+    # container's API calls (observed as PyarrConnectionError timeouts in
+    # soularr's log on every boot).
     networking.firewall.interfaces.docker0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
+    networking.firewall.interfaces.podman0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
 
-    # reuse of lidarr's own secret - see media/lidarr.nix's age.secrets.lidarr-apikey.
-    # (security#185: old plaintext *arr keys are rotated dead by this change;
-    # no git-history rewrite done - it'd break every clone/CI ref for no
-    # remaining benefit once the keys themselves are inert.)
     age.secrets.lidarr-apikey.file = ../../secrets/lidarr-apikey.age;
 
-    # configFile bakes in a placeholder api_key (not a real secret, so it's
-    # fine in the Nix store); this renders the real config.ini into
-    # /srv/soularr, which is already bind-mounted to /data in the container,
-    # so no separate ro mount for it is needed.
     systemd.services.soularr-config = {
-      before = ["docker-soularr.service"];
-      requiredBy = ["docker-soularr.service"];
+      before = [containerUnit];
+      requiredBy = [containerUnit];
       serviceConfig.Type = "oneshot";
       script = ''
         apikey=$(${pkgs.gnused}/bin/sed -n 's/^LIDARR__AUTH__APIKEY=//p' ${config.age.secrets.lidarr-apikey.path})
@@ -107,7 +91,9 @@ in {
     };
 
     virtualisation.oci-containers.containers.soularr = {
-      image = "mrusse08/soularr:latest";
+      # Fully qualified so podman (mimir's backend) doesn't need
+      # unqualified-search registries configured to resolve it.
+      image = "docker.io/mrusse08/soularr:latest";
       autoStart = true;
       user = "306:992"; # lidarr uid : tank gid - aligns import perms
       environment = {
@@ -115,19 +101,35 @@ in {
         SCRIPT_INTERVAL = "900"; # 15 min
         WEBUI_ENABLED = "true";
       };
-      ports = ["127.0.0.1:${toString ports.media.soularr}:8265"];
+      # podman's port publishing DNATs by destination IP and bypasses
+      # networking.firewall entirely, so (unlike every other service here,
+      # which relies on the firewall) the bind address itself is the access
+      # control. Bound to both: mimir's LAN address, and mimir's tailnet
+      # address because nginx's proxyPass now reaches mimir over tailscale0.
+      ports = [
+        "${inputs.self.settings.hosts.mimir.address}:${toString ports.media.soularr}:8265"
+        "${inputs.self.settings.hosts.mimir.tailnetAddress}:${toString ports.media.soularr}:8265"
+      ];
       volumes = [
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
       ];
-      # :latest + --pull=always is deliberate, not an oversight: personal
-      # server, nixpkgs is already tracked on unstable, rolling container
-      # images are an accepted trade for staying current without manual
-      # version bumps. See #181.
       extraOptions = [
         "--pull=always"
         "--add-host=host.docker.internal:host-gateway"
       ];
     };
+  };
+
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
+  flake.modules.nixos.soularr-proxy = inputs.self.lib.mkProxiedService {
+    name = "Soularr";
+    subdomain = "soularr";
+    port = ports.media.soularr;
+    group = "Media";
+    description = "Lidarr <-> slskd bridge";
+    icon = "soularr.png";
+    # This module sets no probePath. soularr exposes no health endpoint.
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

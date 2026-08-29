@@ -52,7 +52,7 @@ in {
         BentoPDF = {
           href = "https://pdf.${domain}";
           description = "PDF toolkit";
-          icon = "pdf.png";
+          icon = "bentopdf.png";
           siteMonitor = "http://127.0.0.1:${toString port}";
         };
       }

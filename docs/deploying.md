@@ -22,6 +22,22 @@ Step 2 catches typos and type errors without building anything, in seconds.
 Step 3 is where the real work happens: Nix builds every package the new
 configuration needs, then activates it.
 
+**mimir (#203) is a second `nixosConfiguration`, and it deploys with thor.**
+mimir is a fully-declarative [microvm.nix](https://microvm-nix.github.io/microvm.nix/)
+guest: thor's build wires `nixosConfigurations.mimir` into the hypervisor
+(`microvm.vms.mimir.evaluatedConfig`, `modules/hosts/thor/_microvm-host.nix`),
+so step 3 above deploys both machines — and the `microvm@mimir` service
+restarts automatically when mimir's configuration changed, including during
+the nightly upgrade. Rolling thor back to an older generation rolls mimir's
+config back with it.
+
+Mimir's read-only `/nix/store` share and its lack of a `nix-daemon` mean the
+usual per-host paths still do not work for it — `nixos-rebuild switch --flake
+.#mimir` on mimir itself and `--target-host` from thor both fail — but no
+separate deploy step is needed. See
+[`modules/hosts/mimir/README.md`](../modules/hosts/mimir/README.md#deploying-config-changes)
+for the details.
+
 ### Choosing `test`, `switch`, or `boot`
 
 These three verbs are the only meaningful difference between deploys. They vary
@@ -178,13 +194,59 @@ Two helpers do the repetitive work:
   an nginx vhost at `<subdomain>.greensroad.uk`, a tile on Homepage, and a
   blackbox HTTP probe that alerts if it stops answering. Pass `probePath` if the
   service has a health endpoint; probing `/` only proves something is listening.
-- **`mkArr`** (`modules/lib/servarr.nix`) — wraps the above for the \*arr apps,
-  and additionally wires the API key secret, disables local auth, and puts the
-  service user in the `tank` group so it can write the shared media trees.
+  `host` defaults to `127.0.0.1`. Override it when the service does not run
+  on the same host as nginx (see below).
+- **`mkArr`** (`modules/lib/servarr.nix`) — wires the \*arr apps' API key
+  secret, disables local authentication, and puts the service user in the
+  `tank` group so it can write the shared media trees. It does **not** call
+  `mkProxiedService`. The vhost is a separate module (below).
 
 Ports go in `modules/settings/ports.nix`, which is the single source of truth —
 never hard-code a port in a service module. Read `modules/searxng.nix` for a
-minimal example and `modules/media/radarr.nix` for the servarr pattern.
+minimal example and `modules/downloads/radarr.nix` for the servarr pattern.
+
+### Same-host vs. cross-host services
+
+`flake.modules.nixos.<name>` lands on a host only if that host's own module
+imports it, or if it is in `common`, which every host gets. A service module
+and its `mkProxiedService` vhost are two independent things. They usually
+live in the same file and get imported together onto the same host, but
+nothing stops them from splitting across hosts. nginx runs only on thor.
+
+For a service that runs on another host — mimir, so far, for the download
+stack moved there in #203 — define two separate flake modules in the file,
+instead of one:
+
+```nix
+flake.modules.nixos.radarr = inputs.self.lib.mkArr { ... };
+
+flake.modules.nixos.radarr-proxy = inputs.self.lib.mkProxiedService {
+  ...
+  host = inputs.self.settings.hosts.mimir.address;
+};
+```
+
+The service module goes on the host that runs it, through that host's own
+imports (for example, mimir's `downloads` group). The `-proxy` module goes on
+thor, grouped with its siblings alongside the group it mirrors (for example,
+`downloads-proxy` sits next to `downloads` in
+`modules/downloads/downloads.nix`) and imported from `thor.nix`.
+
+Getting this wrong is a silent failure, not a build error. The service
+module still evaluates fine on the host that runs it. It just never gets an
+nginx vhost anywhere. The `mkProxiedService` call still evaluates fine if you
+place it on the wrong host. It just proxies to a backend that is not there.
+Confirm that thor actually imports the `-proxy` module, not only that some
+host imports the service module.
+
+**Addressing a cross-host backend:** prefer a static LAN IP
+(`inputs.self.settings.hosts.mimir.address`, `modules/settings/hosts.nix`)
+over a Tailscale hostname, when the two hosts already share an L2 segment
+(mimir's tap interface is bridged into thor's own `br0`). `nginx`'s
+`proxyPass` resolves a hostname only once, at config-load, because no
+`resolver` directive is configured. A Tailscale name is one extra moving part
+for no benefit here. See [networking.md](networking.md) for the full
+rationale and the firewall rule that must accompany it.
 
 ## Secrets
 

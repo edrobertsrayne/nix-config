@@ -14,30 +14,35 @@
     }: {
       imports = with inputs.self.modules.nixos; [
         ./_hardware.nix
+        (import ./_microvm-host.nix {inherit inputs;})
         ./_rollback.nix
 
         alertmanager
         alertmanager-ntfy
-        bar-assistant
+        # bar-assistant
         bentopdf
         blocky
         code-server
+        dlna
+        downloads-proxy
         grafana
         homepage
         immich
-        karakeep
+        jellyfin
+        # karakeep
         libvirt
         loki
         n8n
+        navidrome
         nginx
-        ntfy
-        media
+        # ntfy
         paperless
         persistence
         planner
         portainer
         prometheus
         searxng
+        seerr
         vaultwarden
         zfs
       ];
@@ -75,7 +80,13 @@
         memoryPercent = 25;
       };
 
-      users.groups.tank.members = ["${inputs.self.settings.user.username}"];
+      users.groups.tank = {
+        # Pinned so it can't drift from mimir's tank GID (modules/hosts/mimir/mimir.nix)
+        # — /mnt/ssd/downloads and /mnt/storage are virtiofs shares into mimir,
+        # so raw uid/gid numbers cross that boundary.
+        gid = 992;
+        members = ["${inputs.self.settings.user.username}"];
+      };
 
       # Ensure tmpfiles runs after /mnt/ssd is mounted
       systemd.services.systemd-tmpfiles-setup.after = ["mnt-ssd.mount"];
@@ -94,23 +105,10 @@
           };
         };
 
-        tailscale = {
-          useRoutingFeatures = "client";
-          extraSetFlags = [
-            "--exit-node=se-sto-wg-201.mullvad.ts.net"
-            "--exit-node-allow-lan-access=true"
-          ];
-        };
+        tailscale.useRoutingFeatures = "client";
 
         fstrim.enable = true;
       };
-
-      # Deliberate: thor is headless, SSH is key-only
-      # (PasswordAuthentication = false in modules/ssh.nix) and the web
-      # surface is behind Cloudflare Access. A shell as `ed` already implies
-      # root here; requiring a password would only gate interactive
-      # convenience, not close an attack path. See issue #183.
-      security.sudo.wheelNeedsPassword = false;
 
       virtualisation.docker.daemon.settings = {
         data-root = "/srv/docker";
@@ -131,9 +129,7 @@
       fileSystems = {
         "/boot".options = ["umask=0077"];
 
-        # Stage-2 activation reads /var/lib/nixos before systemd mounts local
-        # filesystems, and impermanence asserts neededForBoot on every
-        # persistent store. disko (#165) leaves this at its false default.
+        # See docs/storage.md ("The ZFS pool") for why this is required.
         "/persist".neededForBoot = true;
 
         "/mnt/storage" = {

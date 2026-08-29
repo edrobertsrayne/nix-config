@@ -2,9 +2,13 @@
 
 > Aspect-oriented NixOS configuration following dendritic principles
 
-Single-host server configuration built around
+Server configuration built around
 [**dendritic architecture**](https://github.com/mightyiam/dendritic) —
-organizing modules by _what they do_ rather than _where they run_.
+organizing modules by _what they do_ rather than _where they run_. It has two
+`nixosConfigurations`: thor, the physical host, and mimir, a
+[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest that thor
+hypervises. mimir runs the download stack behind its own Mullvad exit node
+(issue #203).
 
 ---
 
@@ -15,9 +19,10 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── {aspect}.nix   # Single-purpose modules (ssh.nix, docker.nix)
 ├── {feature}/     # Multi-file features (neovim/, utilities/)
 ├── hosts/         # Host-specific configs
-│   └── thor/      # Home server (NixOS)
-├── media/         # Media stack (*arr apps, jellyfin)
-├── settings/      # Project options (user.nix, ports.nix, server.nix)
+│   ├── thor/      # Home server (NixOS)
+│   └── mimir/     # Download-stack microvm, hypervised by thor
+├── downloads/     # Download stack (*arr apps, transmission, and more), runs on mimir
+├── settings/      # Project options (user.nix, ports.nix, hosts.nix, server.nix)
 ├── dashboards/    # Grafana dashboard JSON
 └── lib/           # Helper functions
 
@@ -34,46 +39,47 @@ secrets/           # Encrypted secrets (agenix)
 
 ---
 
+Every service below runs on **thor**, except the download stack. This guide
+calls out the download stack separately: it is the one group that runs on
+**mimir** instead. Check this section when you are in doubt about which host
+runs a service. This guide groups every service by function, not by host,
+except for that one split.
+
 ## Host: thor
 
-Home server running NixOS, with an impermanent (wipe-on-boot) root and
-declared persistence (see
+Home server running NixOS. Everything in this section runs here, with an
+impermanent (wipe-on-boot) root and declared persistence (see
 [storage.md](docs/storage.md#impermanence-wipe-on-boot-root)). PostgreSQL is a
-shared aspect (`modules/postgresql.nix`) used by Immich and Blocky. Services:
+shared aspect (`modules/postgresql.nix`) used by Immich and Blocky.
 
 ### Media
 
-| Name | Description |
-|------|-------------|
-| Jellyfin | Media server |
-| Jellyseerr | Media request management |
-| Sonarr | TV show management |
-| Radarr | Movie management |
-| Lidarr | Music management |
-| Prowlarr | Indexer management |
-| Bazarr | Subtitle management |
-| Transmission | BitTorrent client |
-| Sabnzbd | Usenet client |
-| slskd | Soulseek P2P client |
-| Soularr | Bridges slskd downloads to Lidarr |
-| Navidrome | Music streaming server |
-| MiniDLNA | DLNA media streaming |
+| | Name | Description |
+|---|------|-------------|
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/jellyfin.png" width="20" alt=""> | Jellyfin | Media server |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/jellyseerr.png" width="20" alt=""> | Jellyseerr | Request manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/navidrome.png" width="20" alt=""> | Navidrome | Music streaming |
+| | MiniDLNA | DLNA media streaming |
+
+The download stack has no privacy requirement of its own on thor. It runs on
+mimir instead, so only it needs Mullvad, not the rest of thor. See
+[docs/networking.md](docs/networking.md) and "Host: mimir" below.
 
 ### Monitoring
 
-| Name | Description |
-|------|-------------|
-| Grafana | Metrics visualization |
-| Prometheus | Time-series metrics database |
-| Alertmanager | Alert routing (delivered via ntfy) |
-| Loki | Log aggregation |
-| Alloy | Log shipping agent (Grafana Alloy) |
-| Node Exporter | System metrics |
-| ZFS Exporter | Filesystem metrics |
-| cAdvisor | Container metrics |
-| Smartctl Exporter | Disk health metrics |
-| Blackbox Exporter | HTTP health probes of every proxied service |
-| Docker health collector | Container HEALTHCHECK and running state as textfile metrics |
+| | Name | Description |
+|---|------|-------------|
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/grafana.png" width="20" alt=""> | Grafana | Metrics dashboard |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/prometheus.png" width="20" alt=""> | Prometheus | Time-series metrics database |
+| | Alertmanager | Alert routing (delivered via ntfy) |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/loki.png" width="20" alt=""> | Loki | Log aggregation |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/grafana-alloy.png" width="20" alt=""> | Alloy | Log shipping agent (Grafana Alloy) |
+| | Node Exporter | System metrics |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/openzfs.png" width="20" alt=""> | ZFS Exporter | Filesystem metrics |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/cadvisor.png" width="20" alt=""> | cAdvisor | Container metrics |
+| | Smartctl Exporter | Disk health metrics |
+| | Blackbox Exporter | HTTP health probes of every proxied service |
+| | Docker health collector | Container HEALTHCHECK and running state as textfile metrics |
 
 How it all fits together — collection, every alert, and which failure each one
 catches — is in [docs/monitoring.md](docs/monitoring.md).
@@ -93,32 +99,58 @@ are read-only in the browser — edit the JSON and rebuild. See
 
 ### Infrastructure & Applications
 
-| Name | Description |
-|------|-------------|
-| Nginx | Reverse proxy |
-| Cloudflared | Cloudflare tunnel |
-| Blocky | DNS server, ad/tracker/malware blocking |
-| Tailscale | Mesh VPN |
-| Docker | Container runtime |
-| Portainer | Container management UI |
-| Libvirt | Virtual machine host (Home Assistant) |
-| Homepage | Service dashboard |
-| Vaultwarden | Password manager |
-| Karakeep | Bookmarking |
-| Immich | Photo management |
-| Paperless | Document management |
-| BentoPDF | PDF toolkit |
-| Bar Assistant | Cocktail manager |
-| SearXNG | Metasearch engine |
-| n8n | Workflow automation |
-| ntfy | Push notifications |
-| Code Server | Browser-based VS Code |
+| | Name | Description |
+|---|------|-------------|
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/nginx.png" width="20" alt=""> | Nginx | Reverse proxy |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/cloudflare.png" width="20" alt=""> | Cloudflared | Cloudflare tunnel |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/blocky.png" width="20" alt=""> | Blocky | DNS server, ad/tracker/malware blocking |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/tailscale.png" width="20" alt=""> | Tailscale | Mesh VPN |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/docker.png" width="20" alt=""> | Docker | Container runtime |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/portainer.png" width="20" alt=""> | Portainer | Container manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/home-assistant.png" width="20" alt=""> | Home Assistant | Home automation (runs in a libvirt VM) |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png" width="20" alt=""> | Homepage | Service dashboard |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/vaultwarden.png" width="20" alt=""> | Vaultwarden | Password manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/karakeep.png" width="20" alt=""> | Karakeep | Bookmark manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/immich.png" width="20" alt=""> | Immich | Photo library |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/paperless-ngx.png" width="20" alt=""> | Paperless | Document management |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/bentopdf.png" width="20" alt=""> | BentoPDF | PDF toolkit |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/bar-assistant.png" width="20" alt=""> | Bar Assistant | Home bar & cocktail manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/searxng.png" width="20" alt=""> | SearXNG | Private search engine |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/n8n.png" width="20" alt=""> | n8n | Workflow automation |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/ntfy.png" width="20" alt=""> | ntfy | Push notifications |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/visual-studio-code.png" width="20" alt=""> | Code Server | VS Code in browser |
 
 **Ingress policy:** nginx opens no LAN-reachable port. The only paths in are
 the Cloudflare tunnel (`cloudflared` → `127.0.0.1:80`, gated by Cloudflare
 Access) and the Tailscale interface (trusted for admin access). Services that
 need direct LAN access must open their own port explicitly — the full list, and
 the reason for each, is in [docs/networking.md](docs/networking.md).
+
+## Host: mimir
+
+mimir is a [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest
+that thor hypervises. It runs only the download stack below, behind its own
+Mullvad exit node, so the rest of thor does not need Mullvad's reliability and
+routing quirks (issue #203). Nothing in the sections above runs on mimir.
+
+### Download stack
+
+| | Name | Description |
+|---|------|-------------|
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/sonarr.png" width="20" alt=""> | Sonarr | TV series manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/radarr.png" width="20" alt=""> | Radarr | Movie manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/lidarr.png" width="20" alt=""> | Lidarr | Music manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/prowlarr.png" width="20" alt=""> | Prowlarr | Indexer manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/bazarr.png" width="20" alt=""> | Bazarr | Subtitle manager |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/transmission.png" width="20" alt=""> | Transmission | Torrent downloader |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/sabnzbd.png" width="20" alt=""> | SABnzbd | Usenet downloader |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/slskd.png" width="20" alt=""> | slskd | Soulseek client |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/soularr.png" width="20" alt=""> | Soularr | Lidarr ↔ slskd bridge |
+
+nginx still runs on thor for these services. It proxies to mimir's static
+`br0` address, instead of to loopback. See
+[docs/deploying.md](docs/deploying.md#same-host-vs-cross-host-services) for
+how a service and its vhost end up split across two hosts.
 
 ---
 

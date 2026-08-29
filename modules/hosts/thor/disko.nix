@@ -112,6 +112,11 @@ _: {
               mountpoint = "/var/lib/libvirt";
               options."com.sun:auto-snapshot" = "true";
             };
+            microvms = {
+              type = "zfs_fs";
+              mountpoint = "/var/lib/microvms";
+              options."com.sun:auto-snapshot" = "true";
+            };
           };
         };
       };
