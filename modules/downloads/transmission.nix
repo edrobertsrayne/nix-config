@@ -9,50 +9,33 @@ in {
   }: let
     cfg = config.services.transmission;
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "Transmission";
-        subdomain = "transmission";
-        port = ports.media.transmission;
-        group = "Media";
-        description = "Torrent downloader";
-        icon = "transmission.png";
-        # No probePath: /transmission/rpc answers 409 by design (the session-id
-        # handshake). The root URL 301s to /transmission/web/ and the probe
-        # follows it.
-      })
-    ];
-
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
       "d ${cfg.settings.incomplete-dir} 0755 ${cfg.user} tank -"
       "d ${cfg.settings.download-dir} 0755 ${cfg.user} tank -"
+      # cfg.home lives outside the default /var/lib/transmission, so
+      # StateDirectory= doesn't create it — the unit's self BindPaths= onto
+      # this path (to poke a hole in ProtectSystem=strict) requires it to
+      # already exist, or the service fails at NAMESPACE setup.
+      "d ${cfg.home}/.config/transmission-daemon 0750 ${cfg.user} ${cfg.user} -"
     ];
 
     services.transmission = {
       enable = true;
       home = lib.mkDefault "/srv/transmission";
       package = pkgs.transmission_4;
-      # Opens peer-port on TCP *and* UDP; the previous hand-rolled
-      # allowedTCPPorts missed UDP, which dht-enabled/utp-enabled need for
-      # inbound peer discovery. RPC port stays closed (openRPCPort defaults
-      # off) - it's reached only via nginx on loopback.
       openPeerPorts = true;
       settings = {
-        # Loopback only: reached via nginx (cloudflared -> Access-gated, or
-        # over the tailnet). The firewall already keeps 9091 off br0;
-        # binding narrowly means a firewall regression can't silently
-        # re-expose the RPC socket.
-        rpc-bind-address = "127.0.0.1";
+        rpc-bind-address = "0.0.0.0";
         rpc-port = ports.media.transmission;
         peer-port = ports.media.transmissionPeer;
 
         rpc-whitelist-enabled = true;
-        rpc-whitelist = "127.0.0.1,::1";
-        # DNS-rebinding protection. Transmission always permits IP-literal
-        # Host headers, so homepage's siteMonitor (http://127.0.0.1:9091)
-        # still works.
+        # Proxied from thor, over tailscale0 (mkProxiedService's host is
+        # mimir's MagicDNS name) - thor's tailnet address, not its LAN one,
+        # is what transmission sees the request arrive from.
+        rpc-whitelist = "127.0.0.1,::1,${inputs.self.settings.hosts.thor.address},${inputs.self.settings.hosts.thor.tailnetAddress}";
         rpc-host-whitelist-enabled = true;
         rpc-host-whitelist = "transmission.${server.domain}";
 
@@ -82,5 +65,16 @@ in {
         blocklist-enabled = false;
       };
     };
+  };
+
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
+  flake.modules.nixos.transmission-proxy = inputs.self.lib.mkProxiedService {
+    name = "Transmission";
+    subdomain = "transmission";
+    port = ports.media.transmission;
+    group = "Media";
+    description = "Torrent downloader";
+    icon = "transmission.png";
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

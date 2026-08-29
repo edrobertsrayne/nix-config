@@ -10,18 +10,6 @@ in {
   }: let
     cfg = config.services.${service};
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "Slskd";
-        subdomain = "slskd";
-        port = ports.media.slskd;
-        group = "Media";
-        description = "Soulseek client";
-        icon = "slskd.png";
-        probePath = "/health";
-      })
-    ];
-
     age.secrets.slskd.file = ../../secrets/slskd.age;
 
     users.users.${cfg.user}.extraGroups = ["tank"];
@@ -70,5 +58,17 @@ in {
     };
 
     environment.persistence."/persist".directories = ["/var/lib/slskd"];
+  };
+
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
+  flake.modules.nixos.slskd-proxy = inputs.self.lib.mkProxiedService {
+    name = "Slskd";
+    subdomain = "slskd";
+    port = ports.media.slskd;
+    group = "Media";
+    description = "Soulseek client";
+    icon = "slskd.png";
+    probePath = "/health";
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

@@ -23,5 +23,14 @@
     # over the tailnet (tailscale0 is in firewall.trustedInterfaces,
     # tailscale.nix). The LAN bridge (br0) must not reach nginx directly or
     # it bypasses Cloudflare Access.
+
+    # proxyPass targets on mimir are MagicDNS names and no resolver directive
+    # is configured, so nginx resolves them once at startup and exits if that
+    # fails. tailscaled must own /etc/resolv.conf before nginx reads its
+    # config.
+    systemd.services.nginx = {
+      after = ["tailscaled.service"];
+      wants = ["tailscaled.service"];
+    };
   };
 }

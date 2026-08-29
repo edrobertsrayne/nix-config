@@ -5,22 +5,6 @@ in {
     cfg = config.services.sabnzbd;
     url = "sabnzbd.${server.domain}";
   in {
-    imports = [
-      (inputs.self.lib.mkProxiedService {
-        name = "SABnzbd";
-        subdomain = "sabnzbd";
-        port = ports.media.sabnzbd;
-        group = "Media";
-        description = "Usenet downloader";
-        icon = "sabnzbd.png";
-        # mode=version is the one API call SABnzbd exempts from the api key.
-        probePath = "/api?mode=version";
-        extraConfig = ''
-          proxy_set_header X-Forwarded-Host $host;
-        '';
-      })
-    ];
-
     # owner is required: the nixpkgs module's preStart (which merges this
     # secret into sabnzbd.ini) runs as User=sabnzbd, not root.
     age.secrets.sabnzbd = {
@@ -39,39 +23,27 @@ in {
         allowConfigWrite = false;
         settings = {
           misc = {
-            host_whitelist = "localhost, 127.0.0.1, ${url}";
+            # Proxied from thor, so loopback-only (the nixpkgs default) is
+            # unreachable. Access is bounded by mimir's firewall, as for
+            # every other service here.
+            host = "0.0.0.0";
+            # "mimir" is listed because the blackbox probe and nginx's
+            # proxyPass reach SABnzbd by tailnet hostname, and its hostname
+            # verification rejects unlisted names (it exempts bare IPs, which
+            # is why the old LAN-IP proxy target never needed this).
+            host_whitelist = "localhost, 127.0.0.1, ${url}, ${inputs.self.settings.hosts.mimir.tailnetName}, ${inputs.self.settings.hosts.thor.address}";
             local_ranges = "127.0.0.1, ::1";
             inet_exposure = "api+web (auth needed)";
             download_dir = "/mnt/ssd/downloads/usenet/incomplete";
             complete_dir = "/mnt/ssd/downloads/usenet/complete";
-            # Was 777 (world-writable). tank-group write is enough - the *arr
-            # services that import from complete_dir are all in tank
-            # (mkArr's extraGroups) and already run with UMask 0002.
             permissions = "775";
-            # Was relying on nixpkgs' default coincidentally matching.
             port = ports.media.sabnzbd;
-            # sabnzbd sets these itself once the incomplete dir benchmarks
-            # >100MB/s; pinning both asserts the SSD passed and skips the
-            # re-test on every start. Revisit if the incomplete dir ever
-            # moves off SSD.
             direct_unpack = true;
             direct_unpack_tested = true;
-            # config_lock 403s the web UI config pages and the
-            # mode=config/set_config API endpoints, but not mode=get_config -
-            # which is what Radarr/Sonarr/Lidarr call - so *arr integration is
-            # unaffected. It also makes save_config() bail early with a log
-            # warning rather than error against the 0400 ini.
             config_lock = true;
-            # nixpkgs defaults this to 4, but sabnzbd 5.x writes 5. Left at 4,
-            # sabnzbd re-runs the 4->5 conversion on every start and can't
-            # record the result against a read-only ini.
             config_conversion_version = 5;
           };
           servers = {
-            # expire_date defaults to null; formats.configobj has no null
-            # handling and writes the literal word `None`, which sabnzbd
-            # then fails to date.fromisoformat() on the next server check.
-            # Set it explicitly to match sabnzbd's own empty-string default.
             "eunews.frugalusenet.com" = {
               name = "eunews.frugalusenet.com";
               displayname = "eunews.frugalusenet.com";
@@ -191,5 +163,21 @@ in {
     ];
 
     environment.persistence."/persist".directories = ["/var/lib/sabnzbd"];
+  };
+
+  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
+  flake.modules.nixos.sabnzbd-proxy = inputs.self.lib.mkProxiedService {
+    name = "SABnzbd";
+    subdomain = "sabnzbd";
+    port = ports.media.sabnzbd;
+    group = "Media";
+    description = "Usenet downloader";
+    icon = "sabnzbd.png";
+    # mode=version is the one API call SABnzbd exempts from the api key.
+    probePath = "/api?mode=version";
+    extraConfig = ''
+      proxy_set_header X-Forwarded-Host $host;
+    '';
+    host = inputs.self.settings.hosts.mimir.tailnetName;
   };
 }

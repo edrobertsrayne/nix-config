@@ -35,7 +35,7 @@ in {
 
     security.sudo = {
       execWheelOnly = true;
-      wheelNeedsPassword = lib.mkDefault true;
+      wheelNeedsPassword = lib.mkDefault false;
       extraConfig = ''
         Defaults lecture = never
       '';

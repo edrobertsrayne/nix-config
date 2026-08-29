@@ -29,7 +29,7 @@ Pool-wide settings: `ashift=12`, `compression=lz4`, `atime=off`,
 reasoning, and why it cannot be changed without recreating the pool, is in a
 comment in that file.
 
-Six datasets, and the difference between them is the only thing standing
+Seven datasets, and the difference between them is the only thing standing
 between you and a bad `rm`:
 
 | Dataset | Mounted at | Snapshotted |
@@ -40,6 +40,11 @@ between you and a bad `rm`:
 | `zroot/persist` | `/persist` | **yes** |
 | `zroot/home` | `/home` | **yes** |
 | `zroot/libvirt` | `/var/lib/libvirt` | **yes** |
+| `zroot/microvms` | `/var/lib/microvms` | **yes** |
+
+`zroot/microvms` holds mimir's disk images (#203). This has the same shape as
+`zroot/libvirt`: one dataset per hypervisor, holding its guests' image files,
+rather than one dataset per guest.
 
 `/nix` is not snapshotted because it does not need to be — it is rebuilt from
 this repo, and generations already roll it back
@@ -66,7 +71,7 @@ the ephemeral root by [nix-community/impermanence][impermanence] via
 directly, next to the service config that needs them: `modules/persistence.nix`
 covers core system/identity state (`/var/lib/nixos`, `/etc/machine-id`,
 `/etc/ssh/ssh_host_*`); every service aspect with real state (e.g.
-`modules/vaultwarden.nix`, `modules/tailscale.nix`, `modules/media/prowlarr.nix`,
+`modules/vaultwarden.nix`, `modules/tailscale.nix`, `modules/downloads/prowlarr.nix`,
 `modules/postgresql.nix`) declares its own directories alongside its service
 config. There's no aggregation list to read — `nix eval
 .#nixosConfigurations.thor.config.environment.persistence.'"/persist"'.directories`
@@ -76,6 +81,16 @@ agenix decrypts host secrets *before* impermanence restores `/etc/ssh` on a
 freshly wiped root, so `age.identityPaths` reads the SSH host key straight
 from `/persist` instead of `/etc/ssh` — `/persist` is available in stage 1
 (`neededForBoot = true`), `/etc/ssh` is not yet. See `modules/persistence.nix`.
+
+Every host that uses `modules/persistence.nix` also sets
+`fileSystems."/persist".neededForBoot = true`. This setting is required, not
+optional: stage-2 activation reads `/var/lib/nixos` before systemd mounts local
+filesystems, and impermanence requires `neededForBoot` on every persistent
+store. disko (#165) leaves this at its `false` default, so each host sets it
+directly — see `modules/hosts/thor/thor.nix` and
+`modules/hosts/mimir/mimir.nix`. Only thor's root is actually rolled back on
+boot today; mimir imports the same persistence aspect for its `/persist`
+dataset without the `rollback-root` service.
 
 `zroot/home` (`/home`) is unaffected by any of this: it mounts normally and is
 never wiped, same as `/srv` and `/var/lib/libvirt`.
@@ -104,14 +119,15 @@ the difference from plain ext4 is only that a second disk's files would survive.
 
 | Path | Contents | On | Snapshotted |
 |---|---|---|---|
-| `/srv/<service>` | Service state and databases — Jellyfin, the \*arr apps, Grafana, Loki, Paperless, Transmission, Bar Assistant, Soularr | zroot | **yes** |
-| `/srv/docker` | Docker images, volumes, container state | zroot | **yes** |
+| `/srv/<service>` (thor) | Service state and databases — Jellyfin, Grafana, Loki, Paperless, Bar Assistant | zroot | **yes** |
+| `/srv/docker` (thor) | Docker images, volumes, container state | zroot | **yes** |
 | `/var/lib/libvirt` | VM disk images (Home Assistant) | zroot | **yes** |
+| `/var/lib/microvms` | mimir's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/persist` (#203) | zroot | **yes** |
 | `/persist` | Per-aspect service/identity state, bind-mounted back to its usual path | zroot | **yes** |
 | `/mnt/ssd/immich` | **Photos and videos** | SSD | no |
 | `/mnt/ssd/music` | Music library | SSD | no |
-| `/mnt/ssd/downloads` | In-progress and completed downloads (usenet, transmission, slskd) | SSD | no |
-| `/mnt/storage/media` | Films and TV — the Jellyfin library | mergerfs | no |
+| `/mnt/ssd/downloads` | In-progress and completed downloads (usenet, transmission, slskd) — physically on thor's SSD, virtiofs-shared into mimir | SSD | no |
+| `/mnt/storage/media` | Films and TV — the Jellyfin library — physically on thor, virtiofs-shared into mimir (read-write, for \*arr import) | mergerfs | no |
 | `/mnt/storage/backup` | Where *other* machines put their backups | mergerfs | no |
 
 Downloads land on the SSD and are moved to `/mnt/storage/media` by the \*arr
@@ -156,7 +172,8 @@ The rationale for that split is in the comments in `nfs.nix` and `samba.nix`.
 ## Snapshots
 
 `modules/zfs.nix` keeps automatic snapshots of every dataset with
-`com.sun:auto-snapshot=true` — `/srv`, `/var/lib/libvirt`, and `/persist`:
+`com.sun:auto-snapshot=true` — `/srv`, `/var/lib/libvirt`, `/var/lib/microvms`,
+`/home`, and `/persist`:
 
 | Frequency | Kept | Covers |
 |---|---|---|
@@ -246,6 +263,7 @@ What each loss would actually cost:
 | `/mnt/ssd/downloads` | Gone | Yes, it is transient by nature |
 | `/srv/*` service state | Rolled back to a snapshot, if the pool survives | Config comes from this repo; history does not |
 | `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot | Same |
+| `/var/lib/microvms` — mimir (the download stack, #203) | Rolled back to a snapshot, if the pool survives | Same. This is thor's pool, so a thor disk failure also takes down mimir's state |
 | `/persist` per-aspect state | Rolled back to a snapshot, if the pool survives | Same |
 | `/home` — user files | Rolled back to a snapshot, if the pool survives | Same |
 | `/` | Wiped to blank on every boot, by design | N/A — nothing there is meant to persist |
