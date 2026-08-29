@@ -6,6 +6,11 @@ _: {
           statusline = {
             lualine = {
               enable = true;
+              integrations.breadcrumbs = {
+                nvim-navic.enable = true;
+                navbuddy.enable = true;
+                location = "winbar";
+              };
             };
           };
           tabline = {
@@ -16,10 +21,6 @@ _: {
           ui = {
             borders.enable = true;
             colorizer.enable = true;
-            breadcrumbs = {
-              enable = true;
-              navbuddy.enable = true;
-            };
             noice.enable = true;
           };
         };
