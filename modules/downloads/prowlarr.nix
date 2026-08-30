@@ -15,6 +15,11 @@ in {
     ];
 
     services.flaresolverr.enable = true;
+
+    systemd.services.flaresolverr.serviceConfig = {
+      MemoryHigh = "768M";
+      MemoryMax = "1G"; # prevent OOM causing crash loops on VM
+    };
   };
 
   flake.modules.nixos.prowlarr-proxy = inputs.self.lib.mkProxiedService {
