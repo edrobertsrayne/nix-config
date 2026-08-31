@@ -12,14 +12,25 @@ in {
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
-      "d ${cfg.settings.incomplete-dir} 0755 ${cfg.user} tank -"
-      "d ${cfg.settings.download-dir} 0755 ${cfg.user} tank -"
+      # 2775: setgid so transmission's completed-download dirs inherit group
+      # tank, not transmission's primary group - required for sonarr/radarr
+      # (tank members) to delete the source file after copying it out.
+      # /mnt/ssd/downloads and /mnt/storage are separate virtiofs mounts, so
+      # imports cannot hardlink and must copy+delete.
+      "d ${cfg.settings.incomplete-dir} 2775 ${cfg.user} tank -"
+      "d ${cfg.settings.download-dir} 2775 ${cfg.user} tank -"
       # cfg.home lives outside the default /var/lib/transmission, so
       # StateDirectory= doesn't create it — the unit's self BindPaths= onto
       # this path (to poke a hole in ProtectSystem=strict) requires it to
       # already exist, or the service fails at NAMESPACE setup.
       "d ${cfg.home}/.config/transmission-daemon 0750 ${cfg.user} ${cfg.user} -"
     ];
+
+    # The nixpkgs module defaults this to 0066, which leaves completed-file
+    # dirs group-inaccessible and blocks the arrs' delete step even with the
+    # right group. The *arrs already get 0002 from flake.lib.mkArr
+    # (modules/lib/servarr.nix).
+    systemd.services.transmission.serviceConfig.UMask = lib.mkForce "0002";
 
     services.transmission = {
       enable = true;

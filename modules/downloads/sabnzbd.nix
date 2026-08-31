@@ -158,9 +158,19 @@ in {
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
-      "d /mnt/ssd/downloads/usenet/complete 0755 ${cfg.user} tank -"
-      "d /mnt/ssd/downloads/usenet/incomplete 0755 ${cfg.user} tank -"
+      # 2775: setgid so SABnzbd's per-job dirs (and the nested dirs unpack
+      # creates inside them) inherit group tank, not sabnzbd's primary group -
+      # required for sonarr/radarr (tank members) to delete the source file
+      # after copying it out. /mnt/ssd/downloads and /mnt/storage are separate
+      # virtiofs mounts, so imports cannot hardlink and must copy+delete.
+      "d /mnt/ssd/downloads/usenet/complete 2775 ${cfg.user} tank -"
+      "d /mnt/ssd/downloads/usenet/incomplete 2775 ${cfg.user} tank -"
     ];
+
+    # Default 0022 leaves failed/aborted job dirs at 0755, which blocks the
+    # arrs' delete step even with the right group. The *arrs already get this
+    # from flake.lib.mkArr (modules/lib/servarr.nix).
+    systemd.services.sabnzbd.serviceConfig.UMask = "0002";
 
     environment.persistence."/persist".directories = ["/var/lib/sabnzbd"];
   };
