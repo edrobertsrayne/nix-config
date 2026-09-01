@@ -147,6 +147,22 @@ comment above that block — but it has two consequences worth internalising:
 You can see the effect in the generation list: generations timestamped `04:0x`
 are the auto-upgrade's, not yours.
 
+### planner is the exception
+
+`operation = "boot"` above means most config-only changes wait for a reboot
+before they take effect — but planner (`modules/planner.nix`) is a floating
+`:latest` image, not a config change, so the nightly cycle doesn't cover it at
+all: a `nixos-rebuild` restarts the container and re-pulls, but nothing forces
+that to happen daily. Instead, a `planner-auto-update` timer on thor polls
+`ghcr.io/edrobertsrayne/planner:latest` every 5 minutes and restarts
+`docker-planner.service` only when the image actually changed, so new pushes
+show up within minutes rather than at the next rebuild. Drive it by hand with:
+
+```sh
+sudo systemctl start planner-auto-update
+journalctl -u planner-auto-update -f
+```
+
 ## Disk housekeeping
 
 Old generations and unreferenced packages accumulate. Three things clean up
