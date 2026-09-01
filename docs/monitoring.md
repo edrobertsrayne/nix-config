@@ -196,9 +196,12 @@ which posts to `https://ntfy.greensroad.uk`:
 | Tags | 🚨 firing critical · ⚠️ firing warning · ✅ resolved |
 | Title | `[Resolved] AlertName on instance` |
 | Body | the alert's `summary`, then `description` |
-| Topic | from `secrets/ntfy-alert-topics.age`, never the Nix store |
+| Topic | `thor` |
 
-`send_resolved` is on, so every alert is followed by its recovery.
+`send_resolved` is on, so every alert is followed by its recovery. The topic
+is a plain string in the Nix store, not a secret: ntfy is only reachable
+through the cloudflared tunnel and the tailnet, both already auth-gated, so
+the topic name isn't what protects it.
 
 ## What catches what
 

@@ -16,7 +16,6 @@ in {
   "n8n.age".publicKeys = systems ++ users;
   "searxng.age".publicKeys = systems ++ users;
   "grafana.age".publicKeys = systems ++ users;
-  "ntfy-alert-topics.age".publicKeys = systems ++ users;
   "bar-assistant.age".publicKeys = systems ++ users;
   "slskd.age".publicKeys = mimirSystems ++ users;
   "code-server.age".publicKeys = systems ++ users;

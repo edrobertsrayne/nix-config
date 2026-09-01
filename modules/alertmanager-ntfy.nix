@@ -1,11 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) server ports;
 in {
-  flake.modules.nixos.alertmanager-ntfy = {config, ...}: {
-    age.secrets.ntfy-alert-topics = {
-      file = ../secrets/ntfy-alert-topics.age;
-    };
-
+  flake.modules.nixos.alertmanager-ntfy = _: {
     services.prometheus.alertmanager-ntfy = {
       enable = true;
       settings = {
@@ -13,8 +9,7 @@ in {
         ntfy = {
           baseurl = "https://ntfy.${server.domain}";
           notification = {
-            # topic is set via extraConfigFiles (secret) to keep topic names out of the store
-            topic = "";
+            topic = "thor";
             priority = ''
               labels["severity"] == "critical" ? "urgent" : "high"
             '';
@@ -44,7 +39,6 @@ in {
           };
         };
       };
-      extraConfigFiles = [config.age.secrets.ntfy-alert-topics.path];
     };
   };
 }

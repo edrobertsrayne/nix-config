@@ -16,9 +16,9 @@ in {
       docker=${pkgs.docker}/bin/docker
       curl=${pkgs.curl}/bin/curl
 
-      # Topic in plain sight, unlike ntfy-alert-topics: ntfy's own access
-      # control plus the cloudflared/tailnet boundary is the protection, not
-      # the name. This posts on loopback, so it needs no token either.
+      # Topic is a plain string: ntfy's own access control plus the
+      # cloudflared/tailnet boundary is the protection, not the name. This
+      # posts on loopback, so it needs no token either.
       notify() {
         $curl -fsS -H "Title: $1" -H "Tags: $2" -H "Priority: $3" -d "$4" \
           "http://127.0.0.1:${toString ports.ntfy}/planner" >/dev/null || true
