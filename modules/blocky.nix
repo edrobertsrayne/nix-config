@@ -19,9 +19,25 @@ in {
             inherit (ports) dns;
             http = ports.blocky;
           };
-          upstreams.groups.default = [
-            "https://dns.mullvad.net/dns-query"
-          ];
+          # strict + Mullvad-first means the fallbacks below are only ever
+          # queried once every entry before them has failed - the default
+          # "parallel_best" strategy would race all of them on every query,
+          # leaving Mullvad's network for no reason. All three fallbacks are
+          # unfiltered endpoints because blocky already does its own
+          # blocklist filtering.
+          upstreams = {
+            groups.default = [
+              "https://dns.mullvad.net/dns-query"
+              "https://dns10.quad9.net/dns-query"
+              "https://cloudflare-dns.com/dns-query"
+              "https://dns.google/dns-query"
+            ];
+            strategy = "strict";
+          };
+          # Thor has no real IPv6 internet transit (only ULA addresses from
+          # router advertisements), so any IPv6 upstream attempt fails
+          # immediately with "no route to host". v4-only avoids that dead path.
+          connectIPVersion = "v4";
           prometheus = {
             enable = true;
             path = "/metrics";
@@ -33,10 +49,7 @@ in {
           };
           bootstrapDns = {
             upstream = "https://dns.mullvad.net/dns-query";
-            ips = [
-              "194.242.2.2"
-              "2a07:e340::2"
-            ];
+            ips = ["194.242.2.2"];
           };
           # Resolves *.greensroad.uk straight to thor for tailnet clients -
           # see docs/blocky.md#split-horizon-greensroaduk.

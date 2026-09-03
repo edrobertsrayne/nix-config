@@ -138,14 +138,21 @@ _: {
               # felt everywhere. loading.strategy = "fast" means Blocky serves
               # regardless of blocklist state, which makes the two list rules
               # necessary: without them, blocking degrades with no symptom.
+              # Blocky retries 3x per query and has a Quad9 fallback upstream,
+              # so a raw error count is never zero — it sits at a ~1%
+              # background rate from normal DoH flakiness. Alert on a
+              # sustained error *rate* instead, so this only fires when
+              # resolution is actually degraded.
               - alert: BlockyResolutionErrors
-                expr: increase(blocky_error_total[15m]) > 0
-                for: 10m
+                expr: >
+                  (sum(increase(blocky_error_total[15m])) /
+                   sum(increase(blocky_query_total[15m]))) > 0.1
+                for: 15m
                 labels:
                   severity: critical
                 annotations:
                   summary: Blocky resolution errors on {{ $labels.instance }}
-                  description: "Blocky is failing to resolve queries — the upstream DoH resolver (dns.mullvad.net) may be unreachable"
+                  description: "Blocky's error rate is {{ $value | humanizePercentage }} over the last 15m — the upstream DoH resolver(s) may be unreachable"
 
               - alert: BlockyListDownloadsFailing
                 expr: increase(blocky_failed_downloads_total[1h]) > 0

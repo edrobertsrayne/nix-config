@@ -22,14 +22,25 @@ the browser* — works from the tailnet but not from outside it.
 
 ## Upstream
 
-Queries go to Mullvad over DoH: `https://dns.mullvad.net/dns-query`. Nothing is
-sent to the ISP in plaintext.
+Queries go to Mullvad over DoH first: `https://dns.mullvad.net/dns-query`.
+Nothing is sent to the ISP in plaintext. `upstreams.strategy = "strict"` means
+the fallbacks — unfiltered Quad9, Cloudflare, then Google DoH — are only ever
+queried once every entry before them has failed. The default `parallel_best`
+strategy would race all of them on every query, which would leave Mullvad's
+network for no reason. Unfiltered endpoints are used throughout because
+blocky already does its own blocklist filtering.
+
+`connectIPVersion = "v4"` — thor has no real IPv6 internet transit (its
+addresses are all ULA from router advertisements), so an IPv6 upstream
+attempt fails immediately with "no route to host" every time. This was a
+large, entirely avoidable share of `BlockyResolutionErrors` noise before it
+was pinned to v4.
 
 A DoH-only upstream is circular — resolving `dns.mullvad.net` needs a resolver,
 and the resolver is `dns.mullvad.net`. `bootstrapDns` breaks the loop by
-pinning the literal addresses `194.242.2.2` and `2a07:e340::2`. If Mullvad ever
-renumbers those, blocky cannot start; that is the tradeoff for not falling back
-to a plaintext resolver.
+pinning the literal address `194.242.2.2`. If Mullvad ever renumbers it,
+blocky cannot start; that is the tradeoff for not falling back to a plaintext
+resolver.
 
 Responses are cached for 5m–30m with prefetching enabled, so popular names stay
 warm rather than re-resolving on expiry.
@@ -153,9 +164,16 @@ Three alerts in `modules/alert-rules.nix`, group `dns-health`:
 
 | Alert | Fires when |
 |---|---|
-| `BlockyResolutionErrors` | `blocky_error_total` increases — usually Mullvad unreachable. Critical. |
+| `BlockyResolutionErrors` | error rate over 15m (`blocky_error_total` / `blocky_query_total`) exceeds 10%. Critical. |
 | `BlockyListDownloadsFailing` | any blocklist download fails within the hour |
 | `BlockyListRefreshStale` | lists haven't refreshed in 48h |
+
+`BlockyResolutionErrors` is rate-based rather than a raw error count because
+blocky always has *some* errors — retries and a single flaky upstream produce
+a steady ~1% background rate that is invisible to actual DNS clients (blocky
+retries 3x and has the fallback chain above). A raw `increase(...) > 0`
+threshold is never false, so it used to fire and re-notify every 4h
+indefinitely; >10% sustained for 15m is a real signal instead.
 
 The two list alerts exist because `loading.strategy = "fast"` means blocky
 serves DNS regardless of blocklist state. **Nothing user-visible breaks when a
