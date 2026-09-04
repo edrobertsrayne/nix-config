@@ -22,13 +22,23 @@ the browser* — works from the tailnet but not from outside it.
 
 ## Upstream
 
-Queries go to Mullvad over DoH first: `https://dns.mullvad.net/dns-query`.
-Nothing is sent to the ISP in plaintext. `upstreams.strategy = "strict"` means
-the fallbacks — unfiltered Quad9, Cloudflare, then Google DoH — are only ever
-queried once every entry before them has failed. The default `parallel_best`
-strategy would race all of them on every query, which would leave Mullvad's
-network for no reason. Unfiltered endpoints are used throughout because
-blocky already does its own blocklist filtering.
+Queries go to unfiltered Quad9 over DoH first: `https://dns10.quad9.net/dns-query`,
+falling back to Cloudflare then Google DoH. Nothing is sent to the ISP in
+plaintext. `upstreams.strategy = "strict"` means each fallback is only ever
+queried once every entry before it has failed — the default `parallel_best`
+strategy would race all of them on every query for no reason. Unfiltered
+endpoints are used throughout because blocky already does its own blocklist
+filtering.
+
+Quad9 is first because Mullvad shut down its own public DoH servers
+(`dns.mullvad.net`) on 2026-11-02, choosing to sponsor Quad9 financially
+instead of continuing to run a resolver — see
+[Mullvad's announcement](https://mullvad.net/en/blog/shutting-down-our-public-encrypted-dns-servers-and-sponsoring-quad9-instead).
+Quad9 replaced Mullvad in this upstream group and in `bootstrapDns` for that
+reason, not because of any DNS-over-VPN-tunnel affinity — this host's traffic
+to Quad9/Cloudflare/Google routes over the regular internet uplink, not
+through Mullvad's VPN network the way `downloads.nix`'s exit-node traffic
+does.
 
 `connectIPVersion = "v4"` — thor has no real IPv6 internet transit (its
 addresses are all ULA from router advertisements), so an IPv6 upstream
@@ -36,9 +46,9 @@ attempt fails immediately with "no route to host" every time. This was a
 large, entirely avoidable share of `BlockyResolutionErrors` noise before it
 was pinned to v4.
 
-A DoH-only upstream is circular — resolving `dns.mullvad.net` needs a resolver,
-and the resolver is `dns.mullvad.net`. `bootstrapDns` breaks the loop by
-pinning the literal address `194.242.2.2`. If Mullvad ever renumbers it,
+A DoH-only upstream is circular — resolving `dns10.quad9.net` needs a
+resolver, and the resolver is `dns10.quad9.net`. `bootstrapDns` breaks the
+loop by pinning the literal address `9.9.9.10`. If Quad9 ever renumbers it,
 blocky cannot start; that is the tradeoff for not falling back to a plaintext
 resolver.
 

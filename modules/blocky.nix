@@ -19,15 +19,14 @@ in {
             inherit (ports) dns;
             http = ports.blocky;
           };
-          # strict + Mullvad-first means the fallbacks below are only ever
-          # queried once every entry before them has failed - the default
-          # "parallel_best" strategy would race all of them on every query,
-          # leaving Mullvad's network for no reason. All three fallbacks are
-          # unfiltered endpoints because blocky already does its own
-          # blocklist filtering.
+          # strict means the fallbacks below are only ever queried once every
+          # entry before them has failed - the default "parallel_best"
+          # strategy would race all of them on every query. Quad9 is first
+          # since Mullvad shut down its own public DoH servers in favour of
+          # sponsoring Quad9 (see docs/blocky.md). All entries are unfiltered
+          # endpoints because blocky already does its own blocklist filtering.
           upstreams = {
             groups.default = [
-              "https://dns.mullvad.net/dns-query"
               "https://dns10.quad9.net/dns-query"
               "https://cloudflare-dns.com/dns-query"
               "https://dns.google/dns-query"
@@ -48,8 +47,8 @@ in {
             prefetching = true;
           };
           bootstrapDns = {
-            upstream = "https://dns.mullvad.net/dns-query";
-            ips = ["194.242.2.2"];
+            upstream = "https://dns10.quad9.net/dns-query";
+            ips = ["9.9.9.10"];
           };
           # Resolves *.greensroad.uk straight to thor for tailnet clients -
           # see docs/blocky.md#split-horizon-greensroaduk.
