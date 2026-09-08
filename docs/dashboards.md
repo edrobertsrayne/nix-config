@@ -69,6 +69,21 @@ would undo that — port the SQL by hand instead. It reads `log_entries` through
 the `blocky-postgres` datasource; the `grafana` role and its `SELECT` grant are
 declared in `modules/blocky.nix`.
 
+`smartctl.json` carries local fixes and is no longer upstream 20204 verbatim —
+re-downloading it would undo them. "Power on Time" shipped with a hardcoded
+`instance="192.168.1.7:9633"`, an address this network does not use (the
+exporter is scraped as `thor:9633`), so the panel rendered "No data"
+indefinitely; the selector was dropped, matching every other panel in the file.
+Its two NVMe panels also hardcoded `device="nvme0"`, now `device=~"nvme.*"` so a
+second drive appears instead of being silently ignored.
+
+`system-errors-warnings.json` is multi-host. Its `Host` variable reads
+`label_values({job="systemd-journal"}, host)`, so a new host shipping logs to
+Loki appears in the dropdown with no dashboard edit. Both aggregating panels
+group `by (host, …)` — dropping `host` from a `sum by` there would sum
+same-named units (`sshd.service` on thor and on mimir) into one misleading
+series, which is the bug the variable exists to prevent.
+
 `blocky.json` also declared a `VAR_BLOCKY_URL` input, substituted with
 `http://thor:4000` (`ports.blocky`). It is used by the "Blocking control" canvas
 panel, which calls Blocky's API **from the browser** — so that panel works from

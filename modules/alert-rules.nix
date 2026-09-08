@@ -41,10 +41,17 @@ _: {
                   summary: Memory usage high on {{ $labels.instance }}
                   description: "Only {{ $value | humanizePercentage }} memory available"
 
+              # virtiofs is excluded because mimir mounts thor's own
+              # filesystems over it (/nix/.ro-store, /mnt/ssd/downloads,
+              # /mnt/storage — modules/hosts/mimir/mimir.nix). Without this,
+              # thor's pools are evaluated a second time through mimir's view of
+              # them and alert as if they were mimir's disks. thor already
+              # watches the originals, where /mnt/storage is fuse.mergerfs and
+              # so falls to MergerfsLowFreeSpace instead of the 10% rule below.
               - alert: HostFilesystemAlmostFull
                 expr: >
-                  (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs"}
-                  / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs"}) < 0.10
+                  (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs|virtiofs"}
+                  / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs|virtiofs"}) < 0.10
                 for: 10m
                 labels:
                   severity: critical
@@ -54,8 +61,8 @@ _: {
 
               - alert: HostFilesystemFillingUp
                 expr: >
-                  (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs"}
-                  / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs"}) < 0.20
+                  (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs|virtiofs"}
+                  / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs|virtiofs"}) < 0.20
                 for: 30m
                 labels:
                   severity: warning
