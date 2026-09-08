@@ -280,9 +280,15 @@ systemd perfectly happy.
 ## Dashboards
 
 Provisioned read-only from `modules/dashboards/` — `node-exporter-full`,
-`cadvisor`, `smartctl`, `storage-health`, `blackbox-http`, `blocky`,
-`blocky-query`, `system-errors-warnings`. Each is contributed by the module
-owning the metrics it displays. See [dashboards.md](dashboards.md).
+`host-comparison`, `cadvisor`, `smartctl`, `storage-health`, `blackbox-http`,
+`blocky`, `blocky-query`, `system-errors-warnings`. Each is contributed by the
+module owning the metrics it displays. See [dashboards.md](dashboards.md).
+
+The two node dashboards split by question. **Host Comparison** puts every host
+on one screen and answers *which* host is unhappy; **Node Exporter Full** is the
+vendored per-host deep dive that answers *why*, one host at a time via its `job`
+dropdown. That split is deliberate — see [dashboards.md](dashboards.md) for why
+Node Exporter Full was left single-host.
 
 ## Runbook
 
