@@ -1,7 +1,12 @@
 # Monitoring
 
-Everything thor knows about itself, and how a failure becomes a phone
-notification. The stack spans a dozen modules; this is the map.
+Everything thor knows about itself and about mimir, and how a failure becomes a
+phone notification. The stack spans a dozen modules; this is the map.
+
+thor is the hub: it runs Prometheus, Loki, Grafana and Alertmanager, scrapes its
+own exporters and mimir's, and receives mimir's logs. mimir runs only the two
+agents that feed thor — node-exporter and Alloy. Nothing monitoring-related is
+duplicated on mimir, and mimir has no Grafana of its own.
 
 This page is the design reference — why the pipeline is shaped this way and
 what each alert exists to catch. If one has just fired and you want to know what
@@ -15,7 +20,12 @@ out as such in [Deliberate omissions](#deliberate-omissions).
 
 ```mermaid
 flowchart LR
-  subgraph collect[Collection]
+  subgraph mimir[mimir]
+    ME["node-exporter"]
+    MJ["journald"] --> MAL["Alloy"]
+  end
+
+  subgraph collect[Collection · thor]
     E["exporters<br/>node · zfs · smartctl · cAdvisor · blocky"]
     T["textfile collector<br/>docker health"]
     B["blackbox-exporter<br/>HTTP probes"]
@@ -27,12 +37,20 @@ flowchart LR
   B --> P
   J --> AL[Alloy] --> L[Loki]
 
+  ME -.->|scraped| P
+  MAL -.->|pushed| L
+
   P -->|alert-rules.nix| AM[Alertmanager]
   L -->|ruler| AM
   AM --> N[alertmanager-ntfy] --> NT[ntfy] --> Phone
   P --> G[Grafana]
   L --> G
 ```
+
+Everything but the mimir box runs on thor. The two dotted edges are the only
+cross-host traffic: thor **pulls** mimir's metrics, mimir **pushes** its logs.
+Metrics are pulled because Prometheus owns the target list; logs are pushed
+because Loki has no scraper. Both cross `tailscale0`.
 
 Two rule engines, one Alertmanager. Prometheus evaluates metric rules; Loki's
 ruler evaluates log rules and posts to the same Alertmanager, so both arrive
@@ -54,6 +72,7 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `alloy` | `127.0.0.1:12345` | `hosts/thor/alloy.nix` | the log shipper itself |
 | `blocky` | `127.0.0.1:4000` | `blocky.nix` | DNS queries, blocklists, cache |
 | `node-exporter` | `thor:9100` | `hosts/thor/node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile |
+| `node-exporter-mimir` | `mimir:9100` | `hosts/thor/mimir-scrape.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
 | `zfs-exporter` | `thor:9134` | `hosts/thor/zfs-exporter.nix` | pool health, dataset usage |
 | `smartctl-exporter` | `thor:9633` | `hosts/thor/smartctl-exporter.nix` | per-drive SMART attributes |
 | `cadvisor` | `127.0.0.1:9338` | `hosts/thor/container-metrics.nix` | per-container CPU, memory, start time |
@@ -62,7 +81,14 @@ job is declared by the module that owns the thing being scraped, not centrally.
 
 `node-exporter` runs the `systemd` collector, which is what makes
 `node_systemd_unit_state` — and therefore per-unit failure alerting — possible
-without parsing logs.
+without parsing logs. mimir runs it too, so `SystemdUnitFailed` and
+`MonitoringUnitDown` cover mimir's units — including its own `alloy.service`,
+which is what stops mimir's log shipping from failing silently.
+
+Both hosts are reached over `tailscale0`, which is the only entry in
+`networking.firewall.trustedInterfaces` (`modules/networking.nix`, applied to
+every host through `common`). That is why neither the scrape of `mimir:9100` nor
+mimir's push to thor's Loki needs a firewall rule on either side.
 
 ### HTTP probes
 
@@ -114,10 +140,28 @@ them. Nix-declared containers are covered by their unit instead — stopping one
 runs `oci-containers`' post-stop hook, which `docker rm -f`s it, so it leaves
 the metric set rather than lingering at 0.
 
+All of the above is thor-only and Docker-only. mimir runs the download stack
+under **podman**, which neither cAdvisor nor `docker inspect` is pointed at
+here, so the `container-health` group covers none of those nine services. They
+are not unmonitored — thor's blackbox probes reach them through nginx, so
+`ProbeFailed` still catches one that stops serving. What is missing is the
+*reason*: a restart loop, a failed healthcheck, or per-container resource use.
+See [Deliberate omissions](#deliberate-omissions).
+
 ### Logs
 
 Alloy reads the systemd journal (12h max age) and pushes to Loki, relabelling
 `unit`, `hostname` and `level` out of journal fields. Loki keeps 30 days.
+
+Both hosts run their own Alloy and push to the same Loki on thor
+(`hosts/thor/alloy.nix`, `hosts/mimir/alloy.nix`) — logs are pushed, never
+scraped. Each tags its stream with a static `host` label (`thor` or `mimir`)
+alongside the shared `job="systemd-journal"`. That label is the only thing
+separating the two hosts downstream, so it matters in three places: the log
+alert rules in `modules/loki.nix` all aggregate `sum by (host)`, the
+`system-errors-warnings` dashboard filters and groups on it, and any ad-hoc
+Explore query wanting one host needs `{job="systemd-journal", host="mimir"}`.
+Omit it and you get both hosts silently merged.
 
 Log rules live in `modules/loki.nix` and are written to
 `/srv/loki/rules/fake/log-alerts.yml` (`fake` being the tenant when
@@ -226,6 +270,8 @@ signal that turns it into a notification.
 | Kernel panic / lockup / MCE | `KernelHardFault` |
 | DNS broken or blocking degraded | `dns-health` group — see [blocky.md](blocky.md) |
 | Alert delivery itself broken | `AlertmanagerNotificationsFailing`, `LogIngestionStopped`, `PrometheusRuleEvaluationFailures`, `ContainerHealthCollectorStale` |
+| mimir down, or the microvm stopped | `InstanceDown` on `node-exporter-mimir` |
+| mimir's log shipping stops | `MonitoringUnitDown` on its `alloy.service` |
 | **thor down, unpowered, or off the network** | *nothing* — see [Deliberate omissions](#deliberate-omissions) |
 
 The two bold rows are the failure classes that motivated issue #192: both leave
@@ -234,9 +280,15 @@ systemd perfectly happy.
 ## Dashboards
 
 Provisioned read-only from `modules/dashboards/` — `node-exporter-full`,
-`cadvisor`, `smartctl`, `storage-health`, `blackbox-http`, `blocky`,
-`blocky-query`, `system-errors-warnings`. Each is contributed by the module
-owning the metrics it displays. See [dashboards.md](dashboards.md).
+`host-comparison`, `cadvisor`, `smartctl`, `storage-health`, `blackbox-http`,
+`blocky`, `blocky-query`, `system-errors-warnings`. Each is contributed by the
+module owning the metrics it displays. See [dashboards.md](dashboards.md).
+
+The two node dashboards split by question. **Host Comparison** puts every host
+on one screen and answers *which* host is unhappy; **Node Exporter Full** is the
+vendored per-host deep dive that answers *why*, one host at a time via its `job`
+dropdown. That split is deliberate — see [dashboards.md](dashboards.md) for why
+Node Exporter Full was left single-host.
 
 ## Runbook
 
@@ -304,10 +356,17 @@ produce two resolved notifications.
 
 ## Deliberate omissions
 
-- **No off-host monitoring.** thor watches thor. If it loses power or network,
-  nothing notifies — the alert pipeline dies with the host it monitors. Issue
-  #132 tracks moving a copy of the stack onto a Raspberry Pi, which is the only
-  real fix.
+- **Nothing watches thor itself.** thor watches thor and mimir, but mimir is a
+  guest thor hypervises, so it is not an independent observer: if thor loses
+  power or network, both hosts and the whole alert pipeline go down together and
+  nothing notifies. Issue #132 tracks moving a copy of the stack onto a
+  Raspberry Pi, which is the only real fix.
+- **No container-level monitoring of the download stack.** It runs under podman
+  on mimir; cAdvisor and the `docker inspect` textfile collector are thor-only
+  and Docker-only, so `ContainerUnhealthy`, `ContainerRestartLoop` and
+  `ContainerStopped` cover nothing there. Blackbox probes catch a service that
+  stops answering, which is the outcome that matters; the cause has to come from
+  the logs.
 - **Homepage's `siteMonitor` tiles are dashboard-only.** They colour a tile and
   alert nobody. During the Bar Assistant incident the tile pinged the healthy
   frontend while the API was dead, and looked fine throughout. Blackbox probes

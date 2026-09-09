@@ -60,6 +60,7 @@ grep -oE 'DS_[A-Z_]+|VAR_[A-Z_]+' modules/dashboards/*.json
 | `blocky-query.json` | [14980](https://grafana.com/grafana/dashboards/14980), rewritten | 1 |
 | `system-errors-warnings.json` | hand-written | — |
 | `storage-health.json` | hand-written | — |
+| `host-comparison.json` | hand-written | — |
 
 `blocky-query.json` is **not** a straight download. Upstream 14980 is written
 for MySQL (`INSTR`, `SUBSTRING_INDEX`), but `queryLog.type` here is
@@ -68,6 +69,40 @@ for MySQL (`INSTR`, `SUBSTRING_INDEX`), but `queryLog.type` here is
 would undo that — port the SQL by hand instead. It reads `log_entries` through
 the `blocky-postgres` datasource; the `grafana` role and its `SELECT` grant are
 declared in `modules/blocky.nix`.
+
+`host-comparison.json` exists because `node-exporter-full.json` is single-host
+and was deliberately left that way. Upstream 1860 pins every panel with exact
+matchers — all **284** of its expressions carry both `instance="$node"` and
+`job="$job"`, and none of its 231 legend formats mention `instance`. Making it
+multi-host therefore means rewriting every matcher to `=~`, rewriting every
+legend, and converting the 14 gauge/stat panels that reduce a series to a single
+number and cannot show two hosts at once. That would fork a 468 KB vendored file
+from upstream permanently, so each refresh would have to re-apply all of it.
+
+The comparison dashboard covers the same ground in 8 hand-written panels
+(scrape status, uptime, CPU, memory, load per core, filesystem, network in/out),
+keyed on `job=~"node-exporter.*"` so any future host whose scrape job follows
+that naming appears automatically, with no dashboard edit. Its `Host` variable
+is `label_values(up{job=~"node-exporter.*"}, instance)`, so legends read
+`thor:9100` / `mimir:9100` — the `instance` label, not the Loki `host` label
+that `system-errors-warnings.json` uses. The two are deliberately not unified:
+adding a `host` label to the scrape configs would change every existing metric's
+series identity.
+
+`smartctl.json` carries local fixes and is no longer upstream 20204 verbatim —
+re-downloading it would undo them. "Power on Time" shipped with a hardcoded
+`instance="192.168.1.7:9633"`, an address this network does not use (the
+exporter is scraped as `thor:9633`), so the panel rendered "No data"
+indefinitely; the selector was dropped, matching every other panel in the file.
+Its two NVMe panels also hardcoded `device="nvme0"`, now `device=~"nvme.*"` so a
+second drive appears instead of being silently ignored.
+
+`system-errors-warnings.json` is multi-host. Its `Host` variable reads
+`label_values({job="systemd-journal"}, host)`, so a new host shipping logs to
+Loki appears in the dropdown with no dashboard edit. Both aggregating panels
+group `by (host, …)` — dropping `host` from a `sum by` there would sum
+same-named units (`sshd.service` on thor and on mimir) into one misleading
+series, which is the bug the variable exists to prevent.
 
 `blocky.json` also declared a `VAR_BLOCKY_URL` input, substituted with
 `http://thor:4000` (`ports.blocky`). It is used by the "Blocking control" canvas

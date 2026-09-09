@@ -56,13 +56,13 @@
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "error" },
+            "matcher": { "id": "byRegexp", "options": ".*error.*" },
             "properties": [
               { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "warning" },
+            "matcher": { "id": "byRegexp", "options": ".*warning.*" },
             "properties": [
               { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }
             ]
@@ -85,8 +85,8 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "sum by (level) (count_over_time({job=\"systemd-journal\", level=~\"error|warning\", unit=~\"$unit\"} [$__auto]))",
-          "legendFormat": "{{level}}",
+          "expr": "sum by (host, level) (count_over_time({job=\"systemd-journal\", host=~\"$host\", level=~\"error|warning\", unit=~\"$unit\"} [$__auto]))",
+          "legendFormat": "{{host}} {{level}}",
           "queryType": "range",
           "refId": "A"
         }
@@ -130,9 +130,9 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "topk(10, sum by (unit) (count_over_time({job=\"systemd-journal\", level=~\"error|warning\", unit=~\"$unit\"} [$__range])))",
+          "expr": "topk(10, sum by (host, unit) (count_over_time({job=\"systemd-journal\", host=~\"$host\", level=~\"error|warning\", unit=~\"$unit\"} [$__range])))",
           "instant": true,
-          "legendFormat": "{{unit}}",
+          "legendFormat": "{{host}} {{unit}}",
           "queryType": "instant",
           "refId": "A"
         }
@@ -151,7 +151,7 @@
         "enableLogDetails": true,
         "prettifyLogMessage": false,
         "showCommonLabels": false,
-        "showLabels": false,
+        "showLabels": true,
         "showTime": true,
         "sortOrder": "Descending",
         "wrapLogMessage": true
@@ -161,7 +161,7 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "{job=\"systemd-journal\", level=\"error\", unit=~\"$unit\"}",
+          "expr": "{job=\"systemd-journal\", host=~\"$host\", level=\"error\", unit=~\"$unit\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -180,7 +180,7 @@
         "enableLogDetails": true,
         "prettifyLogMessage": false,
         "showCommonLabels": false,
-        "showLabels": false,
+        "showLabels": true,
         "showTime": true,
         "sortOrder": "Descending",
         "wrapLogMessage": true
@@ -190,7 +190,7 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "{job=\"systemd-journal\", level=\"warning\", unit=~\"$unit\"}",
+          "expr": "{job=\"systemd-journal\", host=~\"$host\", level=\"warning\", unit=~\"$unit\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -209,7 +209,27 @@
         "allValue": ".*",
         "current": { "text": "All", "value": "$__all" },
         "datasource": { "type": "loki", "uid": "loki" },
-        "definition": "label_values({job=\"systemd-journal\"}, unit)",
+        "definition": "label_values({job=\"systemd-journal\"}, host)",
+        "includeAll": true,
+        "label": "Host",
+        "multi": true,
+        "name": "host",
+        "options": [],
+        "query": {
+          "label": "host",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "{job=\"systemd-journal\"}",
+          "type": 1
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "definition": "label_values({job=\"systemd-journal\", host=~\"$host\"}, unit)",
         "includeAll": true,
         "label": "Unit",
         "multi": true,
@@ -218,7 +238,7 @@
         "query": {
           "label": "unit",
           "refId": "LokiVariableQueryEditor-VariableQuery",
-          "stream": "{job=\"systemd-journal\"}",
+          "stream": "{job=\"systemd-journal\", host=~\"$host\"}",
           "type": 1
         },
         "refresh": 2,

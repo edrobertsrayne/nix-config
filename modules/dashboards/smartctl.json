@@ -384,7 +384,7 @@
           "disableTextWrap": false,
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "smartctl_device_power_on_seconds{instance=\"192.168.1.7:9633\"}",
+          "expr": "smartctl_device_power_on_seconds",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -734,7 +734,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "smartctl_device_bytes_written{device=\"nvme0\"}",
+          "expr": "smartctl_device_bytes_written{device=~\"nvme.*\"}",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -744,7 +744,7 @@
           "useBackend": false
         }
       ],
-      "title": "Nvme0n1 Data Written",
+      "title": "NVMe data written",
       "type": "timeseries"
     },
     {
@@ -812,7 +812,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "smartctl_device_available_spare{device=\"nvme0\"}",
+          "expr": "smartctl_device_available_spare{device=~\"nvme.*\"}",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
