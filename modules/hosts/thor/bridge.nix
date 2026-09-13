@@ -7,7 +7,7 @@
       useDHCP = false;
       bridges = {
         "br0" = {
-          interfaces = ["enp2s0" "enp3s0" "enp4s0" "enp5s0" "vm-mimir"];
+          interfaces = ["enp2s0" "enp3s0" "enp4s0" "enp5s0" "vm-mimir" "vm-njord"];
         };
       };
       interfaces.br0.ipv4.addresses = [

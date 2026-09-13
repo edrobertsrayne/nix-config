@@ -34,5 +34,16 @@
         default = "100.84.179.61";
       };
     };
+
+    njord = {
+      address = mkOption {
+        type = types.str;
+        default = "192.168.68.130";
+      };
+
+      # No tailnetAddress: unlike mimir, nothing on thor proxies to njord by
+      # IP - Dokploy publishes its own apps through its own Cloudflare
+      # tunnel, so thor never needs a concrete address to bind or DNAT to.
+    };
   };
 }

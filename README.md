@@ -4,11 +4,13 @@
 
 Server configuration built around
 [**dendritic architecture**](https://github.com/mightyiam/dendritic) —
-organizing modules by _what they do_ rather than _where they run_. It has two
-`nixosConfigurations`: thor, the physical host, and mimir, a
-[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest that thor
+organizing modules by _what they do_ rather than _where they run_. It has three
+`nixosConfigurations`: thor, the physical host, and two
+[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guests that thor
 hypervises. mimir runs the download stack behind its own Mullvad exit node
-(issue #203).
+(issue #203). njord runs [Dokploy](https://docs.dokploy.com/), a self-hosted
+Docker/Swarm deployment platform, for hosting Docker-based projects without a
+Nix module per project.
 
 ---
 
@@ -20,7 +22,8 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── {feature}/     # Multi-file features (neovim/, utilities/)
 ├── hosts/         # Host-specific configs
 │   ├── thor/      # Home server (NixOS)
-│   └── mimir/     # Download-stack microvm, hypervised by thor
+│   ├── mimir/     # Download-stack microvm, hypervised by thor
+│   └── njord/     # Dokploy microvm, hypervised by thor
 ├── downloads/     # Download stack (*arr apps, transmission, and more), runs on mimir
 ├── settings/      # Project options (user.nix, ports.nix, hosts.nix, server.nix)
 ├── dashboards/    # Grafana dashboard JSON
@@ -39,11 +42,10 @@ secrets/           # Encrypted secrets (agenix)
 
 ---
 
-Every service below runs on **thor**, except the download stack. This guide
-calls out the download stack separately: it is the one group that runs on
-**mimir** instead. Check this section when you are in doubt about which host
-runs a service. This guide groups every service by function, not by host,
-except for that one split.
+Every service below runs on **thor**, except the download stack (**mimir**)
+and Dokploy (**njord**). This guide calls those two out separately. Check this
+section when you are in doubt about which host runs a service. This guide
+groups every service by function, not by host, except for those two splits.
 
 ## Host: thor
 
@@ -151,6 +153,22 @@ nginx still runs on thor for these services. It proxies to mimir's static
 `br0` address, instead of to loopback. See
 [docs/deploying.md](docs/deploying.md#same-host-vs-cross-host-services) for
 how a service and its vhost end up split across two hosts.
+
+## Host: njord
+
+njord is a [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest
+that thor hypervises. It runs [Dokploy](https://docs.dokploy.com/), a
+self-hosted deployment platform built on Docker Swarm and Traefik, so that
+hosting a new Docker-based project doesn't need a Nix module or a
+`nixos-rebuild`. Unlike every other service in this repo, Dokploy is
+deliberately **not declared in Nix** past the guest itself — it installs and
+updates itself, and manages its own Swarm services and Traefik config from its
+own UI. See [modules/hosts/njord/README.md](modules/hosts/njord/README.md) for
+the bootstrap runbook.
+
+njord publishes its apps through its own Cloudflare tunnel, configured from
+inside Dokploy — it needs no nginx vhost on thor and shares nothing with
+thor's own tunnel.
 
 ---
 
