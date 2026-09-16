@@ -13,10 +13,16 @@ in {
 
     systemd.tmpfiles.rules = [
       # 2775: setgid so transmission's completed-download dirs inherit group
-      # tank, not transmission's primary group - required for sonarr/radarr
-      # (tank members) to delete the source file after copying it out.
-      # /mnt/ssd/downloads and /mnt/storage are separate virtiofs mounts, so
-      # imports cannot hardlink and must copy+delete.
+      # tank instead of transmission's primary group. /mnt/ssd/downloads and
+      # /mnt/storage are separate virtiofs mounts, so imports cannot hardlink
+      # and must copy+delete, which needs write access to the dir either way.
+      #
+      # Setgid inheritance over virtiofs is unreliable (confirmed for
+      # sabnzbd's equivalent dirs, 2026-09-16) - some dirs may come out
+      # group=transmission instead. The actual guarantee that the *arrs can
+      # delete is their membership in both tank and transmission
+      # (flake.lib.mkArr, modules/lib/servarr.nix); this setgid rule is
+      # defense-in-depth, not load-bearing on its own.
       "d ${cfg.settings.incomplete-dir} 2775 ${cfg.user} tank -"
       "d ${cfg.settings.download-dir} 2775 ${cfg.user} tank -"
       # cfg.home lives outside the default /var/lib/transmission, so

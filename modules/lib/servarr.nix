@@ -34,12 +34,13 @@ _: {
       }
       // lib.optionalAttrs (dataDir != null) {inherit dataDir;};
 
-    # sabnzbd too: its job dirs are meant to inherit group tank via setgid
-    # (see sabnzbd.nix), but that inheritance is unreliable over the virtiofs
-    # mount, so some job dirs come out group=sabnzbd instead. Membership in
-    # both groups means delete-after-import works either way.
+    # sabnzbd and transmission too: their completed-download dirs are meant
+    # to inherit group tank via setgid (sabnzbd.nix, transmission.nix), but
+    # that inheritance is unreliable over the virtiofs mount, so some dirs
+    # come out group=sabnzbd or group=transmission instead. Membership in
+    # all three groups means delete-after-import works regardless.
     users.users = lib.optionalAttrs (!dynamicUser) {
-      ${cfg.user}.extraGroups = ["tank" "sabnzbd"];
+      ${cfg.user}.extraGroups = ["tank" "sabnzbd" "transmission"];
     };
 
     # dataDir lives outside /var/lib, so StateDirectory= doesn't create it, and
@@ -50,7 +51,7 @@ _: {
     ];
 
     systemd.services.${service}.serviceConfig =
-      lib.optionalAttrs dynamicUser {SupplementaryGroups = ["tank" "sabnzbd"];}
+      lib.optionalAttrs dynamicUser {SupplementaryGroups = ["tank" "sabnzbd" "transmission"];}
       // lib.optionalAttrs umask {UMask = lib.mkForce "0002";};
   };
 }
