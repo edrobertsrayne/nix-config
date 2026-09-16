@@ -34,8 +34,12 @@ _: {
       }
       // lib.optionalAttrs (dataDir != null) {inherit dataDir;};
 
+    # sabnzbd too: its job dirs are meant to inherit group tank via setgid
+    # (see sabnzbd.nix), but that inheritance is unreliable over the virtiofs
+    # mount, so some job dirs come out group=sabnzbd instead. Membership in
+    # both groups means delete-after-import works either way.
     users.users = lib.optionalAttrs (!dynamicUser) {
-      ${cfg.user}.extraGroups = ["tank"];
+      ${cfg.user}.extraGroups = ["tank" "sabnzbd"];
     };
 
     # dataDir lives outside /var/lib, so StateDirectory= doesn't create it, and
@@ -46,7 +50,7 @@ _: {
     ];
 
     systemd.services.${service}.serviceConfig =
-      lib.optionalAttrs dynamicUser {SupplementaryGroups = ["tank"];}
+      lib.optionalAttrs dynamicUser {SupplementaryGroups = ["tank" "sabnzbd"];}
       // lib.optionalAttrs umask {UMask = lib.mkForce "0002";};
   };
 }
