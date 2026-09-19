@@ -52,12 +52,13 @@
         ]
       },
       "locked": {
-        "lastModified": 1781152676,
-        "narHash": "sha256-RxWs5ND31KzTG7wvMM+PMfUjyNpmIEr999lqNARaM5o=",
-        "owner": "nix-community",
-        "repo": "disko",
-        "rev": "ff8702b4de27f72b4c78573dfb89ec74e36abdf1",
-        "type": "github"
+        "lastModified": 1789770686,
+        "narHash": "sha256-uZkBR7yHdIKUFB5SZdfgh1qkGfI3XmYmI/lTiquxbck=",
+        "ref": "master",
+        "rev": "725ea35e410ad83be4931d1bff7e090eacaf3563",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/disko"
       },
       "original": {
         "owner": "nix-community",
@@ -110,12 +111,13 @@
         ]
       },
       "locked": {
-        "lastModified": 1789162737,
-        "narHash": "sha256-ACzb5WjoD3eiHQ/xjyTcHXOG60vNEXPcmHZgloi14Vs=",
-        "owner": "herdrdev",
-        "repo": "herdr",
-        "rev": "9ad65d9031e8cb16a7b553c0e6f74809e9811e92",
-        "type": "github"
+        "lastModified": 1789757784,
+        "narHash": "sha256-DAGkNgjX5ajBp01W6YSYgLxc+UgxGuFCkkFMMfeCWj0=",
+        "ref": "refs/heads/master",
+        "rev": "3f2a6e743f67bc947cfa06be25df106d00b9ee11",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/herdrdev/herdr"
       },
       "original": {
         "owner": "herdrdev",
@@ -151,12 +153,13 @@
         ]
       },
       "locked": {
-        "lastModified": 1789183968,
-        "narHash": "sha256-pEWnYdIF1pBMZwarp/rEPzl+Lknhm5hhjSfeLxH8nAA=",
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "rev": "cd1c9e552f41894aeb5cc5cb353d5a1d61550357",
-        "type": "github"
+        "lastModified": 1789765459,
+        "narHash": "sha256-voJJ5IZR4w2149u2Jm/j2zifeWROlpZQ+JzmCQwjgn8=",
+        "ref": "refs/heads/master",
+        "rev": "17903129f47656fa4d07e78ad87f6592ff4f2527",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/home-manager"
       },
       "original": {
         "owner": "nix-community",
@@ -227,12 +230,13 @@
         "spectrum": "spectrum"
       },
       "locked": {
-        "lastModified": 1788636433,
-        "narHash": "sha256-iCLUJO5V2ZlEAlYxlkCZ5YLkyQrpkyXOMUTkPXjsdPk=",
-        "owner": "microvm-nix",
-        "repo": "microvm.nix",
-        "rev": "804cbac7a462aa0fa8bb60c3d2fc4ead0a62060f",
-        "type": "github"
+        "lastModified": 1789506833,
+        "narHash": "sha256-4L8SOCF84de1irB72Ka9VHcu9wrAJ9Amuey4lU9oh4Y=",
+        "ref": "refs/heads/main",
+        "rev": "187b0a390ee054028106a674e7b01b1cb940cbba",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/microvm-nix/microvm.nix"
       },
       "original": {
         "owner": "microvm-nix",
@@ -288,12 +292,13 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1789006805,
-        "narHash": "sha256-xB8mKMOx1IA9vTDNLmJZ6n4wCMq/cuWBBOzGCRnqxrU=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "8ce4ef6cb6f871616146b9fe26d2a5ae594e94fe",
-        "type": "github"
+        "lastModified": 1789684949,
+        "narHash": "sha256-ZKhUe/2IJUq1JhKxKMu8rbkgSGmPP2ZCqlIPn40aGCM=",
+        "ref": "nixos-unstable",
+        "rev": "e554fab72f81915600f3f449b786fd9af40439a5",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/NixOS/nixpkgs"
       },
       "original": {
         "owner": "NixOS",
@@ -311,12 +316,13 @@
         ]
       },
       "locked": {
-        "lastModified": 1789172534,
-        "narHash": "sha256-LV26WEThZ7U+L274lSY1xNOmxTb8Y9yrE3mOR6CAOZg=",
-        "owner": "notashelf",
-        "repo": "nvf",
-        "rev": "9c1d99771b443055f5cd428f11b5a4b04c7b7e2e",
-        "type": "github"
+        "lastModified": 1789510188,
+        "narHash": "sha256-umec9LKkWjK89Yx4XpvQStkgfKvhK7GjVf5m21bjzKU=",
+        "ref": "refs/heads/main",
+        "rev": "cdc7e7aaa7eb521bba1b38f54c3228d52cc31703",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/notashelf/nvf"
       },
       "original": {
         "owner": "notashelf",
@@ -346,12 +352,13 @@
         ]
       },
       "locked": {
-        "lastModified": 1789110695,
-        "narHash": "sha256-llh6ZJN8/G4QCED9m6nHEfWhz2ONOzkKyvWHivNqW7A=",
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "rev": "ab777f900c3de943e117eb4814ddff6f645b28ad",
-        "type": "github"
+        "lastModified": 1789715798,
+        "narHash": "sha256-hWw9vlrsFm9kOw8MT5k6IX/7xCzgROuJ6ZvQOrkq66Q=",
+        "ref": "refs/heads/master",
+        "rev": "fbdb2de9e7619d660ae7e8f752f38b261020b701",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/oxalica/rust-overlay"
       },
       "original": {
         "owner": "oxalica",
@@ -362,11 +369,11 @@
     "spectrum": {
       "flake": false,
       "locked": {
-        "lastModified": 1785761586,
-        "narHash": "sha256-MWOMVqJJERwjQGgRIv8d6rlEBqbLM3VZWxHkNKIIZNw=",
+        "lastModified": 1786032750,
+        "narHash": "sha256-+Ba/kIn5BjvV7PN8bWOo7RoqgTY/Yv2M7qeMf3wS2Ag=",
         "ref": "refs/heads/main",
-        "rev": "a7762d6f54b40560dd5255ce902e6e6a5d980fe9",
-        "revCount": 1416,
+        "rev": "77d2389874bb092b8dbf05ecc5b1030372e80e98",
+        "revCount": 1417,
         "type": "git",
         "url": "https://spectrum-os.org/git/spectrum"
       },
