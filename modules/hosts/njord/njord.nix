@@ -11,6 +11,7 @@
       imports = [
         inputs.microvm.nixosModules.microvm
         inputs.self.modules.nixos.persistence
+        inputs.self.modules.nixos.microvm-guest
       ];
 
       # Dokploy's install.sh shells out to `openssl rand -hex 32` to generate
@@ -21,11 +22,12 @@
       # failing the install outright.
       environment.systemPackages = [pkgs.openssl];
 
-      # The microvm.nix module also sets a mkDefault hostId, which conflicts
-      # with the mkDefault hostId from mkNixosSystem (modules/lib/hosts.nix) —
-      # both use the same priority. A plain assignment outranks both, the same
-      # way mimir.nix (modules/hosts/mimir/mimir.nix) handles it. This value
-      # has no other use and only needs to be a valid 8-digit hex number.
+      # The microvm.nix module also sets a mkDefault hostId, conditional on
+      # microvm.machineId != null — set to null by the microvm-guest aspect
+      # (#220), so that mkDefault no longer fires here. A plain assignment
+      # still outranks mkNixosSystem's own mkDefault (modules/lib/hosts.nix)
+      # regardless, the same way mimir.nix handles it. This value has no
+      # other use and only needs to be a valid 8-digit hex number.
       networking.hostId = "10000002";
 
       # Dokploy's UI. 80/443 are published directly by Docker (traefik's
@@ -36,7 +38,11 @@
       microvm = {
         hypervisor = "qemu";
         vcpu = 4;
-        mem = 8192;
+        # Trimmed from 8192: #221 found MemoryCurrent 1.1G / MemoryPeak 3G on
+        # this guest under normal load (Docker Swarm + Traefik + Dokploy's
+        # Postgres) — 8 GiB of thor's 31 GiB was uncommitted headroom. 4096
+        # keeps clear margin above the observed peak.
+        mem = 4096;
 
         interfaces = [
           {
@@ -122,9 +128,6 @@
         neededForBoot = true;
         noCheck = true;
       };
-
-      # Read-only /nix/store share, same as mimir.
-      nix.optimise.automatic = false;
     };
   };
 }

@@ -6,7 +6,14 @@ _: {
     # ASSUMPTION: any host importing this aspect, or `common` (whose
     # `tailscale` aspect declares persistence), provides a /persist dataset.
     # Declarations are unconditional under the direct-merge mechanism, so
-    # there is no per-host guard. Only thor is impermanent today.
+    # there is no per-host guard. thor, mimir and njord are all impermanent
+    # (tmpfs root, wiped every boot) — every current importer needs this.
+    # The one entry that isn't safe unconditionally is /etc/machine-id:
+    # microvm.nix writes it from `microvm.machineId` by default, which lands
+    # before this bind-mount runs and collides with it (#220). Guests set
+    # `microvm.machineId = null` (modules/microvm-guest.nix) to leave the
+    # path for impermanence alone; a future non-microvm host importing this
+    # aspect would need its own equivalent guard.
     # Root is wiped on boot, so /etc/ssh is empty when agenix runs — it is the
     # third activation snippet, long before impermanence restores /etc/ssh.
     # /persist is mounted in stage 1 (neededForBoot), so read the identity

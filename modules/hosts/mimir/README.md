@@ -92,11 +92,13 @@ exists in `/var/lib/microvms/mimir/`, it is dead and safe to delete.
 
 ## Storage
 
-- Root: two image-backed volumes (`/persist`, `/srv`) on thor's
-  `zroot/microvms` ZFS dataset (`modules/hosts/thor/disko.nix`), snapshotted
-  the same way `/var/lib/libvirt` is. This is a plain persistent root, **not**
-  an impermanent one. thor's own wipe-on-boot rollback (#163/#167) has no
-  proven pattern here yet.
+- Root is tmpfs, wiped every boot — no root volume is declared in
+  `microvm.volumes` below, and microvm.nix defaults to a tmpfs root in that
+  case, the same outcome as thor's rollback (#163/#167) without running that
+  service. State that needs to survive lives on two image-backed volumes
+  (`/persist`, `/srv`) on thor's `zroot/microvms` ZFS dataset
+  (`modules/hosts/thor/disko.nix`), snapshotted the same way
+  `/var/lib/libvirt` is.
 - `/mnt/ssd/downloads` and `/mnt/storage` are virtiofs shares from thor, not
   separate disks. `df` and `du` show thor's real, physical usage for either
   path.

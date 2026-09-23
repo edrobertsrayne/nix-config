@@ -41,6 +41,8 @@ is what it means in plain terms and where to start.
 | `HostFilesystemAlmostFull` / `HostFilesystemFillingUp` | A filesystem is below 10% / 20% free. | [Out of disk space](#out-of-disk-space) |
 | `MergerfsLowFreeSpace` | `/mnt/storage` has under 100 GiB left. Downloads will start failing before it hits zero. | [Out of disk space](#out-of-disk-space) |
 | `HostMemoryAlmostFull` / `HostMemoryHighUsage` | Under 10% / 20% RAM available. Something is about to be OOM-killed. | `btop`, then restart the offender |
+| `HostSwapSpilledToDisk` | Swap use has passed zram's own capacity onto the `/mnt/ssd/swapfile` tier — real, sustained memory pressure, not routine compression. | `ps aux \| grep virtiofsd`, `systemctl show microvm@<vm>.service -p MemoryCurrent,MemorySwapCurrent` |
+| `HostSwapAlmostFull` | Over 85% of all swap (zram + disk) in use. The next large allocation OOMs — this is the alert that preceded #218. | Same first checks as above, then consider trimming a guest's `mem` (`modules/hosts/*/[host].nix`) |
 | `OomKill` | The kernel already killed something to reclaim memory. | `journalctl -b -g 'Out of memory'` |
 | `SystemdCoredump` | A process crashed hard enough to dump core. | `coredumpctl list` |
 | `SmartSectorErrors` | A drive is developing bad sectors. **This is the early warning — act on it.** | [Disks and ZFS](#disks-and-zfs) |
@@ -264,12 +266,19 @@ sudo virsh console hoas             # serial console; Ctrl-] to exit
 `hoas` is Home Assistant and autostarts. Its disk lives on
 `/var/lib/libvirt`, which *is* snapshotted — see [storage.md](storage.md).
 
-**mimir is not one of these.** mimir is a
-[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guest (#203). Nix
-declares it, instead of running it through `virsh`, so `virsh list` does not
-show it. Use `systemctl status microvm@mimir` on thor instead, and use `ssh
-mimir` for anything inside it. Its disk images live on `/var/lib/microvms`,
-which is snapshotted the same way `/var/lib/libvirt` is.
+**mimir and njord are not one of these.** Both are
+[microvm.nix](https://microvm-nix.github.io/microvm.nix/) guests (#203, and
+njord's own README). Nix declares them, instead of running them through
+`virsh`, so `virsh list` does not show either. Use `systemctl status
+microvm@mimir` / `microvm@njord` on thor instead, and `ssh` (mimir) or the
+tailnet (njord) for anything inside them. Their disk images live on
+`/var/lib/microvms`, snapshotted the same way `/var/lib/libvirt` is.
+
+virtiofsd — the process serving each guest's shared filesystems — runs on thor
+as `microvm-virtiofsd@<name>.service` and is capped with `MemoryHigh=4G`
+(`modules/hosts/thor/_microvm-host.nix`, #221): `systemctl status
+'microvm-virtiofsd@mimir.service'` if a guest's file access looks slow, and
+`ps aux | grep virtiofsd` for actual RSS.
 
 ## When you can't reach thor at all
 

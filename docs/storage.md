@@ -18,6 +18,30 @@ thor has four physical devices in three arrangements.
 | `/mnt/disk1` | 8 TB HDD | ext4 | None |
 | `/mnt/storage` | — | mergerfs over `/mnt/disk*` | None |
 
+### Swap
+
+Two tiers, in priority order (`modules/hosts/thor/thor.nix`):
+
+| Tier | Where | Size | Priority |
+|---|---|---|---|
+| 1 | zram | 25% of RAM, compressed, held in RAM | 100 (preferred) |
+| 2 | `/mnt/ssd/swapfile` | 16 GiB, plain file | 10 (overflow only) |
+
+zram is not a backstop by itself — it holds compressed pages *in RAM*, so once
+it fills there is nowhere left to evict to and the kernel's only remaining move
+is the OOM killer (#218). The disk tier exists to give it somewhere to go.
+
+Not on `zroot`: swap on a ZFS zvol is a known deadlock hazard — writing out a
+swapped page can require an allocation from the same pool that is under memory
+pressure — and ZFS supports no swapfile at all (`swapon` rejects a file with
+holes). `/mnt/ssd` is the only writable non-ZFS filesystem on thor, so the
+swapfile lives there instead, sharing a spindle with `/mnt/ssd/downloads`. On
+an SSD, with swap-out expected to be rare (see the virtiofsd `MemoryHigh` note
+in [monitoring.md](monitoring.md) and #221), that contention is the accepted
+trade against an OOM. `HostSwapSpilledToDisk`/`HostSwapAlmostFull`
+(`modules/alert-rules.nix`) watch both tiers combined — see
+[monitoring.md](monitoring.md#metric-alerts).
+
 ### The ZFS pool
 
 `modules/hosts/thor/disko.nix` declares the whole layout: each NVMe gets a 1 GiB
@@ -87,10 +111,21 @@ Every host that uses `modules/persistence.nix` also sets
 optional: stage-2 activation reads `/var/lib/nixos` before systemd mounts local
 filesystems, and impermanence requires `neededForBoot` on every persistent
 store. disko (#165) leaves this at its `false` default, so each host sets it
-directly — see `modules/hosts/thor/thor.nix` and
-`modules/hosts/mimir/mimir.nix`. Only thor's root is actually rolled back on
-boot today; mimir imports the same persistence aspect for its `/persist`
-dataset without the `rollback-root` service.
+directly — see `modules/hosts/thor/thor.nix`, `modules/hosts/mimir/mimir.nix`
+and `modules/hosts/njord/njord.nix`. thor's root is rolled back explicitly by
+`rollback-root`, above; mimir and njord get the same "wiped every boot"
+outcome for free — microvm.nix gives a guest with no declared root volume a
+tmpfs root, which is inherently ephemeral, so neither guest runs
+`rollback-root` itself.
+
+microvm.nix also defaults `microvm.machineId` to a UUID hashed from the
+hostname and writes `/etc/machine-id` from it via `environment.etc`, which
+collides with impermanence's own bind-mount of that same path (#220) — every
+NixOS `etc` entry activates before persistence's mount units run, so the guest
+finds the file already there. `modules/microvm-guest.nix` sets
+`microvm.machineId = null` on both guests to leave the path to impermanence,
+keeping the deterministic UUID everywhere else it's used (SMBIOS, machined
+registration).
 
 `zroot/home` (`/home`) is unaffected by any of this: it mounts normally and is
 never wiped, same as `/srv` and `/var/lib/libvirt`.

@@ -25,15 +25,16 @@
         inputs.microvm.nixosModules.microvm
         inputs.self.modules.nixos.downloads
         inputs.self.modules.nixos.persistence
+        inputs.self.modules.nixos.microvm-guest
       ];
 
       networking = {
-        # The microvm.nix module also sets a mkDefault hostId. This conflicts with
-        # the mkDefault hostId from mkNixosSystem (modules/lib/hosts.nix), because
-        # both use the same priority. A plain assignment outranks both mkDefaults,
-        # so this value wins without mkForce. This value has no other use. mimir
-        # does not run ZFS itself. The value only needs to be a valid 8-digit hex
-        # number.
+        # The microvm.nix module also sets a mkDefault hostId, conditional on
+        # microvm.machineId != null — set to null by the microvm-guest aspect
+        # (#220), so that mkDefault no longer fires here. A plain assignment
+        # still outranks mkNixosSystem's own mkDefault (modules/lib/hosts.nix)
+        # regardless. This value has no other use. mimir does not run ZFS
+        # itself. The value only needs to be a valid 8-digit hex number.
         hostId = "10000001";
 
         firewall = {
@@ -146,8 +147,6 @@
       ];
 
       virtualisation.docker.daemon.settings.data-root = "/srv/docker";
-
-      nix.optimise.automatic = false;
 
       # GID must match thor's tank group (modules/hosts/thor/thor.nix) —
       # /mnt/ssd/downloads and /mnt/storage are virtiofs shares from thor, so

@@ -78,7 +78,26 @@
       zramSwap = {
         enable = true;
         memoryPercent = 25;
+        priority = 100; # first tier — compressed, in-RAM, fast
       };
+
+      # zram alone is not a backstop: it holds compressed pages *in RAM*, so
+      # when it fills there is nowhere left to evict to and the next large
+      # allocation OOMs — which is what killed the 04:00 build and took
+      # nix-daemon with it (#218). This gives the kernel a real second tier.
+      # Not on ZFS: zvol swap deadlocks under exactly the memory pressure it
+      # exists to relieve, and ZFS supports no swapfile. /mnt/ssd is ext4
+      # (_hardware.nix) and is the only writable non-ZFS filesystem on thor.
+      # Lower priority than zram, so zram is still used first and this only
+      # takes the genuinely cold overflow. Shares a spindle with
+      # /mnt/ssd/downloads — accepted trade, see docs/storage.md.
+      swapDevices = [
+        {
+          device = "/mnt/ssd/swapfile";
+          size = 16384; # MiB
+          priority = 10;
+        }
+      ];
 
       users.groups.tank = {
         # Pinned so it can't drift from mimir's tank GID (modules/hosts/mimir/mimir.nix)

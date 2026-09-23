@@ -62,11 +62,24 @@ self-updates from its own UI and is not touched by thor's nightly
 `autoUpgrade` — see the bootstrap section below. Its version is state on the
 machine, not a value in this repo.
 
+njord no longer runs its own `nix-gc` or `system.autoUpgrade` timers
+(`modules/microvm-guest.nix`): both failed on every scheduled run against the
+read-only `/nix/store` share and no `nix-daemon` (#219). thor's own weekly gc
+and nightly upgrade already cover the same store, and thor's build already
+deploys njord's config — these guest-local timers were pure redundant noise.
+
+njord is monitored the same way mimir is: its own node-exporter and Alloy feed
+thor's Prometheus and Loki (`modules/hosts/njord/node-exporter.nix`,
+`modules/hosts/njord/alloy.nix`, scraped by
+`modules/hosts/thor/njord-scrape.nix`). See [monitoring.md](../../../docs/monitoring.md).
+
 ## Storage
 
-- Root: two image-backed volumes (`/persist` 4 GiB, `/srv` 64 GiB) on thor's
-  `zroot/microvms` ZFS dataset (`modules/hosts/thor/disko.nix`), snapshotted
-  the same way mimir's are. Plain persistent root, not an impermanent one.
+- Root is tmpfs, wiped every boot — no root volume is declared below, and
+  microvm.nix defaults to a tmpfs root in that case. State that needs to
+  survive lives on two image-backed volumes (`/persist` 4 GiB, `/srv` 64 GiB)
+  on thor's `zroot/microvms` ZFS dataset (`modules/hosts/thor/disko.nix`),
+  snapshotted the same way mimir's are.
 - `/srv` carries `/srv/docker` (Docker's data-root) and `/srv/dokploy`, which
   is bind-mounted onto `/etc/dokploy` — Dokploy hardcodes that path for its
   config, Traefik's dynamic config directory, and every app volume it creates.

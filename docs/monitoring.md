@@ -4,9 +4,10 @@ Everything thor knows about itself and about mimir, and how a failure becomes a
 phone notification. The stack spans a dozen modules; this is the map.
 
 thor is the hub: it runs Prometheus, Loki, Grafana and Alertmanager, scrapes its
-own exporters and mimir's, and receives mimir's logs. mimir runs only the two
-agents that feed thor — node-exporter and Alloy. Nothing monitoring-related is
-duplicated on mimir, and mimir has no Grafana of its own.
+own exporters and each guest's, and receives each guest's logs. mimir and njord
+run only the two agents that feed thor — node-exporter and Alloy. Nothing
+monitoring-related is duplicated on either guest, and neither has a Grafana of
+its own.
 
 This page is the design reference — why the pipeline is shaped this way and
 what each alert exists to catch. If one has just fired and you want to know what
@@ -25,6 +26,11 @@ flowchart LR
     MJ["journald"] --> MAL["Alloy"]
   end
 
+  subgraph njord[njord]
+    NE["node-exporter"]
+    NJ["journald"] --> NAL["Alloy"]
+  end
+
   subgraph collect[Collection · thor]
     E["exporters<br/>node · zfs · smartctl · cAdvisor · blocky"]
     T["textfile collector<br/>docker health"]
@@ -39,6 +45,8 @@ flowchart LR
 
   ME -.->|scraped| P
   MAL -.->|pushed| L
+  NE -.->|scraped| P
+  NAL -.->|pushed| L
 
   P -->|alert-rules.nix| AM[Alertmanager]
   L -->|ruler| AM
@@ -47,10 +55,10 @@ flowchart LR
   L --> G
 ```
 
-Everything but the mimir box runs on thor. The two dotted edges are the only
-cross-host traffic: thor **pulls** mimir's metrics, mimir **pushes** its logs.
-Metrics are pulled because Prometheus owns the target list; logs are pushed
-because Loki has no scraper. Both cross `tailscale0`.
+Everything but the two guest boxes runs on thor. The dotted edges are the only
+cross-host traffic: thor **pulls** each guest's metrics, each guest **pushes**
+its own logs. Metrics are pulled because Prometheus owns the target list; logs
+are pushed because Loki has no scraper. All of it crosses `tailscale0`.
 
 Two rule engines, one Alertmanager. Prometheus evaluates metric rules; Loki's
 ruler evaluates log rules and posts to the same Alertmanager, so both arrive
@@ -73,6 +81,7 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `blocky` | `127.0.0.1:4000` | `blocky.nix` | DNS queries, blocklists, cache |
 | `node-exporter` | `thor:9100` | `hosts/thor/node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile |
 | `node-exporter-mimir` | `mimir:9100` | `hosts/thor/mimir-scrape.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
+| `node-exporter-njord` | `njord:9100` | `hosts/thor/njord-scrape.nix` | the same, for njord — no hwmon or textfile |
 | `zfs-exporter` | `thor:9134` | `hosts/thor/zfs-exporter.nix` | pool health, dataset usage |
 | `smartctl-exporter` | `thor:9633` | `hosts/thor/smartctl-exporter.nix` | per-drive SMART attributes |
 | `cadvisor` | `127.0.0.1:9338` | `hosts/thor/container-metrics.nix` | per-container CPU, memory, start time |
@@ -81,14 +90,17 @@ job is declared by the module that owns the thing being scraped, not centrally.
 
 `node-exporter` runs the `systemd` collector, which is what makes
 `node_systemd_unit_state` — and therefore per-unit failure alerting — possible
-without parsing logs. mimir runs it too, so `SystemdUnitFailed` and
-`MonitoringUnitDown` cover mimir's units — including its own `alloy.service`,
-which is what stops mimir's log shipping from failing silently.
+without parsing logs. Both guests run it too, so `SystemdUnitFailed` and
+`MonitoringUnitDown` cover their units — including each one's own
+`alloy.service`, which is what stops that guest's log shipping from failing
+silently. njord was unmonitored until #219/#221 surfaced it: its own timers had
+been failing every scheduled run with nothing to alert on it.
 
-Both hosts are reached over `tailscale0`, which is the only entry in
+All three hosts are reached over `tailscale0`, which is the only entry in
 `networking.firewall.trustedInterfaces` (`modules/networking.nix`, applied to
-every host through `common`). That is why neither the scrape of `mimir:9100` nor
-mimir's push to thor's Loki needs a firewall rule on either side.
+every host through `common`). That is why neither the scrape of `mimir:9100`/
+`njord:9100` nor a guest's push to thor's Loki needs a firewall rule on either
+side.
 
 ### HTTP probes
 
@@ -153,15 +165,15 @@ See [Deliberate omissions](#deliberate-omissions).
 Alloy reads the systemd journal (12h max age) and pushes to Loki, relabelling
 `unit`, `hostname` and `level` out of journal fields. Loki keeps 30 days.
 
-Both hosts run their own Alloy and push to the same Loki on thor
-(`hosts/thor/alloy.nix`, `hosts/mimir/alloy.nix`) — logs are pushed, never
-scraped. Each tags its stream with a static `host` label (`thor` or `mimir`)
-alongside the shared `job="systemd-journal"`. That label is the only thing
-separating the two hosts downstream, so it matters in three places: the log
-alert rules in `modules/loki.nix` all aggregate `sum by (host)`, the
-`system-errors-warnings` dashboard filters and groups on it, and any ad-hoc
+All three hosts run their own Alloy and push to the same Loki on thor
+(`hosts/thor/alloy.nix`, `hosts/mimir/alloy.nix`, `hosts/njord/alloy.nix`) —
+logs are pushed, never scraped. Each tags its stream with a static `host` label
+(`thor`, `mimir` or `njord`) alongside the shared `job="systemd-journal"`. That
+label is the only thing separating the hosts downstream, so it matters in three
+places: the log alert rules in `modules/loki.nix` all aggregate `sum by (host)`,
+the `system-errors-warnings` dashboard filters and groups on it, and any ad-hoc
 Explore query wanting one host needs `{job="systemd-journal", host="mimir"}`.
-Omit it and you get both hosts silently merged.
+Omit it and you get every host silently merged.
 
 Log rules live in `modules/loki.nix` and are written to
 `/srv/loki/rules/fake/log-alerts.yml` (`fake` being the tenant when
@@ -182,6 +194,8 @@ rules are in `modules/loki.nix`. Both fire into Alertmanager.
 | | `HostHighCpuTemperatureWarn` | warn | CPU >72°C for 10m |
 | | `HostMemoryAlmostFull` | crit | <10% available for 10m |
 | | `HostMemoryHighUsage` | warn | <20% available for 15m |
+| | `HostSwapSpilledToDisk` | warn | swap used >8 GiB for 30m — past zram's own capacity, onto `/mnt/ssd` |
+| | `HostSwapAlmostFull` | crit | >85% of all swap (zram + disk) used for 10m |
 | | `HostFilesystemAlmostFull` | crit | <10% free for 10m |
 | | `HostFilesystemFillingUp` | warn | <20% free for 30m |
 | | `MergerfsLowFreeSpace` | warn | pool <100 GiB free for 30m |
@@ -265,13 +279,14 @@ signal that turns it into a notification.
 | Container stopped and forgotten | `ContainerStopped` |
 | Container deliberately removed | *nothing, by design* — the metrics leave with it |
 | Host out of memory, disk, or cooling | `host-health` group |
+| Swap creeping toward exhaustion (#218, #221) | `HostSwapSpilledToDisk`, then `HostSwapAlmostFull` |
 | Drive degrading | `SmartSectorErrors` early, `SmartUnhealthy` late, `ZfsPoolNotOnline`, `ZfsKernelError` |
 | Process OOM-killed | `OomKill` |
 | Kernel panic / lockup / MCE | `KernelHardFault` |
 | DNS broken or blocking degraded | `dns-health` group — see [blocky.md](blocky.md) |
 | Alert delivery itself broken | `AlertmanagerNotificationsFailing`, `LogIngestionStopped`, `PrometheusRuleEvaluationFailures`, `ContainerHealthCollectorStale` |
-| mimir down, or the microvm stopped | `InstanceDown` on `node-exporter-mimir` |
-| mimir's log shipping stops | `MonitoringUnitDown` on its `alloy.service` |
+| mimir or njord down, or the microvm stopped | `InstanceDown` on `node-exporter-mimir`/`node-exporter-njord` |
+| A guest's log shipping stops | `MonitoringUnitDown` on its `alloy.service` |
 | **thor down, unpowered, or off the network** | *nothing* — see [Deliberate omissions](#deliberate-omissions) |
 
 The two bold rows are the failure classes that motivated issue #192: both leave
@@ -356,16 +371,19 @@ produce two resolved notifications.
 
 ## Deliberate omissions
 
-- **Nothing watches thor itself.** thor watches thor and mimir, but mimir is a
-  guest thor hypervises, so it is not an independent observer: if thor loses
-  power or network, both hosts and the whole alert pipeline go down together and
-  nothing notifies. Issue #132 tracks moving a copy of the stack onto a
-  Raspberry Pi, which is the only real fix.
-- **No container-level monitoring of the download stack.** It runs under podman
-  on mimir; cAdvisor and the `docker inspect` textfile collector are thor-only
-  and Docker-only, so `ContainerUnhealthy`, `ContainerRestartLoop` and
-  `ContainerStopped` cover nothing there. Blackbox probes catch a service that
-  stops answering, which is the outcome that matters; the cause has to come from
+- **Nothing watches thor itself.** thor watches thor, mimir and njord, but both
+  guests are hypervised by thor, so neither is an independent observer: if thor
+  loses power or network, every host and the whole alert pipeline go down
+  together and nothing notifies. Issue #132 tracks moving a copy of the stack
+  onto a Raspberry Pi, which is the only real fix.
+- **No container-level monitoring of the download stack or Dokploy.** The
+  download stack runs under podman on mimir; Dokploy runs under Docker Swarm on
+  njord. cAdvisor and the `docker inspect` textfile collector are thor-only and
+  plain-`docker`-only, so `ContainerUnhealthy`, `ContainerRestartLoop` and
+  `ContainerStopped` cover neither. Blackbox probes catch a mimir service that
+  stops answering, which is the outcome that matters; njord's apps are proxied
+  through njord's own Cloudflare tunnel, outside thor's probe list entirely, so
+  even that backstop is absent there. The cause of any failure has to come from
   the logs.
 - **Homepage's `siteMonitor` tiles are dashboard-only.** They colour a tile and
   alert nobody. During the Bar Assistant incident the tile pinged the healthy

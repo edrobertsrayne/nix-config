@@ -41,6 +41,38 @@ _: {
                   summary: Memory usage high on {{ $labels.instance }}
                   description: "Only {{ $value | humanizePercentage }} memory available"
 
+              # thor has two swap tiers: zram (25% of RAM, held compressed in
+              # RAM) then a 16 GiB file on /mnt/ssd — see thor.nix. Any swap
+              # in use beyond zram's ~7.75 GiB capacity means the disk tier
+              # has been touched, i.e. genuine pressure rather than routine
+              # compression of cold pages. node_exporter reports only the
+              # aggregate, hence the absolute threshold. The SwapTotal guard
+              # keeps this from evaluating on the guests, which have no swap.
+              - alert: HostSwapSpilledToDisk
+                expr: >
+                  node_memory_SwapTotal_bytes > 0
+                  and (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) > 8589934592
+                for: 30m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Swap spilled past zram on {{ $labels.instance }}
+                  description: "{{ $value | humanize1024 }}B of swap in use — past zram capacity, now hitting /mnt/ssd"
+
+              # The backstop is itself nearly gone. Below this there is only
+              # the OOM killer — this is the alert that should have preceded
+              # #218 by hours.
+              - alert: HostSwapAlmostFull
+                expr: >
+                  node_memory_SwapTotal_bytes > 0
+                  and (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) > 0.85
+                for: 10m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Swap almost exhausted on {{ $labels.instance }}
+                  description: "{{ $value | humanizePercentage }} of all swap in use — OOM kills are imminent"
+
               # virtiofs is excluded because mimir mounts thor's own
               # filesystems over it (/nix/.ro-store, /mnt/ssd/downloads,
               # /mnt/storage — modules/hosts/mimir/mimir.nix). Without this,
