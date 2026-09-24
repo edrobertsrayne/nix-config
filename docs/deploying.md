@@ -37,7 +37,10 @@ Both guests' read-only `/nix/store` share and their lack of a `nix-daemon`
 mean the usual per-host paths still do not work for them —
 `nixos-rebuild switch --flake .#mimir` (or `.#njord`) on the guest itself and
 `--target-host` from thor both fail — but no separate deploy step is needed.
-See
+The same constraint is why the guests opt out of `nix.gc.automatic`,
+`system.autoUpgrade.enable`, and Home Manager (`modules/microvm-guest.nix`):
+each assumes a writable store or a `nix-daemon` to plant GC roots, and neither
+exists on a guest (#219, #211). See
 [`modules/hosts/mimir/README.md`](../modules/hosts/mimir/README.md#deploying-config-changes)
 and
 [`modules/hosts/njord/README.md`](../modules/hosts/njord/README.md#deploying-config-changes)
