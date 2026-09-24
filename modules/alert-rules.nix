@@ -232,6 +232,20 @@ _: {
                   summary: Systemd unit failed on {{ $labels.instance }}
                   description: "{{ $labels.name }} has been in a failed state for >5m — check systemctl --failed"
 
+              # SystemdUnitFailed above cannot catch this: a unit with
+              # Restart=always and no start rate limit cycles through
+              # activating/active forever and never reaches "failed", no
+              # matter how many times it crashes. flaresolverr did this 768
+              # times over 2.5 days with nothing alerting (#225).
+              - alert: SystemdUnitRestartLooping
+                expr: increase(node_systemd_service_restart_total[15m]) > 5
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Systemd unit restart-looping on {{ $labels.instance }}
+                  description: "{{ $labels.name }} has restarted {{ $value }} times in 15m — SystemdUnitFailed cannot catch this, Restart=always never reaches the failed state"
+
               - alert: AlertmanagerNotificationsFailing
                 expr: sum(rate(alertmanager_notifications_failed_total{integration="webhook"}[15m])) > 0
                 for: 5m
