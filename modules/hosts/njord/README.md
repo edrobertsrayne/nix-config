@@ -62,11 +62,15 @@ self-updates from its own UI and is not touched by thor's nightly
 `autoUpgrade` — see the bootstrap section below. Its version is state on the
 machine, not a value in this repo.
 
-njord no longer runs its own `nix-gc` or `system.autoUpgrade` timers
-(`modules/microvm-guest.nix`): both failed on every scheduled run against the
-read-only `/nix/store` share and no `nix-daemon` (#219). thor's own weekly gc
-and nightly upgrade already cover the same store, and thor's build already
-deploys njord's config — these guest-local timers were pure redundant noise.
+njord no longer runs its own `nix-gc`, `system.autoUpgrade`, or Home Manager
+(`modules/microvm-guest.nix`): the first two failed on every scheduled run
+against the read-only `/nix/store` share and no `nix-daemon` (#219), and
+Home Manager's activation hit the same wall trying to plant its own GC roots
+(#211). thor's own weekly gc and nightly upgrade already cover the same
+store, thor's build already deploys njord's config, and njord's root
+(including `/home`) is tmpfs and unpersisted, so Home Manager's dotfiles
+would be wiped at the next boot regardless — these guest-local units were
+pure redundant noise.
 
 njord is monitored the same way mimir is: its own node-exporter and Alloy feed
 thor's Prometheus and Loki (`modules/hosts/njord/node-exporter.nix`,

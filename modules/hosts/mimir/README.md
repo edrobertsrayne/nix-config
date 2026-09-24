@@ -81,6 +81,14 @@ needed:
   (`PermitRootLogin = "no"`, `modules/ssh.nix`), so a `root@<ip>` target
   fails separately with a publickey error.
 
+That same `temproots` error was also home-manager-ed.service's failure mode
+(#211): Home Manager's own activation calls `nix-store --realise --add-root`
+as user `ed` to plant its GC roots, which hits the identical no-daemon,
+read-only-store wall. mimir no longer runs Home Manager at all
+(`modules/microvm-guest.nix`) — its root, including `/home`, is tmpfs and
+unpersisted, so HM's dotfiles would be wiped at the next boot regardless, and
+`modules/user.nix` already provides ed's account and shell.
+
 The old host-side CLI flow (`sudo microvm -R -u mimir`) is obsolete. It was
 the update path while mimir ran in microvm.nix's "declarative deployment"
 mode, where `microvm -u` builds from the flake pointer file
