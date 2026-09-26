@@ -111,10 +111,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1789757784,
-        "narHash": "sha256-DAGkNgjX5ajBp01W6YSYgLxc+UgxGuFCkkFMMfeCWj0=",
+        "lastModified": 1790381600,
+        "narHash": "sha256-/j0FZQ30kbkRYfCHFE7uacNuqp88wTpUk+p3LPtEK58=",
         "ref": "refs/heads/master",
-        "rev": "3f2a6e743f67bc947cfa06be25df106d00b9ee11",
+        "rev": "81ddfc65b4661c52569f8b8d1ee41d5a6d68f85e",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/herdrdev/herdr"
@@ -153,10 +153,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1789765459,
-        "narHash": "sha256-voJJ5IZR4w2149u2Jm/j2zifeWROlpZQ+JzmCQwjgn8=",
+        "lastModified": 1790365885,
+        "narHash": "sha256-iQ0ebhiVo64NktTnwft9hNxlFu4j5cvljVxyJaEVIP4=",
         "ref": "refs/heads/master",
-        "rev": "17903129f47656fa4d07e78ad87f6592ff4f2527",
+        "rev": "7b4c5ec4bedaf1e062bbc1bcaeddbc6bd242aa1b",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -230,10 +230,10 @@
         "spectrum": "spectrum"
       },
       "locked": {
-        "lastModified": 1789506833,
-        "narHash": "sha256-4L8SOCF84de1irB72Ka9VHcu9wrAJ9Amuey4lU9oh4Y=",
+        "lastModified": 1790337272,
+        "narHash": "sha256-Gj7g9GkMZNj0u0VKvyN4uf2XUxdHd4JwKOsaSicGtAo=",
         "ref": "refs/heads/main",
-        "rev": "187b0a390ee054028106a674e7b01b1cb940cbba",
+        "rev": "68f2670367e03da7d0cceef0594a7b2c173849de",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/microvm-nix/microvm.nix"
@@ -246,11 +246,11 @@
     },
     "mnw": {
       "locked": {
-        "lastModified": 1780772958,
-        "narHash": "sha256-VKKe8r4pwCGWZ3Yr9CPN129R4S3CKLSrlYqdYz3vKpM=",
+        "lastModified": 1784154424,
+        "narHash": "sha256-HRn4O1X2ShYtbq5Egji72/aemyc2cIQicjRZD9hBqM8=",
         "owner": "Gerg-L",
         "repo": "mnw",
-        "rev": "0871dbf63a53610c95db04439ed8ea4d6ec9c160",
+        "rev": "0151d9fa87992cbeb67c86616fb9170dcec830b6",
         "type": "github"
       },
       "original": {
@@ -292,10 +292,10 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1789684949,
-        "narHash": "sha256-ZKhUe/2IJUq1JhKxKMu8rbkgSGmPP2ZCqlIPn40aGCM=",
+        "lastModified": 1790323409,
+        "narHash": "sha256-VVTPf+Hyd5ebpjBMHmrLMSBIeW6ls48Bqtosj7CNKLA=",
         "ref": "nixos-unstable",
-        "rev": "e554fab72f81915600f3f449b786fd9af40439a5",
+        "rev": "e94cb152ed51bd6e24eb4a41f1460252beb52cd2",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/NixOS/nixpkgs"
@@ -316,10 +316,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1789510188,
-        "narHash": "sha256-umec9LKkWjK89Yx4XpvQStkgfKvhK7GjVf5m21bjzKU=",
+        "lastModified": 1790221470,
+        "narHash": "sha256-TzyWd4i7YCpqoF9xB8mfgDJ2sviAZysKH9R8YbQGjqA=",
         "ref": "refs/heads/main",
-        "rev": "cdc7e7aaa7eb521bba1b38f54c3228d52cc31703",
+        "rev": "95afe7a794216f53e217c5148c6fbe0b668192cf",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/notashelf/nvf"
@@ -352,10 +352,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1789715798,
-        "narHash": "sha256-hWw9vlrsFm9kOw8MT5k6IX/7xCzgROuJ6ZvQOrkq66Q=",
+        "lastModified": 1790321428,
+        "narHash": "sha256-JQBGEZDY6up5yu0ehQeDDnjvsw7MP8d4AlaBd9RxZVI=",
         "ref": "refs/heads/master",
-        "rev": "fbdb2de9e7619d660ae7e8f752f38b261020b701",
+        "rev": "84fb3c79e477d5e7ec4eff9c24dbc5d5c99b0fd1",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/oxalica/rust-overlay"
