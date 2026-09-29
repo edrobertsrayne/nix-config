@@ -197,6 +197,10 @@
       type = types.port;
       default = 8083;
     };
+    firecrawl = mkOption {
+      type = types.port;
+      default = 3002;
+    };
     homepage = mkOption {
       type = types.port;
       default = 8086;

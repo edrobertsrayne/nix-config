@@ -25,6 +25,7 @@
         code-server
         dlna
         downloads-proxy
+        firecrawl
         grafana
         homepage
         immich

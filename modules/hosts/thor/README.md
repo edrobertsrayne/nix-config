@@ -81,7 +81,7 @@ actually read. This table is a convenience copy; if they disagree, the Nix wins.
 | Alertmanager-ntfy | 9094  |     | cAdvisor      | 9338  |
 | Grafana           | 3000  |     | Smartctl Exp. | 9633  |
 | Loki              | 3100  |     | Blackbox Exp. | 9115  |
-| Alloy             | 12345 |     |               |       |
+| Alloy             | 12345 |     | Firecrawl     | 3002  |
 
 ---
 
