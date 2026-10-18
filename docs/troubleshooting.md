@@ -41,7 +41,7 @@ is what it means in plain terms and where to start.
 | `HostFilesystemAlmostFull` / `HostFilesystemFillingUp` | A filesystem is below 10% / 20% free. | [Out of disk space](#out-of-disk-space) |
 | `MergerfsLowFreeSpace` | `/mnt/storage` has under 100 GiB left. Downloads will start failing before it hits zero. | [Out of disk space](#out-of-disk-space) |
 | `HostMemoryAlmostFull` / `HostMemoryHighUsage` | Under 10% / 20% RAM available. Something is about to be OOM-killed. | `btop`, then restart the offender |
-| `HostSwapSpilledToDisk` | Swap use has passed zram's own capacity onto the `/mnt/ssd/swapfile` tier — real, sustained memory pressure, not routine compression. | `ps aux \| grep virtiofsd`, `systemctl show microvm@<vm>.service -p MemoryCurrent,MemorySwapCurrent` |
+| `HostSwapSpilledToDisk` | Swap use has passed zram's own capacity onto the `/mnt/ssd/swapfile` tier — real, sustained memory pressure, not routine compression. | `arcstats` (ARC size), `systemctl show microvm@<vm>.service -p MemoryCurrent,MemorySwapCurrent` |
 | `HostSwapAlmostFull` | Over 85% of all swap (zram + disk) in use. The next large allocation OOMs — this is the alert that preceded #218. | Same first checks as above, then consider trimming a guest's `mem` (`modules/hosts/*/[host].nix`) |
 | `OomKill` | The kernel already killed something to reclaim memory. | `journalctl -b -g 'Out of memory'` |
 | `SystemdCoredump` | A process crashed hard enough to dump core. | `coredumpctl list` |
@@ -275,10 +275,15 @@ tailnet (njord) for anything inside them. Their disk images live on
 `/var/lib/microvms`, snapshotted the same way `/var/lib/libvirt` is.
 
 virtiofsd — the process serving each guest's shared filesystems — runs on thor
-as `microvm-virtiofsd@<name>.service` and is capped with `MemoryHigh=4G`
-(`modules/hosts/thor/_microvm-host.nix`, #221): `systemctl status
-'microvm-virtiofsd@mimir.service'` if a guest's file access looks slow, and
-`ps aux | grep virtiofsd` for actual RSS.
+as `microvm-virtiofsd@<name>.service`: `systemctl status
+'microvm-virtiofsd@mimir.service'` if a guest's file access looks slow.
+
+Do not read virtiofsd RSS in `ps` as memory use. It maps the guest's shared
+RAM, so each share repeats the guest's size (#221). Use `Private_Dirty` and
+`Pss` in `/proc/<pid>/smaps_rollup` instead. For real memory use on thor,
+look at the ZFS ARC (`/proc/spl/kstat/zfs/arcstats`, capped at 4 GiB in
+`modules/zfs.nix`) and each guest's `systemctl show microvm@<name>
+-p MemoryCurrent,MemorySwapCurrent`.
 
 ## When you can't reach thor at all
 

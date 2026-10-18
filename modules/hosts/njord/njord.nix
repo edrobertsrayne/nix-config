@@ -43,6 +43,8 @@
         # Postgres) — 8 GiB of thor's 31 GiB was uncommitted headroom. 4096
         # keeps clear margin above the observed peak.
         mem = 4096;
+        # Returns pages the guest frees to thor (free-page-reporting), see mimir.
+        balloon = true;
 
         interfaces = [
           {

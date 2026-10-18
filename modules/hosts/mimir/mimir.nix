@@ -50,7 +50,12 @@
       microvm = {
         hypervisor = "qemu";
         vcpu = 2;
-        mem = 8192;
+        # Was 8192, all of which the guest used: its page cache grew to fill
+        # it, and that RAM is host shmem that thor can only swap, never drop
+        # (#221). Working set is ~1.7 GiB anon + ~1.6 GiB tmpfs.
+        mem = 5120;
+        # Returns pages the guest frees to thor (free-page-reporting).
+        balloon = true;
 
         interfaces = [
           {
