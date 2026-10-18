@@ -81,7 +81,7 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `blocky` | `127.0.0.1:4000` | `blocky.nix` | DNS queries, blocklists, cache |
 | `node-exporter` | `thor:9100` | `hosts/thor/node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile |
 | `node-exporter-mimir` | `mimir:9100` | `hosts/thor/mimir-scrape.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
-| `node-exporter-njord` | `njord:9100` | `hosts/thor/njord-scrape.nix` | the same, for njord — no hwmon or textfile |
+| `node-exporter-njord` | `njord:9100` | `hosts/thor/njord-scrape.nix` | the same, for njord — no hwmon; its textfile carries Docker container state (`docker-health.nix`) |
 | `zfs-exporter` | `thor:9134` | `hosts/thor/zfs-exporter.nix` | pool health, dataset usage |
 | `smartctl-exporter` | `thor:9633` | `hosts/thor/smartctl-exporter.nix` | per-drive SMART attributes |
 | `cadvisor` | `127.0.0.1:9338` | `hosts/thor/container-metrics.nix` | per-container CPU, memory, start time |
@@ -126,6 +126,10 @@ has no tile of its own to generate.
 
 Probes run every 60s, redirects followed, IPv4, 10s prober timeout inside a 15s
 scrape timeout.
+
+njord's public apps (`admin.` and `slicer.robertsrayne.uk`) are probed from thor
+through Cloudflare and njord's tunnel (`hosts/thor/njord-probes.nix`), so a dead
+`dokploy-traefik` shows up as `ProbeFailed` (#223).
 
 ### Container health
 

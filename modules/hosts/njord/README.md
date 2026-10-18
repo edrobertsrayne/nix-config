@@ -145,3 +145,49 @@ Once the tunnel is confirmed working, `dokploy-traefik`'s host-published
 through those published ports. They can be dropped by recreating that
 container without `-p`, closing the only surface Docker opens on the LAN
 behind `nixos-fw`. Optional; not yet done as of this writing.
+
+## dokploy-traefik
+
+`dokploy-traefik` is a plain container, not a Swarm service: Dokploy manages it
+that way on purpose (its Web Server reload/recreate actions act on a container
+named `dokploy-traefik`), so converting it to a service would fight Dokploy.
+
+The cost: Swarm has no reconcile loop for it. After a hard reboot dockerd can
+start it before the `dokploy-network` overlay is ready; the attach fails, it
+exits 255, and restart policy `always` does not retry. cloudflared then
+returns 502 for every njord subdomain (#223).
+
+- **`dokploy-traefik-watchdog`** (`modules/hosts/njord/traefik-watchdog.nix`)
+  runs every minute and `docker start`s the container if it exists and is
+  stopped. It does not recreate a missing one — that needs Dokploy's own run
+  args.
+- **A stopped container is also at risk of removal.** Once it sat stopped
+  long enough, a Docker prune (most likely Dokploy's scheduled cleanup)
+  deleted the container and its image, and the sites stayed down from
+  2026-10-06 until noticed on 2026-10-18. The watchdog keeps it from sitting
+  stopped.
+- **Alerts:** thor's blackbox probes of `admin.` and `slicer.robertsrayne.uk`
+  (`modules/hosts/thor/njord-probes.nix`) fire `ProbeFailed` through the whole
+  tunnel path, including when the container is missing. `ContainerStopped`
+  covers a stopped plain container via the shared docker-health collector;
+  Swarm task containers are excluded from it.
+
+**Recovery if it is missing:** Dokploy's Settings > Web Server > Reload
+Traefik only restarts an existing container and fails on a missing one
+(`reloadTraefik background: Error: Resource type not found`). Recreate it with
+the same arguments as Dokploy's `install.sh` (check the image tag there). Its
+config in `/etc/dokploy/traefik` survives:
+
+```sh
+ssh 192.168.68.130 'sudo docker run -d \
+  --name dokploy-traefik --restart always \
+  --network dokploy-network \
+  -v /etc/dokploy/traefik/traefik.yml:/etc/traefik/traefik.yml \
+  -v /etc/dokploy/traefik/dynamic:/etc/dokploy/traefik/dynamic \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -p 80:80/tcp -p 443:443/tcp -p 443:443/udp \
+  traefik:v3.6.25'
+```
+
+`install.sh` also shows a `docker service create` form of the same container,
+which would put it under Swarm's reconcile loop. Not adopted yet.
