@@ -148,6 +148,11 @@ The auth model narrows, not disappears: Cloudflare Access still gates
 **off-tailnet** access, but tailnet visits no longer round-trip through
 Cloudflare and so stop appearing in the Access audit log.
 
+The mapping makes blocky answer SOA queries for `greensroad.uk` with a fake
+zone, which broke ACME renewals from 2026-10-10: lego could not find the
+Cloudflare zone and asked for `uk.` instead. `modules/acme.nix` therefore sets
+`dnsResolver = "1.1.1.1:53"`, so cert renewal bypasses blocky.
+
 Immich, Jellyfin and Navidrome still bind `0.0.0.0` and are still reached by
 **tailnet IP and port**, not hostname, despite this change — see
 [docs/networking.md](networking.md#choosing-how-to-reach-a-service) for why
