@@ -36,11 +36,31 @@ swapped page can require an allocation from the same pool that is under memory
 pressure — and ZFS supports no swapfile at all (`swapon` rejects a file with
 holes). `/mnt/ssd` is the only writable non-ZFS filesystem on thor, so the
 swapfile lives there instead, sharing a spindle with `/mnt/ssd/downloads`. On
-an SSD, with swap-out expected to be rare (see the virtiofsd `MemoryHigh` note
-in [monitoring.md](monitoring.md) and #221), that contention is the accepted
-trade against an OOM. `HostSwapSpilledToDisk`/`HostSwapAlmostFull`
-(`modules/alert-rules.nix`) watch both tiers combined — see
-[monitoring.md](monitoring.md#metric-alerts).
+an SSD, with swap-out expected to be rare (see the memory budget below and
+#221), that contention is the accepted trade against an OOM.
+`HostSwapSpilledToDisk`/`HostSwapAlmostFull` (`modules/alert-rules.nix`) watch
+both tiers combined — see [monitoring.md](monitoring.md#metric-alerts).
+
+### Memory budget
+
+thor has 31 GiB. Roughly, it divides like this:
+
+| Use | Size | Set in |
+|---|---|---|
+| ZFS ARC | max 4 GiB | `modules/zfs.nix` |
+| mimir guest | 5 GiB | `modules/hosts/mimir/mimir.nix` |
+| njord guest | 4 GiB | `modules/hosts/njord/njord.nix` |
+| hoas (libvirt) | ~4 GiB | libvirt domain |
+| Host services, page cache | the rest | — |
+
+Without the ARC cap, the ARC grew to about 10 GiB. Linux does not count it as
+available memory, and the kernel swapped guest pages instead of shrinking it.
+mimir and njord have a balloon with free-page reporting, so memory the guest
+frees goes back to thor.
+
+**virtiofsd RSS in `ps` is misleading.** Each share's process maps the guest's
+whole shared RAM, so it shows about 4 GiB per share. Its private memory is
+about 1–10 MB. Check `Private_Dirty` and `Pss` in `/proc/<pid>/smaps_rollup`.
 
 ### The ZFS pool
 

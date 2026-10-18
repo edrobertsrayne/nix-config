@@ -23,12 +23,9 @@
     autostart = ["mimir" "njord"];
   };
 
-  # virtiofsd's page-cache-like RSS is the biggest consumer of thor's 31 GiB
-  # (~13 GB across mimir's three shares and njord's one, #221) and the kernel
-  # was choosing to push guest anonymous pages into zram rather than reclaim
-  # it. MemoryHigh is a throttle-and-reclaim ceiling, not a kill limit: the
-  # cgroup is put under reclaim pressure when it exceeds this, so the cache
-  # shrinks instead of the VMs swapping. Per-instance — njord's single
-  # ro-store share sits at ~0.3 GB and is unaffected.
-  systemd.services."microvm-virtiofsd@".serviceConfig.MemoryHigh = "4G";
+  # No MemoryHigh on microvm-virtiofsd@. Its ~4 GB RSS per share looked like
+  # a cache (#221) but is the guest's own RAM: virtiofsd maps the guest's
+  # shared memfd, so every share's RSS repeats it. Private memory is ~1-10 MB.
+  # A cap only throttled that shmem and pushed guest pages into zram. Size the
+  # guests (microvm.mem) and ZFS ARC (modules/zfs.nix) instead.
 }
