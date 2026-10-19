@@ -12,7 +12,7 @@ in {
     systemd.services.bazarr.serviceConfig.UMask = lib.mkForce "0002";
     services.bazarr = {
       enable = true;
-      listenPort = ports.media.bazarr;
+      settings.general.port = ports.media.bazarr;
       dataDir = "/srv/bazarr";
     };
   };
