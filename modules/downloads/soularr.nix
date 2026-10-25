@@ -4,6 +4,7 @@
 in {
   flake.modules.nixos.soularr = {
     config,
+    lib,
     pkgs,
     ...
   }: let
@@ -64,7 +65,35 @@ in {
       backup_count = 3
     '';
   in {
-    systemd.tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
+    systemd = {
+      tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
+
+      services = {
+        soularr-config = {
+          before = [containerUnit];
+          requiredBy = [containerUnit];
+          serviceConfig.Type = "oneshot";
+          script = ''
+            apikey=$(${pkgs.gnused}/bin/sed -n 's/^LIDARR__AUTH__APIKEY=//p' ${config.age.secrets.lidarr-apikey.path})
+            ${pkgs.gnused}/bin/sed "s/@LIDARR_API_KEY@/$apikey/" ${configFile} > /srv/soularr/config.ini
+            ${pkgs.coreutils}/bin/chown 306:992 /srv/soularr/config.ini
+            ${pkgs.coreutils}/bin/chmod 0640 /srv/soularr/config.ini
+          '';
+        };
+
+        # /srv/soularr is the data volume; never start before its mount. Back
+        # off on failure so a registry or network problem retries slowly
+        # instead of every few seconds.
+        ${lib.removeSuffix ".service" containerUnit} = {
+          unitConfig.RequiresMountsFor = ["/srv/soularr"];
+          serviceConfig = {
+            RestartSec = "30s";
+            RestartSteps = 8;
+            RestartMaxDelaySec = "1h";
+          };
+        };
+      };
+    };
 
     # The container reaches lidarr/slskd via host.docker.internal (= the
     # podman bridge gateway, 10.88.0.1), which arrives as INPUT traffic on
@@ -77,18 +106,6 @@ in {
     networking.firewall.interfaces.podman0.allowedTCPPorts = [ports.media.slskd ports.media.lidarr];
 
     age.secrets.lidarr-apikey.file = ../../secrets/lidarr-apikey.age;
-
-    systemd.services.soularr-config = {
-      before = [containerUnit];
-      requiredBy = [containerUnit];
-      serviceConfig.Type = "oneshot";
-      script = ''
-        apikey=$(${pkgs.gnused}/bin/sed -n 's/^LIDARR__AUTH__APIKEY=//p' ${config.age.secrets.lidarr-apikey.path})
-        ${pkgs.gnused}/bin/sed "s/@LIDARR_API_KEY@/$apikey/" ${configFile} > /srv/soularr/config.ini
-        ${pkgs.coreutils}/bin/chown 306:992 /srv/soularr/config.ini
-        ${pkgs.coreutils}/bin/chmod 0640 /srv/soularr/config.ini
-      '';
-    };
 
     virtualisation.oci-containers.containers.soularr = {
       # Fully qualified so podman (mimir's backend) doesn't need
@@ -114,8 +131,13 @@ in {
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
       ];
+      # Not --pull=always: it contacts Docker Hub on every start, so a
+      # rate-limit (toomanyrequests) put the unit in a restart loop that kept
+      # the limit exhausted (#234). The image cache persists (mimir's podman
+      # graphroot is on /srv), so pull only when missing; update by hand
+      # (podman pull) when wanted.
       extraOptions = [
-        "--pull=always"
+        "--pull=missing"
         "--add-host=host.docker.internal:host-gateway"
       ];
     };

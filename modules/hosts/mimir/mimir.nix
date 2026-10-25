@@ -109,7 +109,7 @@
           # bridge — the container keeps eth0 but loses all reachability
           # (observed 2026-08-28: soularr unreachable from thor, and unable to
           # reach lidarr/slskd, on every boot since 2026-08-26). Scoping
-          # 10-eth below to enp0s7 alone is not enough: the 99-*-dhcp
+          # 10-eth below to the real NIC alone is not enough: the 99-*-dhcp
           # fallback files would then match the veths instead, so they are
           # explicitly unmanaged here first (this file sorts before both).
           matchConfig.Name = ["veth*" "podman*" "docker*" "aardvark*"];
@@ -119,11 +119,13 @@
         network.networks."10-eth" = {
           matchConfig = {
             Type = "ether";
-            # Scoped by name: Type=ether alone also matches container veths
-            # (their devtype is ether), and networkd managing those breaks
-            # podman networking — see the 05-container block above. mimir's
-            # only real NIC is enp0s7.
-            Name = "enp0s7";
+            # Matched by MAC, not interface name: Type=ether alone also
+            # matches container veths (their devtype is ether), and networkd
+            # managing those breaks podman networking — see the 05-container
+            # block above. The name follows the guest's PCI slot, which moved
+            # (enp0s7 -> enp0s8) when the qemu device list changed, dropping
+            # mimir onto the DHCP fallback (#236).
+            MACAddress = mac;
           };
           networkConfig = {
             Address = ["${ipAddress}/22"];
@@ -140,6 +142,11 @@
         };
 
         services.systemd-tmpfiles-setup.after = ["srv.mount"];
+        tmpfiles.rules = [
+          "d /srv/containers 0755 root root -"
+          "d /srv/containers/storage 0700 root root -"
+          "d /srv/containers/tmp 1777 root root -"
+        ];
       };
 
       services.tailscale.extraSetFlags = [
@@ -152,6 +159,18 @@
       ];
 
       virtualisation.docker.daemon.settings.data-root = "/srv/docker";
+
+      # Root is tmpfs, so podman's default graphroot would lose the image
+      # cache every boot and force a Docker Hub pull (#234). Keep storage and
+      # the pull staging dir (default /var/tmp, also tmpfs) on srv.img.
+      virtualisation.containers = {
+        storage.settings.storage = {
+          driver = "overlay";
+          graphroot = "/srv/containers/storage";
+          runroot = "/run/containers/storage";
+        };
+        containersConf.settings.engine.image_copy_tmp_dir = "/srv/containers/tmp";
+      };
 
       # GID must match thor's tank group (modules/hosts/thor/thor.nix) —
       # /mnt/ssd/downloads and /mnt/storage are virtiofs shares from thor, so

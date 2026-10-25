@@ -90,8 +90,8 @@
         };
 
         # Matched by MAC rather than interface name: unlike mimir (whose NIC
-        # is known to enumerate as enp0s7), njord's guest NIC name isn't
-        # pinned down yet, and MACAddress is immune to that while still
+        # now also matches by MAC after its NIC name changed), njord's guest
+        # NIC name isn't pinned down, and MACAddress is immune to that while still
         # excluding Docker's own interfaces.
         "10-eth" = {
           matchConfig = {
