@@ -86,6 +86,13 @@ in {
         # instead of every few seconds.
         ${lib.removeSuffix ".service" containerUnit} = {
           unitConfig.RequiresMountsFor = ["/srv/soularr"];
+          # The port publish below binds the tailnet address, which tailscale0
+          # only gets once tailscale reaches Running. tailscaled.service is
+          # "started" ~6s earlier (observed on mimir), so order after
+          # tailscaled-autoconnect, which waits for Running. Wants (not
+          # Requires) so a failed autoconnect still lets the unit try.
+          after = ["tailscaled-autoconnect.service"];
+          wants = ["tailscaled-autoconnect.service"];
           serviceConfig = {
             RestartSec = "30s";
             RestartSteps = 8;
