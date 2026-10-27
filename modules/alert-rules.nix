@@ -150,7 +150,7 @@ _: {
                   description: "Drive {{ $labels.device }} reports SMART status unhealthy"
 
               - alert: SmartTemperatureHigh
-                expr: smartctl_device_temperature > 55
+                expr: smartctl_device_temperature{temperature_type="current"} > 55
                 for: 10m
                 labels:
                   severity: warning
