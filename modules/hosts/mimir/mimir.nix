@@ -158,6 +158,20 @@
         "--exit-node-allow-lan-access=true"
       ];
 
+      # tailscaled-autoconnect reports Running before the netmap holds every
+      # peer, so `tailscale set --exit-node=<ip>` can fail with "no node found
+      # in netmap" (#240). Retry until the exit node is known.
+      systemd.services.tailscaled-set = {
+        serviceConfig = {
+          Restart = "on-failure";
+          RestartSec = "5s";
+        };
+        unitConfig = {
+          StartLimitIntervalSec = 120;
+          StartLimitBurst = 10;
+        };
+      };
+
       virtualisation.docker.daemon.settings.data-root = "/srv/docker";
 
       # Root is tmpfs, so podman's default graphroot would lose the image
