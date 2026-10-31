@@ -28,6 +28,7 @@
         grafana
         homepage
         immich
+        janitarr
         jellyfin
         karakeep
         libvirt
