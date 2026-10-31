@@ -131,6 +131,10 @@
             type = types.port;
             default = 8265;
           };
+          janitarr = mkOption {
+            type = types.port;
+            default = 8090;
+          };
           navidrome = mkOption {
             type = types.port;
             default = 4533;

@@ -173,6 +173,22 @@
         "type": "github"
       }
     },
+    "janitarr": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793473932,
+        "narHash": "sha256-i0nQPyP1Qz63U94/Hi0fv2FmwnYF0HtIuUfyx7MjPNY=",
+        "owner": "edrobertsrayne",
+        "repo": "janitarr",
+        "rev": "3a8bb86c39f6574642b6c2605ceaf7706c0b1c39",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edrobertsrayne",
+        "repo": "janitarr",
+        "type": "github"
+      }
+    },
     "microvm": {
       "inputs": {
         "nixpkgs": [
@@ -287,6 +303,7 @@
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
+        "janitarr": "janitarr",
         "microvm": "microvm",
         "nixpkgs": "nixpkgs_2",
         "nvf": "nvf",

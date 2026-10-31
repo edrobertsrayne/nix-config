@@ -174,7 +174,7 @@ the difference from plain ext4 is only that a second disk's files would survive.
 
 | Path | Contents | On | Snapshotted |
 |---|---|---|---|
-| `/srv/<service>` (thor) | Service state and databases — Jellyfin, Grafana, Loki, Paperless, Bar Assistant | zroot | **yes** |
+| `/srv/<service>` (thor) | Service state and databases — Jellyfin, Grafana, Loki, Paperless, Bar Assistant, Janitarr | zroot | **yes** |
 | `/srv/docker` (thor) | Docker images, volumes, container state | zroot | **yes** |
 | `/var/lib/libvirt` | VM disk images (Home Assistant) | zroot | **yes** |
 | `/var/lib/microvms` | mimir's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/persist` (#203) | zroot | **yes** |
