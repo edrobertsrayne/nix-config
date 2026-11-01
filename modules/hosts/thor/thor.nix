@@ -59,7 +59,6 @@
             efiSysMountPoint = "/boot";
           };
         };
-        initrd.systemd.enable = true;
         tmp.cleanOnBoot = true;
         extraModulePackages = [
           (config.boot.kernelPackages.it87.overrideAttrs (old: {

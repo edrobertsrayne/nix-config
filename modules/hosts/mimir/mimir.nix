@@ -206,16 +206,6 @@
         # — see the machine-id race note below.
         noCheck = true;
       };
-
-      # Root is tmpfs (wiped every boot), so /persist's bind-mounts (SSH host
-      # keys, /etc/machine-id) must win the race against systemd's own
-      # first-boot machine-id generation. That only happens reliably when the
-      # persistence module's units run inside initrd, alongside thor
-      # (modules/hosts/thor/thor.nix) which already does this for the same
-      # reason. On mimir specifically, /persist sits on a virtio-attached
-      # image (vs. thor's already-imported ZFS pool), so the mount is slower
-      # to become available in initrd — noCheck above narrows that gap.
-      boot.initrd.systemd.enable = true;
     };
   };
 }

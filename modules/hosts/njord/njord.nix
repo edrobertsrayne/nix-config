@@ -122,10 +122,6 @@
         depends = ["/srv"];
       };
 
-      # Root is tmpfs (wiped every boot), so /persist's bind-mounts (SSH host
-      # keys, /etc/machine-id) must win the race against systemd's own
-      # first-boot machine-id generation — same reasoning as mimir and thor.
-      boot.initrd.systemd.enable = true;
       fileSystems."/persist" = {
         neededForBoot = true;
         noCheck = true;
