@@ -178,7 +178,7 @@
       # cache every boot and force a Docker Hub pull (#234). Keep storage and
       # the pull staging dir (default /var/tmp, also tmpfs) on srv.img.
       virtualisation.containers = {
-        storage.settings.storage = {
+        storage.rootful.settings.storage = {
           driver = "overlay";
           graphroot = "/srv/containers/storage";
           runroot = "/run/containers/storage";
