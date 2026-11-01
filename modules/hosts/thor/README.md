@@ -81,7 +81,7 @@ actually read. This table is a convenience copy; if they disagree, the Nix wins.
 | Alertmanager-ntfy | 9094  |     | cAdvisor      | 9338  |
 | Grafana           | 3000  |     | Smartctl Exp. | 9633  |
 | Loki              | 3100  |     | Blackbox Exp. | 9115  |
-| Alloy             | 12345 |     |               |       |
+| Alloy             | 12345 |     | restic REST   | 8010  |
 
 ---
 
@@ -109,6 +109,9 @@ them.
 Two NVMe drives in a ZFS mirror, plus unredundant ext4 disks pooled with
 mergerfs. Layout, what lives where, the NFS/Samba exports, and what is *not*
 backed up: [storage.md](../../../docs/storage.md).
+
+Nightly restic backups of `/srv`, `/persist` and Immich, and the REST server
+odin and freyja back up to: [backup.md](../../../docs/backup.md).
 
 `zroot/root` (`/`) is wiped to a blank snapshot on every boot — impermanent by
 design, via a stage-1 initrd service. `zroot/persist` (`/persist`) and

@@ -42,6 +42,8 @@
         planner
         portainer
         prometheus
+        restic
+        restic-server
         searxng
         seerr
         vaultwarden

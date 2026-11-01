@@ -33,7 +33,7 @@ flowchart LR
 
   subgraph collect[Collection · thor]
     E["exporters<br/>node · zfs · smartctl · cAdvisor · blocky"]
-    T["textfile collector<br/>docker health"]
+    T["textfile collector<br/>docker health, restic"]
     B["blackbox-exporter<br/>HTTP probes"]
     J["journald"]
   end
@@ -79,7 +79,7 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `loki` | `127.0.0.1:3100` | `loki.nix` | log ingestion rates |
 | `alloy` | `127.0.0.1:12345` | `hosts/thor/alloy.nix` | the log shipper itself |
 | `blocky` | `127.0.0.1:4000` | `blocky.nix` | DNS queries, blocklists, cache |
-| `node-exporter` | `thor:9100` | `hosts/thor/node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile |
+| `node-exporter` | `thor:9100` | `hosts/thor/node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile (Docker health, restic) |
 | `node-exporter-mimir` | `mimir:9100` | `hosts/thor/mimir-scrape.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
 | `node-exporter-njord` | `njord:9100` | `hosts/thor/njord-scrape.nix` | the same, for njord — no hwmon; its textfile carries Docker container state (`docker-health.nix`) |
 | `zfs-exporter` | `thor:9134` | `hosts/thor/zfs-exporter.nix` | pool health, dataset usage |
@@ -164,6 +164,19 @@ are not unmonitored — thor's blackbox probes reach them through nginx, so
 *reason*: a restart loop, a failed healthcheck, or per-container resource use.
 See [Deliberate omissions](#deliberate-omissions).
 
+### Backup freshness
+
+`restic-metrics` (`modules/restic.nix`) reads every restic repo on thor hourly
+and writes `restic.prom` to the same textfile directory:
+`restic_last_snapshot_timestamp_seconds{repo}`, `restic_snapshot_count{repo}`
+and `restic_repo_readable{repo}`. It reads the repos themselves, not the jobs'
+exit codes, so the laptop repos are covered the same way as thor's own. A
+laptop repo publishes nothing until its first backup. See
+[backup.md](backup.md).
+
+The textfile directory is shared: `modules/textfile-collector.nix` owns the
+node-exporter flag, and every publisher imports it.
+
 ### Logs
 
 Alloy reads the systemd journal (12h max age) and pushes to Loki, relabelling
@@ -218,6 +231,11 @@ rules are in `modules/loki.nix`. Both fire into Alertmanager.
 | | `ContainerRestartLoop` | crit | >3 restarts in 15m |
 | | `ContainerStopped` | warn | container still exists but hasn't run for 10m — in practice a non-Nix one, see [Container health](#container-health) |
 | | `ContainerHealthCollectorStale` | warn | the health textfile is >10m old |
+| `backup-health` ([backup.md](backup.md)) | `ResticBackupStale` | warn / crit | newest snapshot in a `thor-*` repo >2d old, crit at >3d |
+| | `ResticClientBackupStale` | warn | a laptop repo's newest snapshot >7d old |
+| | `ResticRepoUnreadable` | crit | restic can't list a repo's snapshots for 2h |
+| | `ResticBackupMissing` | warn | a `thor-*` repo has published no snapshot time for 2d — its job never succeeded |
+| | `ResticMetricsStale` | warn | the restic textfile is >3h old |
 | `monitoring-health` | `MonitoringUnitDown` | crit | prometheus, alertmanager, alertmanager-ntfy, loki, grafana or alloy not active |
 | | `SystemdUnitFailed` | crit | any unit in `failed` for 5m, named |
 | | `AlertmanagerNotificationsFailing` | crit | the ntfy webhook has been erroring 5m |
@@ -284,11 +302,14 @@ signal that turns it into a notification.
 | Container deliberately removed | *nothing, by design* — the metrics leave with it |
 | Host out of memory, disk, or cooling | `host-health` group |
 | Swap creeping toward exhaustion (#218, #221) | `HostMemoryPressure`, then `HostSwapAlmostFull` |
+| Backup didn't run, or the SSD copy stopped | `ResticBackupStale`, `ResticBackupMissing`; a failed job is `SystemdUnitFailed` |
+| Laptop stopped backing up | `ResticClientBackupStale` |
+| Backup repo damaged or unreadable | `ResticRepoUnreadable`, and the nightly `restic check` failing → `SystemdUnitFailed` |
 | Drive degrading | `SmartSectorErrors` early, `SmartUnhealthy` late, `ZfsPoolNotOnline`, `ZfsKernelError` |
 | Process OOM-killed | `OomKill` |
 | Kernel panic / lockup / MCE | `KernelHardFault` |
 | DNS broken or blocking degraded | `dns-health` group — see [blocky.md](blocky.md) |
-| Alert delivery itself broken | `AlertmanagerNotificationsFailing`, `LogIngestionStopped`, `PrometheusRuleEvaluationFailures`, `ContainerHealthCollectorStale` |
+| Alert delivery itself broken | `AlertmanagerNotificationsFailing`, `LogIngestionStopped`, `PrometheusRuleEvaluationFailures`, `ContainerHealthCollectorStale`, `ResticMetricsStale` |
 | mimir or njord down, or the microvm stopped | `InstanceDown` on `node-exporter-mimir`/`node-exporter-njord` |
 | A guest's log shipping stops | `MonitoringUnitDown` on its `alloy.service` |
 | **thor down, unpowered, or off the network** | *nothing* — see [Deliberate omissions](#deliberate-omissions) |

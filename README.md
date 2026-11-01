@@ -205,6 +205,8 @@ thor also upgrades itself from `main` nightly — see
   roll back, and the nightly auto-upgrade
 - [Troubleshooting](docs/troubleshooting.md) - an alert fired, or something
   broke: what to type, by symptom
+- [Backups](docs/backup.md) - restic repos, restoring, and setting up a
+  laptop to back up to thor
 
 **How it is built**
 
