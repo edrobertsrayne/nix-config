@@ -343,6 +343,72 @@ _: {
                 annotations:
                   summary: Container health metrics stale on {{ $labels.instance }}
                   description: "docker-health-textfile last wrote {{ $value | humanizeDuration }} ago (threshold: 10m) — container health and running state are no longer being reported"
+
+          # restic metrics come from restic-metrics (modules/restic.nix), which
+          # reads every repo hourly. A failed backup, copy, prune or check unit
+          # is already SystemdUnitFailed; these catch the jobs that never ran.
+          - name: backup-health
+            rules:
+              # Nightly jobs, so 2 days means at least one missed run.
+              - alert: ResticBackupStale
+                expr: time() - restic_last_snapshot_timestamp_seconds{repo=~"thor-.*"} > 2 * 86400
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Backup stale — {{ $labels.repo }}
+                  description: "The newest snapshot in {{ $labels.repo }} is {{ $value | humanizeDuration }} old (threshold: 2d)"
+
+              - alert: ResticBackupStale
+                expr: time() - restic_last_snapshot_timestamp_seconds{repo=~"thor-.*"} > 3 * 86400
+                for: 15m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Backup stale — {{ $labels.repo }}
+                  description: "The newest snapshot in {{ $labels.repo }} is {{ $value | humanizeDuration }} old (threshold: 3d)"
+
+              # Laptops are often off or away, so a week before it nags.
+              - alert: ResticClientBackupStale
+                expr: time() - restic_last_snapshot_timestamp_seconds{repo!~"thor-.*"} > 7 * 86400
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Client backup stale — {{ $labels.repo }}
+                  description: "{{ $labels.repo }} has not backed up to thor for {{ $value | humanizeDuration }} (threshold: 7d)"
+
+              - alert: ResticRepoUnreadable
+                expr: restic_repo_readable == 0
+                for: 2h
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Backup repo unreadable — {{ $labels.repo }}
+                  description: "restic could not list snapshots in {{ $labels.repo }} for >2h — check the disk, permissions or run restic check"
+
+              # thor's repos are created by their first run, so a missing
+              # series means the jobs never ran (or the metrics lost the repo).
+              - alert: ResticBackupMissing
+                expr: |
+                  absent(restic_last_snapshot_timestamp_seconds{repo="thor-state"})
+                    or absent(restic_last_snapshot_timestamp_seconds{repo="thor-state-ssd"})
+                    or absent(restic_last_snapshot_timestamp_seconds{repo="thor-immich"})
+                for: 2d
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Backup repo has no snapshots — {{ $labels.repo }}
+                  description: "{{ $labels.repo }} has published no snapshot time for 2d — its job has never succeeded"
+
+              - alert: ResticMetricsStale
+                expr: time() - node_textfile_mtime_seconds{file=~".*/restic\\.prom"} > 3 * 3600
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Backup metrics stale on {{ $labels.instance }}
+                  description: "restic-metrics last wrote {{ $value | humanizeDuration }} ago (threshold: 3h) — backup freshness is no longer being reported"
       ''
     ];
   };
