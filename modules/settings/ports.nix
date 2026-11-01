@@ -17,6 +17,11 @@
       type = types.port;
       default = 53;
     };
+    # Backup
+    resticServer = mkOption {
+      type = types.port;
+      default = 8010;
+    };
     # Monitoring
     prometheus = mkOption {
       type = types.port;
