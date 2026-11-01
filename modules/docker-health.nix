@@ -1,6 +1,5 @@
-_: let
-  # node-exporter reads every *.prom in here; nothing else writes to it.
-  textfileDir = "/var/lib/prometheus-node-exporter-textfile";
+{inputs, ...}: let
+  inherit (inputs.self.lib) textfileDir;
 in {
   flake.modules.nixos.docker-health = {pkgs, ...}: let
     # Docker's own HEALTHCHECK verdict is the earliest signal that a container
@@ -58,15 +57,9 @@ in {
       mv "$tmp" "$out"
     '';
   in {
-    services.prometheus.exporters.node = {
-      enabledCollectors = ["textfile"];
-      extraFlags = ["--collector.textfile.directory=${textfileDir}"];
-    };
+    imports = [inputs.self.modules.nixos.textfile-collector];
 
     systemd = {
-      # World-readable: node-exporter runs as its own user and only reads.
-      tmpfiles.rules = ["d ${textfileDir} 0755 root root -"];
-
       services.docker-health-textfile = {
         description = "Publish Docker container health as node-exporter textfile metrics";
         after = ["docker.service"];
