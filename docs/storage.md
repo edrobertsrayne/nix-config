@@ -179,13 +179,15 @@ the difference from plain ext4 is only that a second disk's files would survive.
 | `/srv/<service>` (thor) | Service state and databases — Jellyfin, Grafana, Loki, Paperless, Bar Assistant, Janitarr | zroot | **yes** |
 | `/srv/docker` (thor) | Docker images, volumes, container state | zroot | **yes** |
 | `/var/lib/libvirt` | VM disk images (Home Assistant) | zroot | **yes** |
-| `/var/lib/microvms` | mimir's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/persist` (#203) | zroot | **yes** |
+| `/var/lib/microvms` | mimir's and njord's disk images, including its own `/srv` (the \*arr apps, Transmission, Sabnzbd, Soularr) and `/persist` (#203) | zroot | **yes** |
 | `/persist` | Per-aspect service/identity state, bind-mounted back to its usual path | zroot | **yes** |
 | `/mnt/ssd/immich` | **Photos and videos** | SSD | no |
 | `/mnt/ssd/music` | Music library | SSD | no |
 | `/mnt/ssd/downloads` | In-progress and completed downloads (usenet, transmission, slskd) — physically on thor's SSD, virtiofs-shared into mimir | SSD | no |
 | `/mnt/storage/media` | Films and TV — the Jellyfin library — physically on thor, virtiofs-shared into mimir (read-write, for \*arr import) | mergerfs | no |
-| `/mnt/storage/backup` | Where *other* machines put their backups | mergerfs | no |
+| `/mnt/storage/backup` | NFS drop-off share for other machines | mergerfs | no |
+| `/mnt/storage/restic` | restic repos: thor-state, thor-immich, and the laptops under `clients/` ([backup.md](backup.md)) | mergerfs | no |
+| `/mnt/ssd/restic` | restic repo: thor-state-ssd, the second copy of thor-state | SSD | no |
 
 Downloads land on the SSD and are moved to `/mnt/storage/media` by the \*arr
 apps, which is why the SSD needs headroom even though the library lives
@@ -292,39 +294,46 @@ zpool status        # `scan:` shows the last scrub's result
 verifies their contents, and silent corruption there is invisible until you open
 the file.
 
+## What is backed up
+
+[backup.md](backup.md) has the detail. In short: restic backs up `/srv`,
+`/persist` and a Postgres dump nightly to the HDD pool, with a second copy on
+the SSD. The Immich library is backed up to the HDD pool. odin and freyja back
+up to thor's REST server, also on the HDD pool.
+
 ## What is not backed up
 
 Modelled on [monitoring.md](monitoring.md#deliberate-omissions) — this is the
 honest statement of what is not protected, not a to-do list.
 
-**There is no backup of thor.** Nothing copies thor's data anywhere else — not
-to another machine, not to another disk, not off-site. `/mnt/storage/backup` is
-a *destination* for other computers; nothing writes thor's own data into it.
+**Nothing is off-site.** Every backup is on thor. A fire, a theft, or a power
+surge that kills every disk loses the data and the backups together. The
+off-site copy is the open half of #169.
 
 **Snapshots are not backups.** They live on the same pool as the data they
 protect. They defend against deletion, corruption by an application, and bad
 config — all common. They do nothing about a fire, a theft, both NVMe drives
 failing, or a filesystem-level disaster.
 
-**Most of the bulk data has neither.** Snapshots cover `/srv`, `/var/lib/libvirt`,
-and `/persist` only. Everything on the SSD and on mergerfs — photos, music,
-media, and the backup share itself — has no snapshots and no redundancy.
+**Some data is deliberately left out of restic.** Music, media, downloads,
+`/home`, and the VM images (`/var/lib/libvirt`, `/var/lib/microvms`) have no
+restic backup. Of those, only `/home` and the VM images have snapshots.
 
 What each loss would actually cost:
 
 | Data | If its disk dies | Recoverable? |
 |---|---|---|
-| **`/mnt/ssd/immich` — photos** | Gone | **No. Irreplaceable.** |
+| `/mnt/ssd/immich` — photos | Gone from the SSD | Yes, from `thor-immich` on the HDD pool |
+| `/srv/*`, `/persist` state | Gone with both NVMe drives | Yes, from `thor-state` (HDD) or `thor-state-ssd` (SSD) |
 | `/mnt/ssd/music` | Gone | Only from original media or by re-acquiring |
 | `/mnt/storage/media` | Gone | Yes, tediously — the \*arr apps can re-download |
 | `/mnt/ssd/downloads` | Gone | Yes, it is transient by nature |
-| `/srv/*` service state | Rolled back to a snapshot, if the pool survives | Config comes from this repo; history does not |
-| `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot | Same |
-| `/var/lib/microvms` — mimir (the download stack, #203) | Rolled back to a snapshot, if the pool survives | Same. This is thor's pool, so a thor disk failure also takes down mimir's state |
-| `/persist` per-aspect state | Rolled back to a snapshot, if the pool survives | Same |
-| `/home` — user files | Rolled back to a snapshot, if the pool survives | Same |
+| `/var/lib/libvirt` — Home Assistant | Rolled back to a snapshot, if the pool survives | Not if the pool is lost |
+| `/var/lib/microvms` — mimir and njord | Rolled back to a snapshot, if the pool survives | Not if the pool is lost. The guests' config comes from this repo |
+| `/home` — user files | Rolled back to a snapshot, if the pool survives | Not if the pool is lost |
 | `/` | Wiped to blank on every boot, by design | N/A — nothing there is meant to persist |
 | `/nix` | Rebuilt by `nixos-rebuild` from this repo | Yes, completely |
 
-The single-sentence summary: **an SSD failure loses the photo library
-permanently.** That is the gap worth closing first if backups are ever added.
+The HDD pool (`/mnt/storage`) holds a backup of everything that has one. If
+the HDD dies, the photo library and the laptops are each down to one copy until
+the next nightly run on a new disk.
