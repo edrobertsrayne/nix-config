@@ -32,32 +32,34 @@ _: {
                   summary: Memory critically low on {{ $labels.instance }}
                   description: "Only {{ $value | humanizePercentage }} memory available"
 
+              # 15%, not 20%: thor's steady state includes long stretches at
+              # 15-20% that are reclaimable cache, and at 20% this was firing
+              # most of the time (#224).
               - alert: HostMemoryHighUsage
-                expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.20
-                for: 15m
+                expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.15
+                for: 10m
                 labels:
                   severity: warning
                 annotations:
                   summary: Memory usage high on {{ $labels.instance }}
                   description: "Only {{ $value | humanizePercentage }} memory available"
 
-              # thor has two swap tiers: zram (25% of RAM, held compressed in
-              # RAM) then a 16 GiB file on /mnt/ssd — see thor.nix. Any swap
-              # in use beyond zram's ~7.75 GiB capacity means the disk tier
-              # has been touched, i.e. genuine pressure rather than routine
-              # compression of cold pages. node_exporter reports only the
-              # aggregate, hence the absolute threshold. The SwapTotal guard
-              # keeps this from evaluating on the guests, which have no swap.
-              - alert: HostSwapSpilledToDisk
-                expr: >
-                  node_memory_SwapTotal_bytes > 0
-                  and (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) > 8589934592
-                for: 30m
+              # Measures stalls, not occupancy. Swap *used* is a poor signal:
+              # cold pages get parked on thor's /mnt/ssd tier and sit there for
+              # days without being touched, so a used-bytes threshold (the old
+              # HostSwapSpilledToDisk, >8 GiB) fired almost continuously. PSI
+              # "some" is the share of wall time at least one task waited on
+              # memory (reclaim, swap-in), whichever tier the page is in. Over
+              # 30 days baseline peaked ~2.5%; the one real episode (2026-10-05
+              # 04:17, swap at 19.7 GiB) is the only time the 15m rate crossed 3%.
+              - alert: HostMemoryPressure
+                expr: rate(node_pressure_memory_waiting_seconds_total[15m]) > 0.03
+                for: 10m
                 labels:
                   severity: warning
                 annotations:
-                  summary: Swap spilled past zram on {{ $labels.instance }}
-                  description: "{{ $value | humanize1024 }}B of swap in use — past zram capacity, now hitting /mnt/ssd"
+                  summary: Memory pressure stalling tasks on {{ $labels.instance }}
+                  description: "Tasks stalled on memory {{ $value | humanizePercentage }} of the time over 15m — reclaim/swap-in is costing real time"
 
               # The backstop is itself nearly gone. Below this there is only
               # the OOM killer — this is the alert that should have preceded

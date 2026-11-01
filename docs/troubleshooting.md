@@ -40,8 +40,8 @@ is what it means in plain terms and where to start.
 | `ContainerRestartLoop` | More than 3 restarts in 15 minutes. | `docker logs <name>` |
 | `HostFilesystemAlmostFull` / `HostFilesystemFillingUp` | A filesystem is below 10% / 20% free. | [Out of disk space](#out-of-disk-space) |
 | `MergerfsLowFreeSpace` | `/mnt/storage` has under 100 GiB left. Downloads will start failing before it hits zero. | [Out of disk space](#out-of-disk-space) |
-| `HostMemoryAlmostFull` / `HostMemoryHighUsage` | Under 10% / 20% RAM available. Something is about to be OOM-killed. | `btop`, then restart the offender |
-| `HostSwapSpilledToDisk` | Swap use has passed zram's own capacity onto the `/mnt/ssd/swapfile` tier — real, sustained memory pressure, not routine compression. | `arcstats` (ARC size), `systemctl show microvm@<vm>.service -p MemoryCurrent,MemorySwapCurrent` |
+| `HostMemoryAlmostFull` / `HostMemoryHighUsage` | Under 10% / 15% RAM available. Something is about to be OOM-killed. | `btop`, then restart the offender |
+| `HostMemoryPressure` | Tasks spent over 3% of the last 15m stalled waiting on memory (PSI) — reclaim or swap-in is costing real time, not just parking cold pages. | `arcstats` (ARC size), `systemctl show microvm@<vm>.service -p MemoryCurrent,MemorySwapCurrent` |
 | `HostSwapAlmostFull` | Over 85% of all swap (zram + disk) in use. The next large allocation OOMs — this is the alert that preceded #218. | Same first checks as above, then consider trimming a guest's `mem` (`modules/hosts/*/[host].nix`) |
 | `OomKill` | The kernel already killed something to reclaim memory. | `journalctl -b -g 'Out of memory'` |
 | `SystemdCoredump` | A process crashed hard enough to dump core. | `coredumpctl list` |

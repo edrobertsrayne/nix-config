@@ -197,8 +197,8 @@ rules are in `modules/loki.nix`. Both fire into Alertmanager.
 | `host-health` | `HostHighCpuTemperature` | crit | CPU >80°C for 5m |
 | | `HostHighCpuTemperatureWarn` | warn | CPU >72°C for 10m |
 | | `HostMemoryAlmostFull` | crit | <10% available for 10m |
-| | `HostMemoryHighUsage` | warn | <20% available for 15m |
-| | `HostSwapSpilledToDisk` | warn | swap used >8 GiB for 30m — past zram's own capacity, onto `/mnt/ssd` |
+| | `HostMemoryHighUsage` | warn | <15% available for 10m |
+| | `HostMemoryPressure` | warn | memory PSI "some" >3% over 15m, for 10m — tasks stalling, not just swap occupied |
 | | `HostSwapAlmostFull` | crit | >85% of all swap (zram + disk) used for 10m |
 | | `HostFilesystemAlmostFull` | crit | <10% free for 10m |
 | | `HostFilesystemFillingUp` | warn | <20% free for 30m |
@@ -283,7 +283,7 @@ signal that turns it into a notification.
 | Container stopped and forgotten | `ContainerStopped` |
 | Container deliberately removed | *nothing, by design* — the metrics leave with it |
 | Host out of memory, disk, or cooling | `host-health` group |
-| Swap creeping toward exhaustion (#218, #221) | `HostSwapSpilledToDisk`, then `HostSwapAlmostFull` |
+| Swap creeping toward exhaustion (#218, #221) | `HostMemoryPressure`, then `HostSwapAlmostFull` |
 | Drive degrading | `SmartSectorErrors` early, `SmartUnhealthy` late, `ZfsPoolNotOnline`, `ZfsKernelError` |
 | Process OOM-killed | `OomKill` |
 | Kernel panic / lockup / MCE | `KernelHardFault` |

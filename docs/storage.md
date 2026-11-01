@@ -38,8 +38,10 @@ holes). `/mnt/ssd` is the only writable non-ZFS filesystem on thor, so the
 swapfile lives there instead, sharing a spindle with `/mnt/ssd/downloads`. On
 an SSD, with swap-out expected to be rare (see the memory budget below and
 #221), that contention is the accepted trade against an OOM.
-`HostSwapSpilledToDisk`/`HostSwapAlmostFull` (`modules/alert-rules.nix`) watch
-both tiers combined — see [monitoring.md](monitoring.md#metric-alerts).
+Cold pages parked on the disk tier are expected and not alerted on.
+`HostMemoryPressure` (stall time, either tier) and `HostSwapAlmostFull` (both
+tiers combined) in `modules/alert-rules.nix` watch for real pressure — see
+[monitoring.md](monitoring.md#metric-alerts).
 
 ### Memory budget
 
