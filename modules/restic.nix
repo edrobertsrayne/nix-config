@@ -158,6 +158,19 @@ in {
               ${systemctl} start postgresqlBackup.service
               ${destroySnaps}
               ${zfs} snapshot ${lib.concatMapStringsSep " " (ds: "${ds}@${snapName}") datasets}
+
+              # .zfs/snapshot/<name> is an automount. On the first run restic
+              # read /persist's before it had mounted and saved an empty
+              # directory with no warning, so mount both here and refuse to
+              # back up an empty one.
+              for dir in ${srvSnap} ${persistSnap}; do
+                for _ in 1 2 3 4 5; do
+                  [ -n "$(${pkgs.coreutils}/bin/ls -A "$dir/" 2>/dev/null)" ] && continue 2
+                  sleep 1
+                done
+                echo "$dir is empty after 5s, the snapshot did not mount" >&2
+                exit 1
+              done
             '';
             backupCleanupCommand = ''
               #!${pkgs.runtimeShell}

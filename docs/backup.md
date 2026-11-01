@@ -122,11 +122,25 @@ day.
 
 ### Test restore (monthly)
 
-1. Restore `vaultwarden/db.sqlite3` from thor-state to `/tmp/restore`.
+1. Restore `/persist/.zfs/snapshot/restic/var/lib/vaultwarden` from thor-state
+   to `/tmp/restore`.
 2. Run `sqlite3 <file> 'PRAGMA integrity_check'`. The result must be `ok`.
 3. Restore one Immich original and `cmp` it with the file in `/mnt/ssd/immich`.
-4. Run `sudo restic-thor-state-ssd snapshots`. It must show the same newest
-   snapshot as `thor-state`.
+4. Check that the SSD copy is current. `restic copy` gives each copied
+   snapshot a new ID and records the source ID as `original`:
+
+   ```sh
+   sudo restic-thor-state snapshots --latest 1 --json | jq -r '.[].short_id'
+   sudo restic-thor-state-ssd snapshots --latest 1 --json | jq -r '.[].original[0:8]'
+   ```
+
+   The two IDs must match.
+5. Check that both datasets made it in. Each count must be well above zero:
+
+   ```sh
+   sudo restic-thor-state ls latest | grep -c '^/persist/'
+   sudo restic-thor-state ls latest | grep -c '^/srv/'
+   ```
 
 ## Laptop backups (odin, freyja)
 
