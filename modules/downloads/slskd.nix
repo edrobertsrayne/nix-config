@@ -49,12 +49,29 @@ in {
       };
     };
 
-    systemd.services.${service}.serviceConfig = {
-      UMask = lib.mkForce "0002";
-      # shares.directories == directories.downloads here (downloads-only sharing),
-      # so drop the auto-derived ReadOnlyPaths that would otherwise conflict
-      # with ReadWritePaths for the same directory.
-      ReadOnlyPaths = lib.mkForce [];
+    systemd.services.${service} = {
+      # .NET 10.0.14 moved named mutexes out of /tmp/.dotnet: it uses
+      # $XDG_RUNTIME_DIR/.dotnet, or $HOME/.dotnet when that is unset. A system
+      # unit has no XDG_RUNTIME_DIR and the slskd user's home is /var/empty, so
+      # slskd cannot take its singleton mutex and exits at startup (#245).
+      environment.XDG_RUNTIME_DIR = "/run/${service}";
+
+      serviceConfig = {
+        RuntimeDirectory = service;
+        RuntimeDirectoryMode = "0700";
+        # slskd exits with status 0 when it cannot start, and on-failure does
+        # not retry that. With always, a repeat of #245 keeps retrying and trips
+        # SystemdUnitRestartLooping (modules/alert-rules.nix) as well as
+        # ProbeFailed. The delay keeps it clear of the start rate limit, which
+        # would stop the retries.
+        Restart = lib.mkForce "always";
+        RestartSec = "30s";
+        UMask = lib.mkForce "0002";
+        # shares.directories == directories.downloads here (downloads-only sharing),
+        # so drop the auto-derived ReadOnlyPaths that would otherwise conflict
+        # with ReadWritePaths for the same directory.
+        ReadOnlyPaths = lib.mkForce [];
+      };
     };
 
     environment.persistence."/persist".directories = ["/var/lib/slskd"];
