@@ -158,25 +158,32 @@ exits 255, and restart policy `always` does not retry. cloudflared then
 returns 502 for every njord subdomain (#223).
 
 - **`dokploy-traefik-watchdog`** (`modules/hosts/njord/traefik-watchdog.nix`)
-  runs every minute and `docker start`s the container if it exists and is
-  stopped. It does not recreate a missing one — that needs Dokploy's own run
-  args.
-- **A stopped container is also at risk of removal.** Once it sat stopped
-  long enough, a Docker prune (most likely Dokploy's scheduled cleanup)
-  deleted the container and its image, and the sites stayed down from
-  2026-10-06 until noticed on 2026-10-18. The watchdog keeps it from sitting
-  stopped.
+  runs every minute and `docker start`s the container if it is stopped. If the
+  start fails, it removes the container and recreates it from the same image.
+  If the container is missing, it creates one from the image tag pinned in the
+  watchdog. Recreating uses `install.sh`'s run args, so any custom ports added
+  in Dokploy's UI are lost. To keep Traefik down on purpose, first run
+  `systemctl stop dokploy-traefik-watchdog.timer`.
+- **A start can fail every time.** After the VM restart on 2026-11-01, every
+  start failed with `could not allocate IP from IPAM: Address already in use`
+  on `dokploy-network`, most likely because a Swarm task took the container's
+  old address. Retrying did not help, but a new container gets a new address.
+- **A stopped container is also at risk of removal.** Dokploy's scheduled
+  Docker cleanup deletes a stopped container and its image. This took the
+  sites down from 2026-10-06 until noticed on 2026-10-18, and again on
+  2026-11-01 at 23:50 UTC, after the failed starts above.
 - **Alerts:** thor's blackbox probes of `admin.` and `slicer.robertsrayne.uk`
   (`modules/hosts/thor/njord-probes.nix`) fire `ProbeFailed` through the whole
   tunnel path, including when the container is missing. `ContainerStopped`
   covers a stopped plain container via the shared docker-health collector;
   Swarm task containers are excluded from it.
 
-**Recovery if it is missing:** Dokploy's Settings > Web Server > Reload
-Traefik only restarts an existing container and fails on a missing one
-(`reloadTraefik background: Error: Resource type not found`). Recreate it with
-the same arguments as Dokploy's `install.sh` (check the image tag there). Its
-config in `/etc/dokploy/traefik` survives:
+**Manual recovery if the watchdog can't bring it back:** check
+`journalctl -u dokploy-traefik-watchdog` on njord first. Dokploy's Settings >
+Web Server > Reload Traefik only restarts an existing container and fails on a
+missing one (`reloadTraefik background: Error: Resource type not found`).
+Recreate it with the same arguments as Dokploy's `install.sh` (check the image
+tag there). Its config in `/etc/dokploy/traefik` survives:
 
 ```sh
 ssh 192.168.68.130 'sudo docker run -d \
