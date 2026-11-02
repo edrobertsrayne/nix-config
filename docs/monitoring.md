@@ -248,7 +248,7 @@ Evaluated by Loki's ruler every 1m over the journal.
 
 | Alert | Sev | Fires when |
 |---|---|---|
-| `SystemdUnitCrashLooping` | crit | >2 "failed with result"/non-zero exits in 5m — catches `Restart=always` units that never settle into `failed` |
+| `SystemdUnitCrashLooping` | crit | a unit logged "Failed with result" >2 times in 1h — catches units restarted by `Restart=` or a timer that never settle into `failed`. Takes up to 1h to clear after a fix. Three guest power-cycles in 1h also trip it for units that exit non-zero on SIGTERM (`keyd`, `podman-soularr`) |
 | `OomKill` | crit | the OOM killer ran |
 | `ZfsKernelError` | crit | ZFS logged an error, degradation, fault or corruption |
 | `KernelHardFault` | crit | kernel panic, hard lockup or machine check exception |

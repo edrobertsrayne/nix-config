@@ -34,7 +34,7 @@ is what it means in plain terms and where to start.
 | `ProbeFailed` | A service stopped answering HTTP. The process may still be running — this is the alert that catches "up but broken". | [A service is unreachable](#a-service-is-unreachable) |
 | `ProbeSlow` | It answers, but takes >5s. Usually load or a slow database, rarely urgent. | `systemctl status <unit>`, then its logs |
 | `SystemdUnitFailed` | A unit died and systemd stopped retrying. The alert names the unit. | `systemctl status <unit>` |
-| `SystemdUnitCrashLooping` | A unit keeps dying and restarting, so it never reaches `failed`. Nothing looks wrong in `systemctl --failed`. | `journalctl -u <unit> -e` |
+| `SystemdUnitCrashLooping` | A unit failed 3+ times in the last hour, because `Restart=` or a timer keeps starting it. It may never reach `failed`, so `systemctl --failed` can look clean. The alert names the unit, and stays up for up to 1h after a fix. | `journalctl -u <unit> -e` |
 | `ContainerUnhealthy` | A container's own healthcheck is failing while the container stays up. | [Containers](#containers) |
 | `ContainerStopped` | A container exists but hasn't run for 10 minutes. In practice this means one started outside Nix, via Portainer. | [Containers](#containers) |
 | `ContainerRestartLoop` | More than 3 restarts in 15 minutes. | `docker logs <name>` |
