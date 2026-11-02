@@ -161,6 +161,16 @@ state, and SSH always works there. If `grafana.greensroad.uk` is dead but
 download-stack services are the exception. They are at `mimir:<port>`, not
 `thor:<port>`, because #203 moved them off thor.
 
+### A .NET service exits at startup with a mutex error
+
+The journal shows `I/O exception attempting to acquire the application
+singleton mutex`, and the exit status is 0. .NET 10.0.14 and later keep named
+mutexes in `$XDG_RUNTIME_DIR/.dotnet`, or in `$HOME/.dotnet` when that variable
+is not set. A system unit has no `XDG_RUNTIME_DIR`, and NixOS service users often
+have `/var/empty` as their home, so .NET cannot create the mutex. To fix it, give
+the unit a `RuntimeDirectory` and set `XDG_RUNTIME_DIR` to that path. See
+`modules/downloads/slskd.nix` (#245).
+
 ## DNS is broken everywhere
 
 thor is the whole house's DNS server, so a Blocky failure looks like "the
