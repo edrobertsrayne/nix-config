@@ -7,18 +7,24 @@ in {
         - name: log-alerts
           interval: 1m
           rules:
+            # Counts per unit, not per host: a shutdown stops every unit once,
+            # so one guest restart logs one failure each for units that exit
+            # non-zero on SIGTERM (#243). Only "Failed with result" is counted,
+            # as it covers every failure type and is logged once per failure.
+            # The 1h window catches slow loops: acme-order-renew retried every
+            # 15m for 8 days without tripping a 5m window.
             - alert: SystemdUnitCrashLooping
               expr: |
-                sum by (host) (
+                sum by (host, name) (
                   count_over_time(
-                    {job="systemd-journal", unit="init.scope"} |~ "(?i)failed with result|main process exited, code=exited, status=[^0]" [5m]
+                    {job="systemd-journal", unit="init.scope"} |= "Failed with result" | regexp `^(?P<name>\S+): Failed with result` [1h]
                   )
                 ) > 2
               labels:
                 severity: critical
               annotations:
                 summary: Systemd unit crash-looping on {{ $labels.host }}
-                description: "A unit has failed repeatedly in the last 5m without settling into a failed state (Restart=always) — check journalctl for details"
+                description: "{{ $labels.name }} has failed {{ $value }} times in the last 1h, restarted by Restart= or a timer so it may never settle into a failed state — check journalctl -u {{ $labels.name }}"
 
             - alert: OomKill
               expr: |
