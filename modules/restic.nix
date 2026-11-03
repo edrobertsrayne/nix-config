@@ -114,7 +114,7 @@ in {
           runCheck = true;
           checkOpts = ["--read-data-subset=5%"];
           timerConfig = {
-            OnCalendar = "03:00";
+            OnCalendar = "01:00";
             RandomizedDelaySec = "30m";
             Persistent = true;
           };
@@ -165,10 +165,13 @@ in {
               # back up an empty one.
               for dir in ${srvSnap} ${persistSnap}; do
                 for _ in 1 2 3 4 5; do
-                  [ -n "$(${pkgs.coreutils}/bin/ls -A "$dir/" 2>/dev/null)" ] && continue 2
+                  listing=$(${pkgs.coreutils}/bin/ls -A "$dir/" 2>&1) && [ -n "$listing" ] && continue 2
                   sleep 1
                 done
                 echo "$dir is empty after 5s, the snapshot did not mount" >&2
+                echo "last ls output: ''${listing:-<no output, ls succeeded>}" >&2
+                echo "snapshot mounts in this namespace:" >&2
+                ${pkgs.gnugrep}/bin/grep -F .zfs/snapshot /proc/self/mountinfo >&2 || true
                 exit 1
               done
             '';
