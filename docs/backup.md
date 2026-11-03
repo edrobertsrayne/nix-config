@@ -42,8 +42,8 @@ the originals. Immich's own nightly database dumps in `backups/` are included.
 
 | Time | Job |
 |---|---|
-| 03:00 (+ up to 30 min) | `restic-backups-thor-state`, then `restic-backups-thor-state-ssd` on success |
-| 03:00 (+ up to 30 min) | `restic-backups-thor-immich` |
+| 01:00 (+ up to 30 min) | `restic-backups-thor-state`, then `restic-backups-thor-state-ssd` on success |
+| 01:00 (+ up to 30 min) | `restic-backups-thor-immich` |
 | 05:00 (+ up to 30 min) | `restic-backups-clients-{odin,freyja}`: prune only |
 | hourly | `restic-metrics` |
 
