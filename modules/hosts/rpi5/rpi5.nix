@@ -35,7 +35,7 @@ in {
           # module build for nothing.
           boot.supportedFilesystems.zfs = lib.mkForce false;
 
-          environment.systemPackages = with pkgs; [wget curl vim tree htop devenv];
+          environment.systemPackages = with pkgs; [wget curl vim tree htop devenv herdr-core];
 
           users.users = {
             ed = {
