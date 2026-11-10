@@ -163,8 +163,17 @@ in {
               # read /persist's before it had mounted and saved an empty
               # directory with no warning, so mount both here and refuse to
               # back up an empty one.
+              #
+              # Trigger each automount from PID 1's mount namespace (#250).
+              # ZFS builds the mount path from the dataset's recorded
+              # mountpoint, and only refreshes that record when the caller
+              # shares init's root. This unit has its own namespace
+              # (PrivateTmp), so after a reboot it got /persist's stage-1
+              # path, /sysroot/persist, and the mount failed silently into an
+              # empty directory. The host-side mount propagates in here.
               for dir in ${srvSnap} ${persistSnap}; do
                 for _ in 1 2 3 4 5; do
+                  ${pkgs.util-linux}/bin/nsenter -t 1 -m -- ${pkgs.coreutils}/bin/ls -A "$dir/" >/dev/null 2>&1 || true
                   listing=$(${pkgs.coreutils}/bin/ls -A "$dir/" 2>&1) && [ -n "$listing" ] && continue 2
                   sleep 1
                 done

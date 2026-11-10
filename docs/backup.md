@@ -60,6 +60,14 @@ The prepare step does these things, in this sequence:
 3. It backs up from `/srv/.zfs/snapshot/restic` and
    `/persist/.zfs/snapshot/restic`.
 
+The `.zfs/snapshot` directories are automounts. The prepare step triggers them
+from PID 1's mount namespace with `nsenter -t 1 -m`. If a process in a private
+mount namespace (this unit has `PrivateTmp`) triggers the mount, ZFS uses the
+mountpoint it recorded when the dataset was mounted. For `/persist`, that is the
+stage-1 path, `/sysroot/persist`. The mount then fails and the directory shows
+as empty. The failure is in `/proc/spl/kstat/zfs/dbgmsg` as `Unable to
+automount`. See #250.
+
 The cleanup step destroys the `@restic` snapshots, also after a failure. Every
 file comes from the same instant, so the SQLite databases (vaultwarden, ntfy,
 uptime-kuma, the \*arr apps) are crash-consistent.
