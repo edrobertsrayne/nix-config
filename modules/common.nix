@@ -20,6 +20,7 @@
       tree
       htop
       devenv
+      herdr-core
     ];
   };
 }
