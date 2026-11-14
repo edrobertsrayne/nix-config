@@ -1,6 +1,6 @@
 {inputs, ...}: {
   flake.modules.homeManager.neovim = {...}: {
-    imports = [inputs.nvf.homeManagerModules.default];
+    imports = [inputs.nvf.homeModules.default];
 
     home.shellAliases = {
       n = "nvim";
