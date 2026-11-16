@@ -111,7 +111,7 @@ ssh 192.168.68.130
 # Tailscale needs interactive auth on first boot, same as mimir.
 sudo tailscale up
 
-# Docker is already installed and configured by NixOS (common.nix), so the
+# Docker is already installed and configured by NixOS (the `docker` aspect, `modules/docker.nix`), so the
 # installer's own Docker install is skipped. ADVERTISE_ADDR is passed
 # explicitly — otherwise the script tries to guess a public IP by calling out
 # to ifconfig.io/icanhazip.com, which is pointless on a LAN-only box.

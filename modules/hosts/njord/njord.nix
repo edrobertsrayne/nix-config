@@ -10,6 +10,7 @@
     in {
       imports = [
         inputs.microvm.nixosModules.microvm
+        inputs.self.modules.nixos.docker
         inputs.self.modules.nixos.persistence
         inputs.self.modules.nixos.microvm-guest
       ];

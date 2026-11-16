@@ -20,10 +20,13 @@
         alertmanager
         alertmanager-ntfy
         auto-upgrade
+        avahi
         bar-assistant
         bentopdf
         blocky
+        capslock
         dlna
+        docker
         downloads-proxy
         grafana
         home-manager

@@ -172,8 +172,6 @@
         };
       };
 
-      virtualisation.docker.daemon.settings.data-root = "/srv/docker";
-
       # Root is tmpfs, so podman's default graphroot would lose the image
       # cache every boot and force a Docker Hub pull (#234). Keep storage and
       # the pull staging dir (default /var/tmp, also tmpfs) on srv.img.
