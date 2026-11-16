@@ -6,6 +6,7 @@
 
     modules.nixos.njord = {pkgs, ...}: let
       ipAddress = inputs.self.settings.hosts.njord.address;
+      inherit (inputs.self.settings) network;
       mac = "02:00:00:00:00:11";
     in {
       imports = [
@@ -100,8 +101,8 @@
             MACAddress = mac;
           };
           networkConfig = {
-            Address = ["${ipAddress}/22"];
-            Gateway = "192.168.68.1";
+            Address = ["${ipAddress}/${toString network.prefixLength}"];
+            Gateway = network.gateway;
             DHCP = "no";
           };
         };

@@ -8,7 +8,8 @@
 
       # nginx's proxyPass to mimir now resolves over tailscale0
       # (mimir.tailnetName below), so requests mimir sees from thor arrive on
-      # this address, not thor.address. Already hardcoded in modules/blocky.nix.
+      # this address, not thor.address. Also what blocky's split-horizon
+      # mapping for the domain answers with (modules/blocky.nix).
       tailnetAddress = mkOption {
         type = types.str;
         default = "100.84.196.40";

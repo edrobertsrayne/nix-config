@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) ports;
+  inherit (inputs.self.settings) ports hosts server;
 in {
   flake.modules.nixos.blocky = {
     config,
@@ -52,7 +52,7 @@ in {
           };
           # Resolves *.greensroad.uk straight to thor for tailnet clients -
           # see docs/blocky.md#split-horizon-greensroaduk.
-          customDNS.mapping."greensroad.uk" = "100.84.196.40";
+          customDNS.mapping.${server.domain} = hosts.thor.tailnetAddress;
           queryLog = {
             type = "postgresql";
             target = "postgres://blocky@/blocky?host=/run/postgresql&sslmode=disable";
