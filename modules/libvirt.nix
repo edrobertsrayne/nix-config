@@ -18,12 +18,10 @@ in {
       virt-manager
     ];
 
-    networking.firewall.allowedTCPPortRanges = [
-      {
-        from = 5900;
-        to = 5999;
-      }
-    ]; # allow SPICE default and additional ports
+    # No firewall opening for SPICE/VNC (5900+): tailscale0 is a trusted
+    # interface (modules/tailscale.nix), so consoles are reachable from the
+    # tailnet. The LAN bridge must not reach them - a guest console listening
+    # on 0.0.0.0 would otherwise be open to every device on br0.
 
     # VM images live on their own zroot/libvirt dataset (disko.nix), already
     # survives a wipe — do not persist /var/lib/libvirt here, it would bind
