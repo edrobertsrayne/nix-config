@@ -82,6 +82,9 @@
         kernelModules = ["it87"];
         extraModprobeConfig = "options it87 ignore_resource_conflict=1";
       };
+      # CPU package temperature; the guests have no thermal zones.
+      services.prometheus.exporters.node.enabledCollectors = ["thermal_zone"];
+
       zramSwap = {
         enable = true;
         memoryPercent = 25;

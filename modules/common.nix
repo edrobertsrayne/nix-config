@@ -4,9 +4,11 @@
     # has no use for (docker, avahi, capslock, home-manager, nix-gc,
     # auto-upgrade) is imported by the hosts that want it instead.
     imports = with inputs.self.modules.nixos; [
+      alloy
       locale
       networking
       nix
+      node-exporter
       server
       ssh
       tailscale

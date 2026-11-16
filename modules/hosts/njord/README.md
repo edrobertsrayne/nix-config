@@ -73,9 +73,9 @@ would be wiped at the next boot regardless — these guest-local units were
 pure redundant noise.
 
 njord is monitored the same way mimir is: its own node-exporter and Alloy feed
-thor's Prometheus and Loki (`modules/hosts/njord/node-exporter.nix`,
-`modules/hosts/njord/alloy.nix`, scraped by
-`modules/hosts/thor/njord-scrape.nix`). See [monitoring.md](../../../docs/monitoring.md).
+thor's Prometheus and Loki (the shared `node-exporter` and `alloy` aspects,
+`modules/node-exporter.nix` and `modules/alloy.nix`; thor's scrape job is
+generated from `settings.hosts`). See [monitoring.md](../../../docs/monitoring.md).
 
 ## Storage
 
