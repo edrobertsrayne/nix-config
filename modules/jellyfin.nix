@@ -49,12 +49,8 @@ in {
       pkgs.jellyfin-ffmpeg
     ];
 
-    nixpkgs.config.packageOverrides = pkgs: {
-      vaapiIntel = pkgs.vaapiIntel.override {enableHybridCodec = true;};
-    };
-
     # Enable intro skipper plugin
-    nixpkgs.overlays = with pkgs; [
+    nixpkgs.overlays = [
       (
         _final: prev: {
           jellyfin-web = prev.jellyfin-web.overrideAttrs (_finalAttrs: _previousAttrs: {
