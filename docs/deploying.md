@@ -37,8 +37,8 @@ Both guests' read-only `/nix/store` share and their lack of a `nix-daemon`
 mean the usual per-host paths still do not work for them —
 `nixos-rebuild switch --flake .#mimir` (or `.#njord`) on the guest itself and
 `--target-host` from thor both fail — but no separate deploy step is needed.
-The same constraint is why the guests opt out of `nix.gc.automatic`,
-`system.autoUpgrade.enable`, and Home Manager (`modules/microvm-guest.nix`):
+The same constraint is why the guests do not import the `nix-gc`,
+`auto-upgrade` and `home-manager` aspects (see `modules/microvm-guest.nix`):
 each assumes a writable store or a `nix-daemon` to plant GC roots, and neither
 exists on a guest (#219, #211). See
 [`modules/hosts/mimir/README.md`](../modules/hosts/mimir/README.md#deploying-config-changes)
@@ -132,7 +132,7 @@ not roll back data — see [storage.md](storage.md) for what does.
 
 ## The nightly upgrade
 
-thor upgrades itself. `modules/nix.nix` sets:
+thor upgrades itself. `modules/auto-upgrade.nix` sets:
 
 ```nix
 system.autoUpgrade = {
@@ -163,7 +163,7 @@ automatically:
 
 | Mechanism | Schedule | What |
 |---|---|---|
-| `nix.gc` (`modules/nix.nix`) | weekly | Deletes generations older than 7 days |
+| `nix.gc` (`modules/nix-gc.nix`) | weekly | Deletes generations older than 7 days |
 | `nix.optimise` | automatic | Hard-links identical files in the store |
 | `nh clean` (`modules/utilities/nh.nix`) | daily | Keeps 3 generations / 5 days |
 

@@ -19,12 +19,14 @@
 
         alertmanager
         alertmanager-ntfy
+        auto-upgrade
         bar-assistant
         bentopdf
         blocky
         dlna
         downloads-proxy
         grafana
+        home-manager
         homepage
         immich
         janitarr
@@ -35,6 +37,7 @@
         n8n
         navidrome
         nginx
+        nix-gc
         ntfy
         paperless
         persistence

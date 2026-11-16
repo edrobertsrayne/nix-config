@@ -89,8 +89,8 @@ flake.modules.nixos.media.imports = with inputs.self.modules.nixos; [
 wants (`ssh`, `docker`, `nix`, `user`, …), and
 [`modules/hosts/thor/thor.nix`](../modules/hosts/thor/thor.nix) lists the
 rest thor specifically needs. `modules/lib/hosts.nix` builds
-`nixosConfigurations.thor` from `common`, `home-manager`, `interfaces`
-(below), and the host's own aspect — see `mkNixosSystem`.
+`nixosConfigurations.thor` from `common`, `interfaces` (below), and the
+host's own aspect — see `mkNixosSystem`.
 
 ## Cross-aspect options: how aspects talk without depending on each other
 
