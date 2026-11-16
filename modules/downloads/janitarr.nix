@@ -3,16 +3,11 @@
   inherit (inputs.self.settings.server) domain;
   port = ports.media.janitarr;
   mimir = inputs.self.settings.hosts.mimir.address;
-in {
-  # Runs on thor (not in the `downloads` group, which is mimir's) and talks to
-  # mimir's sonarr/radarr over the LAN; mimir's firewall already accepts thor
-  # on those ports. See docs/deploying.md, "Same-host vs. cross-host services".
-  flake.modules.nixos.janitarr = {
-    config,
-    pkgs,
-    ...
-  }: let
-    janitarr = pkgs.buildNpmPackage {
+
+  # One definition for both the flake package and the service, so
+  # `nix build .#janitarr` builds exactly what thor runs.
+  mkJanitarr = pkgs:
+    pkgs.buildNpmPackage {
       pname = "janitarr";
       version = "0.0.1";
       src = inputs.janitarr;
@@ -29,6 +24,20 @@ in {
         runHook postInstall
       '';
     };
+in {
+  perSystem = {pkgs, ...}: {
+    packages.janitarr = mkJanitarr pkgs;
+  };
+
+  # Runs on thor (not in the `downloads` group, which is mimir's) and talks to
+  # mimir's sonarr/radarr over the LAN; mimir's firewall already accepts thor
+  # on those ports. See docs/deploying.md, "Same-host vs. cross-host services".
+  flake.modules.nixos.janitarr = {
+    config,
+    pkgs,
+    ...
+  }: let
+    janitarr = mkJanitarr pkgs;
 
     # The agenix files hold SONARR__AUTH__APIKEY=… (servarr env format);
     # janitarr wants SONARR_API_KEY. Extract at start so keys never hit disk.
