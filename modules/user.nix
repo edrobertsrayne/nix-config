@@ -12,13 +12,10 @@ in {
       users.${user.username} = {
         isNormalUser = true;
         description = user.fullname;
-        extraGroups = ["wheel" "networkmanager"];
+        extraGroups = ["wheel"];
         openssh.authorizedKeys.keys = user.sshKeys;
-        packages = with pkgs; [
-          vim
-          git
-          htop
-        ];
+        # vim and htop come from modules/common.nix.
+        packages = [pkgs.git];
       };
     };
 
