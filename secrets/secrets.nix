@@ -18,7 +18,6 @@ in {
   "grafana.age".publicKeys = systems ++ users;
   "bar-assistant.age".publicKeys = systems ++ users;
   "slskd.age".publicKeys = mimirSystems ++ users;
-  "code-server.age".publicKeys = systems ++ users;
   "radarr-apikey.age".publicKeys = mimirSystems ++ users;
   "sonarr-apikey.age".publicKeys = mimirSystems ++ users;
   "lidarr-apikey.age".publicKeys = mimirSystems ++ users;

@@ -120,7 +120,6 @@ are read-only in the browser — edit the JSON and rebuild. See
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/searxng.png" width="20" alt=""> | SearXNG | Private search engine |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/n8n.png" width="20" alt=""> | n8n | Workflow automation |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/ntfy.png" width="20" alt=""> | ntfy | Push notifications |
-| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/visual-studio-code.png" width="20" alt=""> | Code Server | VS Code in browser |
 
 **Ingress policy:** nginx opens no LAN-reachable port. The only paths in are
 the Cloudflare tunnel (`cloudflared` → `127.0.0.1:80`, gated by Cloudflare

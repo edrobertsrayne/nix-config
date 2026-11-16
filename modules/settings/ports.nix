@@ -198,10 +198,6 @@
       type = types.port;
       default = 2283;
     };
-    codeServer = mkOption {
-      type = types.port;
-      default = 8888;
-    };
     searxng = mkOption {
       type = types.port;
       default = 8083;

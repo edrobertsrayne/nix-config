@@ -22,7 +22,6 @@
         bar-assistant
         bentopdf
         blocky
-        code-server
         dlna
         downloads-proxy
         grafana
