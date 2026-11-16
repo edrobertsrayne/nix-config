@@ -11,8 +11,8 @@ in {
         group = "Productivity";
         description = "Recipe manager";
         icon = "mealie.png";
-        # Public endpoint returning version info. Unverified — mealie is
-        # commented out of thor.nix, so check it on activation.
+        # Public endpoint returning version info. Unverified — no host
+        # imports this aspect at present, so check it on activation.
         probePath = "/api/app/about";
       })
     ];

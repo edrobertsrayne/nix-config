@@ -4,10 +4,11 @@
 
 Server configuration built around
 [**dendritic architecture**](https://github.com/mightyiam/dendritic) —
-organizing modules by _what they do_ rather than _where they run_. It has three
-`nixosConfigurations`: thor, the physical host, and two
+organizing modules by _what they do_ rather than _where they run_. It has four
+`nixosConfigurations`: thor, the physical host, two
 [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guests that thor
-hypervises. mimir runs the download stack behind its own Mullvad exit node
+hypervises, and rpi5, a bootstrap SD image for a Raspberry Pi
+([docs/raspberry-pi.md](docs/raspberry-pi.md)). mimir runs the download stack behind its own Mullvad exit node
 (issue #203). njord runs [Dokploy](https://docs.dokploy.com/), a self-hosted
 Docker/Swarm deployment platform, for hosting Docker-based projects without a
 Nix module per project.
@@ -23,9 +24,10 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── hosts/         # Host-specific configs
 │   ├── thor/      # Home server (NixOS)
 │   ├── mimir/     # Download-stack microvm, hypervised by thor
-│   └── njord/     # Dokploy microvm, hypervised by thor
+│   ├── njord/     # Dokploy microvm, hypervised by thor
+│   └── rpi5/      # Raspberry Pi bootstrap SD image
 ├── downloads/     # Download stack (*arr apps, transmission, and more), runs on mimir
-├── settings/      # Project options (user.nix, ports.nix, hosts.nix, server.nix)
+├── settings/      # Project options (user.nix, ports.nix, hosts.nix, network.nix, …)
 ├── dashboards/    # Grafana dashboard JSON
 └── lib/           # Helper functions
 
