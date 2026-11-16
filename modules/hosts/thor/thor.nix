@@ -39,7 +39,6 @@
         ntfy
         paperless
         persistence
-        planner
         portainer
         prometheus
         restic

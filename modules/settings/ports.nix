@@ -214,14 +214,6 @@
       type = types.port;
       default = 28981;
     };
-    planner = mkOption {
-      type = types.port;
-      default = 22400;
-    };
-    joplin = mkOption {
-      type = types.port;
-      default = 22300;
-    };
     bentopdf = mkOption {
       type = types.port;
       default = 8085;
