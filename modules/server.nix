@@ -39,7 +39,9 @@ _: {
 
     programs.command-not-found.enable = false;
 
-    fonts.fontconfig.enable = false;
+    # mkDefault: aspects that run a headless browser (karakeep, flaresolverr
+    # in prowlarr.nix) need fontconfig and turn it back on.
+    fonts.fontconfig.enable = lib.mkDefault false;
 
     documentation = {
       enable = false;

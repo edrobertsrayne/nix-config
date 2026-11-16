@@ -3,7 +3,6 @@
 in {
   flake.modules.nixos.karakeep = {
     config,
-    lib,
     pkgs,
     ...
   }: let
@@ -40,8 +39,10 @@ in {
       RestartSec = "5s";
     };
 
+    # server.nix turns fontconfig off by default; karakeep's headless
+    # Chromium aborts without it (see prowlarr.nix, #225).
     fonts = {
-      fontconfig.enable = lib.mkForce true;
+      fontconfig.enable = true;
       packages = [pkgs.noto-fonts];
     };
 
