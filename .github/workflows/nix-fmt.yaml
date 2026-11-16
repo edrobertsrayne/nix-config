@@ -21,7 +21,7 @@ jobs:
           token: ${{ secrets.GH_ACTIONS_TOKEN }}
       
       - name: Install Determinate Nix
-        uses: DeterminateSystems/nix-installer-action@main
+        uses: DeterminateSystems/nix-installer-action@v23
         with:
           determinate: true
       
