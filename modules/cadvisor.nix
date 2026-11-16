@@ -1,9 +1,10 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  # The Docker health textfile collector lives in modules/docker-health.nix,
-  # shared with njord.
-  flake.modules.nixos.thor = _: {
+  # Per-container metrics for a Docker host. The Docker health textfile
+  # collector it pulls in lives in modules/docker-health.nix, shared with
+  # njord.
+  flake.modules.nixos.cadvisor = _: {
     imports = [inputs.self.modules.nixos.docker-health];
 
     services = {
@@ -24,6 +25,6 @@ in {
       ];
     };
 
-    monitoring.dashboards.cadvisor = ../../dashboards/cadvisor.json;
+    monitoring.dashboards.cadvisor = ./dashboards/cadvisor.json;
   };
 }

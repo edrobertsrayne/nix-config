@@ -8,7 +8,7 @@ in {
       # function on the local segment, so closing this disables the
       # service outright. No new exposure results - /mnt/ssd/music is
       # already guest-readable to the whole LAN over Samba
-      # (hosts/thor/samba.nix), and minidlna serves the same tree
+      # (modules/samba.nix), and minidlna serves the same tree
       # unauthenticated either way.
       openFirewall = true; # HTTP + SSDP
       settings = {

@@ -207,7 +207,7 @@ what to check.
 
 ## Sharing over the network
 
-Bind mounts in `modules/hosts/thor/nfs.nix` expose trees under `/export`:
+Bind mounts in `modules/nfs.nix` expose trees under `/export`:
 
 | Export | Real path |
 |---|---|

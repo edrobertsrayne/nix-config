@@ -1,6 +1,29 @@
 _: {
-  flake.modules.nixos.thor = {pkgs, ...}: {
+  flake.modules.nixos.fancontrol = {
+    config,
+    pkgs,
+    ...
+  }: {
     hardware.fancontrol.enable = false;
+
+    # The IT8613 Super I/O chip needs the out-of-tree it87 driver, which must
+    # shadow the in-tree module of the same name (hence updates/).
+    boot = {
+      extraModulePackages = [
+        (config.boot.kernelPackages.it87.overrideAttrs (old: {
+          postInstall =
+            (old.postInstall or "")
+            + ''
+              ver=$(ls $out/lib/modules)
+              mkdir -p $out/lib/modules/$ver/updates
+              mv $out/lib/modules/$ver/kernel/drivers/hwmon/it87.ko \
+                 $out/lib/modules/$ver/updates/it87.ko
+            '';
+        }))
+      ];
+      kernelModules = ["it87"];
+      extraModprobeConfig = "options it87 ignore_resource_conflict=1";
+    };
 
     systemd.services.fancontrol = {
       description = "software fan control";

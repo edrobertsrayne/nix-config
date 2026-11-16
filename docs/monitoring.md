@@ -82,11 +82,11 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `node-exporter` | `thor:9100` | `node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile (Docker health, restic) |
 | `node-exporter-mimir` | `mimir:9100` | `node-exporter.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
 | `node-exporter-njord` | `njord:9100` | `node-exporter.nix` | the same, for njord — no hwmon; its textfile carries Docker container state (`docker-health.nix`) |
-| `zfs-exporter` | `thor:9134` | `hosts/thor/zfs-exporter.nix` | pool health, dataset usage |
-| `smartctl-exporter` | `thor:9633` | `hosts/thor/smartctl-exporter.nix` | per-drive SMART attributes |
-| `cadvisor` | `127.0.0.1:9338` | `hosts/thor/container-metrics.nix` | per-container CPU, memory, start time |
-| `blackbox-exporter` | `127.0.0.1:9115` | `hosts/thor/blackbox-exporter.nix` | the prober itself |
-| `blackbox-http` | every `monitoring.probeTargets` entry | `hosts/thor/blackbox-exporter.nix` | end-to-end HTTP reachability |
+| `zfs-exporter` | `thor:9134` | `zfs.nix` | pool health, dataset usage |
+| `smartctl-exporter` | `thor:9633` | `smart.nix` | per-drive SMART attributes |
+| `cadvisor` | `127.0.0.1:9338` | `cadvisor.nix` | per-container CPU, memory, start time |
+| `blackbox-exporter` | `127.0.0.1:9115` | `blackbox-exporter.nix` | the prober itself |
+| `blackbox-http` | every `monitoring.probeTargets` entry | `blackbox-exporter.nix` | end-to-end HTTP reachability |
 
 `node-exporter` runs the `systemd` collector, which is what makes
 `node_systemd_unit_state` — and therefore per-unit failure alerting — possible
@@ -135,7 +135,7 @@ through Cloudflare and njord's tunnel (`hosts/thor/njord-probes.nix`), so a dead
 
 cAdvisor reports resource usage and start times but not Docker's `HEALTHCHECK`
 verdict, and node-exporter has no Docker collector. So
-`hosts/thor/container-metrics.nix` runs a 30s timer that renders `docker
+`docker-health.nix` runs a 30s timer that renders `docker
 inspect` into the textfile collector at
 `/var/lib/prometheus-node-exporter-textfile/docker-health.prom`:
 

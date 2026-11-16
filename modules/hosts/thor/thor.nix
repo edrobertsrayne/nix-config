@@ -1,17 +1,10 @@
 {inputs, ...}: {
   flake = let
-    tunnel = "23c4423f-ec30-423b-ba18-ba18904ddb85";
-    secret = ../../../secrets/cloudflare-thor.age;
-    inherit (inputs.self.settings.server) domain;
     inherit (inputs.self.lib) mkNixosSystem;
   in {
     nixosConfigurations.thor = mkNixosSystem {name = "thor";};
 
-    modules.nixos.thor = {
-      config,
-      pkgs,
-      ...
-    }: {
+    modules.nixos.thor = {pkgs, ...}: {
       imports = with inputs.self.modules.nixos; [
         ./_hardware.nix
         (import ./_microvm-host.nix {inherit inputs;})
@@ -23,11 +16,15 @@
         avahi
         bar-assistant
         bentopdf
+        blackbox-exporter
         blocky
+        cadvisor
         capslock
+        cloudflared
         dlna
         docker
         downloads-proxy
+        fancontrol
         grafana
         home-manager
         homepage
@@ -39,6 +36,7 @@
         loki
         n8n
         navidrome
+        nfs
         nginx
         nix-gc
         ntfy
@@ -48,8 +46,10 @@
         prometheus
         restic
         restic-server
+        samba
         searxng
         seerr
+        smart
         user-password
         vaultwarden
         zfs
@@ -67,21 +67,8 @@
           };
         };
         tmp.cleanOnBoot = true;
-        extraModulePackages = [
-          (config.boot.kernelPackages.it87.overrideAttrs (old: {
-            postInstall =
-              (old.postInstall or "")
-              + ''
-                ver=$(ls $out/lib/modules)
-                mkdir -p $out/lib/modules/$ver/updates
-                mv $out/lib/modules/$ver/kernel/drivers/hwmon/it87.ko \
-                   $out/lib/modules/$ver/updates/it87.ko
-              '';
-          }))
-        ];
-        kernelModules = ["it87"];
-        extraModprobeConfig = "options it87 ignore_resource_conflict=1";
       };
+
       # CPU package temperature; the guests have no thermal zones.
       services.prometheus.exporters.node.enabledCollectors = ["thermal_zone"];
 
@@ -120,20 +107,7 @@
       # Ensure tmpfiles runs after /mnt/ssd is mounted
       systemd.services.systemd-tmpfiles-setup.after = ["mnt-ssd.mount"];
 
-      age.secrets.cloudflared.file = secret;
-
       services = {
-        cloudflared = {
-          enable = true;
-          tunnels."${tunnel}" = {
-            credentialsFile = config.age.secrets.cloudflared.path;
-            default = "http_status:404";
-            ingress = {
-              "*.${domain}" = "http://127.0.0.1:80";
-            };
-          };
-        };
-
         tailscale.useRoutingFeatures = "client";
 
         fstrim.enable = true;

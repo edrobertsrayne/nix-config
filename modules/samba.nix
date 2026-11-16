@@ -1,5 +1,5 @@
 _: {
-  flake.modules.nixos.thor = {
+  flake.modules.nixos.samba = {
     services.samba = {
       enable = true;
       # Deliberate: SMB stays reachable from the untrusted LAN bridge (br0,

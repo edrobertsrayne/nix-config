@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.thor = {
+  flake.modules.nixos.blackbox-exporter = {
     config,
     lib,
     pkgs,
@@ -66,6 +66,6 @@ in {
       }
     ];
 
-    monitoring.dashboards.blackbox-http = ../../dashboards/blackbox-http.json;
+    monitoring.dashboards.blackbox-http = ./dashboards/blackbox-http.json;
   };
 }

@@ -12,7 +12,7 @@ that cannot use either path.
 
 ### Cloudflare tunnel — for browsers, from anywhere
 
-`cloudflared` (`modules/hosts/thor/thor.nix`) holds an outbound connection to
+`cloudflared` (`modules/cloudflared.nix`) holds an outbound connection to
 Cloudflare and forwards `*.greensroad.uk` to nginx on `127.0.0.1:80`. Anything
 not matching returns 404.
 

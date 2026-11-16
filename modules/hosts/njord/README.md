@@ -26,7 +26,7 @@ Unlike mimir, thor never proxies to njord and holds no concrete tailnet
 address for it (`modules/settings/hosts.nix`) — nothing on thor needs to bind
 or DNAT to it. njord's own apps are published through **njord's own Cloudflare
 tunnel**, run from inside Dokploy, entirely separate from thor's tunnel
-(`modules/hosts/thor/thor.nix`).
+(`modules/cloudflared.nix`).
 
 ---
 

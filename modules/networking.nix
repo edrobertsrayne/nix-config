@@ -19,7 +19,7 @@
       #   22/tcp                   ssh.nix              key-only admin access
       #   53/tcp+udp               blocky.nix            thor *is* the LAN's DNS server
       #   5353/udp + mDNS          avahi.nix             service discovery is link-local
-      #   137-139,445/tcp          hosts/thor/samba.nix  guest-read media/music (Sonos etc.)
+      #   137-139,445/tcp          samba.nix             guest-read media/music (Sonos etc.)
       #   8096/tcp,1900+7359/udp   media/jellyfin.nix    LAN players; Jellyfin auths itself
       #   8200/tcp,1900/udp        media/dlna.nix        DLNA is LAN-only; same tree as guest SMB
       #   51413/tcp+udp            media/transmission.nix inbound BitTorrent peers (WAN, via router)
