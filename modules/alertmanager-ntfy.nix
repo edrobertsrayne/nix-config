@@ -1,5 +1,5 @@
 {inputs, ...}: let
-  inherit (inputs.self.settings) server ports;
+  inherit (inputs.self.settings) ports;
 in {
   flake.modules.nixos.alertmanager-ntfy = _: {
     services.prometheus.alertmanager-ntfy = {
@@ -7,7 +7,9 @@ in {
       settings = {
         http.addr = "127.0.0.1:${toString ports.alertmanagerNtfy}";
         ntfy = {
-          baseurl = "https://ntfy.${server.domain}";
+          # Loopback, not the public vhost: that path needs DNS, nginx and
+          # the ACME certificate, which are things these alerts report on.
+          baseurl = "http://127.0.0.1:${toString ports.ntfy}";
           notification = {
             topic = "thor";
             priority = ''
