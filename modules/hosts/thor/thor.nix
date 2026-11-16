@@ -50,6 +50,7 @@
         restic-server
         searxng
         seerr
+        user-password
         vaultwarden
         zfs
       ];
