@@ -37,8 +37,8 @@ Both guests' read-only `/nix/store` share and their lack of a `nix-daemon`
 mean the usual per-host paths still do not work for them —
 `nixos-rebuild switch --flake .#mimir` (or `.#njord`) on the guest itself and
 `--target-host` from thor both fail — but no separate deploy step is needed.
-The same constraint is why the guests opt out of `nix.gc.automatic`,
-`system.autoUpgrade.enable`, and Home Manager (`modules/microvm-guest.nix`):
+The same constraint is why the guests do not import the `nix-gc`,
+`auto-upgrade` and `home-manager` aspects (see `modules/microvm-guest.nix`):
 each assumes a writable store or a `nix-daemon` to plant GC roots, and neither
 exists on a guest (#219, #211). See
 [`modules/hosts/mimir/README.md`](../modules/hosts/mimir/README.md#deploying-config-changes)
@@ -132,7 +132,7 @@ not roll back data — see [storage.md](storage.md) for what does.
 
 ## The nightly upgrade
 
-thor upgrades itself. `modules/nix.nix` sets:
+thor upgrades itself. `modules/auto-upgrade.nix` sets:
 
 ```nix
 system.autoUpgrade = {
@@ -156,22 +156,6 @@ comment above that block — but it has two consequences worth internalising:
 You can see the effect in the generation list: generations timestamped `04:0x`
 are the auto-upgrade's, not yours.
 
-### planner is the exception
-
-`operation = "boot"` above means most config-only changes wait for a reboot
-before they take effect — but planner (`modules/planner.nix`) is a floating
-`:latest` image, not a config change, so the nightly cycle doesn't cover it at
-all: a `nixos-rebuild` restarts the container and re-pulls, but nothing forces
-that to happen daily. Instead, a `planner-auto-update` timer on thor polls
-`ghcr.io/edrobertsrayne/planner:latest` every 5 minutes and restarts
-`docker-planner.service` only when the image actually changed, so new pushes
-show up within minutes rather than at the next rebuild. Drive it by hand with:
-
-```sh
-sudo systemctl start planner-auto-update
-journalctl -u planner-auto-update -f
-```
-
 ## Disk housekeeping
 
 Old generations and unreferenced packages accumulate. Three things clean up
@@ -179,7 +163,7 @@ automatically:
 
 | Mechanism | Schedule | What |
 |---|---|---|
-| `nix.gc` (`modules/nix.nix`) | weekly | Deletes generations older than 7 days |
+| `nix.gc` (`modules/nix-gc.nix`) | weekly | Deletes generations older than 7 days |
 | `nix.optimise` | automatic | Hard-links identical files in the store |
 | `nh clean` (`modules/utilities/nh.nix`) | daily | Keeps 3 generations / 5 days |
 

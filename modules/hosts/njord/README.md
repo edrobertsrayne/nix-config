@@ -26,7 +26,7 @@ Unlike mimir, thor never proxies to njord and holds no concrete tailnet
 address for it (`modules/settings/hosts.nix`) — nothing on thor needs to bind
 or DNAT to it. njord's own apps are published through **njord's own Cloudflare
 tunnel**, run from inside Dokploy, entirely separate from thor's tunnel
-(`modules/hosts/thor/thor.nix`).
+(`modules/cloudflared.nix`).
 
 ---
 
@@ -73,9 +73,9 @@ would be wiped at the next boot regardless — these guest-local units were
 pure redundant noise.
 
 njord is monitored the same way mimir is: its own node-exporter and Alloy feed
-thor's Prometheus and Loki (`modules/hosts/njord/node-exporter.nix`,
-`modules/hosts/njord/alloy.nix`, scraped by
-`modules/hosts/thor/njord-scrape.nix`). See [monitoring.md](../../../docs/monitoring.md).
+thor's Prometheus and Loki (the shared `node-exporter` and `alloy` aspects,
+`modules/node-exporter.nix` and `modules/alloy.nix`; thor's scrape job is
+generated from `settings.hosts`). See [monitoring.md](../../../docs/monitoring.md).
 
 ## Storage
 
@@ -111,7 +111,7 @@ ssh 192.168.68.130
 # Tailscale needs interactive auth on first boot, same as mimir.
 sudo tailscale up
 
-# Docker is already installed and configured by NixOS (common.nix), so the
+# Docker is already installed and configured by NixOS (the `docker` aspect, `modules/docker.nix`), so the
 # installer's own Docker install is skipped. ADVERTISE_ADDR is passed
 # explicitly — otherwise the script tries to guess a public IP by calling out
 # to ifconfig.io/icanhazip.com, which is pointless on a LAN-only box.

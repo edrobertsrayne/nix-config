@@ -1,6 +1,7 @@
 {inputs, ...}: {
   flake.modules.nixos.thor = {lib, ...}: let
     ipAddress = inputs.self.settings.hosts.thor.address;
+    inherit (inputs.self.settings) network;
   in {
     networking = {
       networkmanager.enable = lib.mkForce false;
@@ -13,11 +14,11 @@
       interfaces.br0.ipv4.addresses = [
         {
           address = ipAddress;
-          prefixLength = 22;
+          inherit (network) prefixLength;
         }
       ];
       defaultGateway = {
-        address = "192.168.68.1";
+        address = network.gateway;
         interface = "br0";
       };
       nameservers = ["194.242.2.2" "1.1.1.1" "8.8.8.8"];

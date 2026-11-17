@@ -49,7 +49,7 @@
     # Keyed by name, not URL: the key becomes the probe's instance label, so
     # Grafana legends and ntfy alerts say "Prowlarr" rather than
     # "http://127.0.0.1:9696". probePath aims the probe at a health endpoint
-    # where the service has one — see modules/hosts/thor/blackbox-exporter.nix.
+    # where the service has one — see modules/blackbox-exporter.nix.
     monitoring.probeTargets = lib.optionalAttrs probe {
       "${name}" = "${backendUrl}${probePath}";
     };

@@ -1,7 +1,15 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
 in {
-  flake.modules.nixos.mimir = {pkgs, ...}: let
+  # Ships the systemd journal to Loki on thor. One aspect for every host:
+  # the only thing that differs is the `host` label, which follows the
+  # hostname.
+  flake.modules.nixos.alloy = {
+    config,
+    lib,
+    pkgs,
+    ...
+  }: let
     alloyConfig = pkgs.writeText "config.alloy" ''
       loki.relabel "journal" {
         rule {
@@ -21,7 +29,7 @@ in {
 
       loki.source.journal "read" {
         max_age       = "12h"
-        labels        = { job = "systemd-journal", host = "mimir" }
+        labels        = { job = "systemd-journal", host = "${config.networking.hostName}" }
         relabel_rules = loki.relabel.journal.rules
         forward_to    = [loki.write.default.receiver]
       }
@@ -33,10 +41,25 @@ in {
       }
     '';
   in {
-    services.alloy = {
-      enable = true;
-      configPath = alloyConfig;
-      extraFlags = ["--disable-reporting"];
+    services = {
+      alloy = {
+        enable = true;
+        configPath = alloyConfig;
+        extraFlags = ["--disable-reporting"];
+      };
+
+      # alloy binds 127.0.0.1 by default, so only a Prometheus on the same
+      # host can scrape it. Gated so the guests carry no dead scrape job.
+      prometheus.scrapeConfigs = lib.mkIf config.services.prometheus.enable [
+        {
+          job_name = "alloy";
+          static_configs = [
+            {
+              targets = ["127.0.0.1:${toString ports.alloy}"];
+            }
+          ];
+        }
+      ];
     };
 
     environment.persistence."/persist".directories = ["/var/lib/private/alloy"];

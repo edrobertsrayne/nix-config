@@ -6,6 +6,7 @@
 
     modules.nixos.mimir = {lib, ...}: let
       ipAddress = inputs.self.settings.hosts.mimir.address;
+      inherit (inputs.self.settings) network;
       mac = "02:00:00:00:00:10";
       thorAddress = inputs.self.settings.hosts.thor.address;
 
@@ -128,8 +129,8 @@
             MACAddress = mac;
           };
           networkConfig = {
-            Address = ["${ipAddress}/22"];
-            Gateway = "192.168.68.1";
+            Address = ["${ipAddress}/${toString network.prefixLength}"];
+            Gateway = network.gateway;
             DHCP = "no";
           };
           routingPolicyRules = [
@@ -172,8 +173,6 @@
         };
       };
 
-      virtualisation.docker.daemon.settings.data-root = "/srv/docker";
-
       # Root is tmpfs, so podman's default graphroot would lose the image
       # cache every boot and force a Docker Hub pull (#234). Keep storage and
       # the pull staging dir (default /var/tmp, also tmpfs) on srv.img.
@@ -186,10 +185,8 @@
         containersConf.settings.engine.image_copy_tmp_dir = "/srv/containers/tmp";
       };
 
-      # GID must match thor's tank group (modules/hosts/thor/thor.nix) —
-      # /mnt/ssd/downloads and /mnt/storage are virtiofs shares from thor, so
-      # raw uid/gid numbers cross that boundary.
-      users.groups.tank.gid = 992;
+      # Same GID as thor's tank group — see modules/settings/storage.nix.
+      users.groups.tank.gid = inputs.self.settings.storage.tankGid;
 
       # /srv (srv.img) has no ordering pull on systemd-tmpfiles-setup by
       # default, so rules targeting /srv/* (e.g. transmission's home dir,

@@ -1,6 +1,9 @@
 {inputs, ...}: let
   inherit (inputs.self.settings) ports;
   downloadDir = "/mnt/ssd/downloads/slskd/complete";
+  # lidarr's uid (static in nixpkgs) and the shared tank gid, so imports
+  # land with the ownership lidarr expects.
+  owner = "306:${toString inputs.self.settings.storage.tankGid}";
 in {
   flake.modules.nixos.soularr = {
     config,
@@ -66,7 +69,7 @@ in {
     '';
   in {
     systemd = {
-      tmpfiles.rules = ["d /srv/soularr 0775 306 992 -"];
+      tmpfiles.rules = ["d /srv/soularr 0775 306 ${toString inputs.self.settings.storage.tankGid} -"];
 
       services = {
         soularr-config = {
@@ -76,7 +79,7 @@ in {
           script = ''
             apikey=$(${pkgs.gnused}/bin/sed -n 's/^LIDARR__AUTH__APIKEY=//p' ${config.age.secrets.lidarr-apikey.path})
             ${pkgs.gnused}/bin/sed "s/@LIDARR_API_KEY@/$apikey/" ${configFile} > /srv/soularr/config.ini
-            ${pkgs.coreutils}/bin/chown 306:992 /srv/soularr/config.ini
+            ${pkgs.coreutils}/bin/chown ${owner} /srv/soularr/config.ini
             ${pkgs.coreutils}/bin/chmod 0640 /srv/soularr/config.ini
           '';
         };
@@ -119,7 +122,7 @@ in {
       # unqualified-search registries configured to resolve it.
       image = "docker.io/mrusse08/soularr:latest";
       autoStart = true;
-      user = "306:992"; # lidarr uid : tank gid - aligns import perms
+      user = owner;
       environment = {
         TZ = "Etc/UTC";
         SCRIPT_INTERVAL = "900"; # 15 min

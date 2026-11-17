@@ -1,4 +1,6 @@
-_: {
+{inputs, ...}: let
+  inherit (inputs.self.settings) ports;
+in {
   flake.modules.nixos.zfs = {
     boot.zfs.forceImportRoot = false;
 
@@ -11,18 +13,43 @@ _: {
     # `echo 4294967296 | sudo tee /sys/module/zfs/parameters/zfs_arc_max`.
     boot.kernelParams = ["zfs.zfs_arc_max=4294967296"];
 
-    services.zfs.autoSnapshot = {
-      enable = true;
-      frequent = 4; # 15-min, 1 hour of cover
-      hourly = 24;
-      daily = 7;
-      weekly = 4;
-      monthly = 3;
+    services = {
+      zfs = {
+        autoSnapshot = {
+          enable = true;
+          frequent = 4; # 15-min, 1 hour of cover
+          hourly = 24;
+          daily = 7;
+          weekly = 4;
+          monthly = 3;
+        };
+
+        autoScrub = {
+          enable = true;
+          interval = "weekly";
+        };
+      };
+
+      prometheus = {
+        exporters.zfs = {
+          enable = true;
+          port = ports.exporters.zfs;
+        };
+
+        scrapeConfigs = [
+          {
+            job_name = "zfs-exporter";
+            static_configs = [
+              {
+                targets = ["thor:${toString ports.exporters.zfs}"];
+              }
+            ];
+          }
+        ];
+      };
     };
 
-    services.zfs.autoScrub = {
-      enable = true;
-      interval = "weekly";
-    };
+    # Spans ZFS, MergerFS and SMART; filed here as the primary owner.
+    monitoring.dashboards.storage-health = ./dashboards/storage-health.json;
   };
 }

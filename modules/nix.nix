@@ -1,11 +1,10 @@
 {inputs, ...}: let
   inherit (inputs.self.settings.user) username;
 in {
-  flake.modules.nixos.nix = {
-    lib,
-    config,
-    ...
-  }: {
+  # Garbage collection and the nightly upgrade are separate opt-in aspects
+  # (modules/nix-gc.nix, modules/auto-upgrade.nix): neither can run on a
+  # microvm guest.
+  flake.modules.nixos.nix = {lib, ...}: {
     nix = {
       enable = true;
       channel.enable = false;
@@ -29,50 +28,12 @@ in {
         builders-use-substitutes = true;
       };
 
-      gc = {
-        automatic = true;
-        dates = "weekly";
-        options = "--delete-older-than 7d";
-      };
-
-      optimise.automatic = lib.mkDefault (!config.boot.isContainer);
-
       daemonCPUSchedPolicy = lib.mkDefault "batch";
       daemonIOSchedClass = lib.mkDefault "idle";
       daemonIOSchedPriority = lib.mkDefault 7;
     };
 
-    systemd.services = {
-      nix-daemon.serviceConfig.OOMScoreAdjust = lib.mkDefault 250;
-      nix-gc.serviceConfig = {
-        CPUSchedulingPolicy = lib.mkDefault "batch";
-        IOSchedulingClass = lib.mkDefault "idle";
-        IOSchedulingPriority = lib.mkDefault 7;
-      };
-    };
-
-    # Tracking `main` unattended is deliberate, not an oversight: commits only
-    # reach main after `nixos-rebuild test` on thor, so this pulls a config
-    # already validated on the machine it deploys to — a gated release branch
-    # would add ceremony without adding validation. Recovery is layered: 5 kept
-    # systemd-boot generations roll back config (and allowReboot falls back if
-    # a generation won't boot), and auto-snapshotted /srv + /persist (#163)
-    # roll back data. Same trade as floating container tags (#181): personal
-    # server, stay current without manual bumps. See #178.
-    # `operation = "boot"` (not the default `switch`, #167 commit 4): a
-    # future commit adding an environment.persistence line would otherwise
-    # apply live at 04:00, bind-mounting an empty /persist dir over a
-    # running service's real data, which then vanishes at the next wipe.
-    # Config-only/userspace updates now sit staged until something reboots
-    # thor; allowReboot still fires unattended on a kernel bump.
-    system.autoUpgrade = {
-      enable = true;
-      operation = "boot";
-      flake = "github:edrobertsrayne/nix-config";
-      flags = [];
-      dates = "04:00";
-      allowReboot = true;
-    };
+    systemd.services.nix-daemon.serviceConfig.OOMScoreAdjust = lib.mkDefault 250;
 
     nixpkgs.config.allowUnfree = true;
   };

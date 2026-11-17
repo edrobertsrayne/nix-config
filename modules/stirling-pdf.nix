@@ -11,7 +11,7 @@ in {
         description = "PDF toolkit";
         icon = "stirling-pdf.png";
         # Returns {"version": ..., "status": "UP"} without authentication.
-        # Unverified — stirling-pdf is commented out of thor.nix, so check it
+        # Unverified — no host imports this aspect at present, so check it
         # on activation; upstream has shipped versions where this endpoint
         # reports itself disabled.
         probePath = "/api/v1/info/status";

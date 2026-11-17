@@ -14,7 +14,6 @@
         inputs.disko.nixosModules.disko
         inputs.impermanence.nixosModules.impermanence
         inputs.self.modules.nixos.common
-        inputs.self.modules.nixos.home-manager
         inputs.self.modules.nixos.interfaces
         (inputs.self.modules.nixos.${name} or {})
         {

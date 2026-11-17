@@ -9,6 +9,18 @@
       recommendedOptimisation = true;
       recommendedGzipSettings = true;
 
+      # Catch-all for hostnames no vhost claims. Without an explicit default
+      # server nginx hands those to the first vhost it loaded, so
+      # anything.<domain> (the tunnel forwards the whole wildcard) was
+      # answered by Bazarr. Plain HTTP gets a 404, which cloudflared passes
+      # through as-is; HTTPS has its handshake rejected, since no certificate
+      # could match the name anyway.
+      virtualHosts."_" = {
+        default = true;
+        rejectSSL = true;
+        locations."/".return = "404";
+      };
+
       # WebSocket upgrade support
       appendHttpConfig = ''
         map $http_upgrade $connection_upgrade {

@@ -78,19 +78,23 @@ Aspects are composed by importing other aspects by name, resolved off
 `inputs.self.modules.nixos`:
 
 ```nix
-# modules/media/media.nix — an aspect that is just a bundle of aspects
-flake.modules.nixos.media.imports = with inputs.self.modules.nixos; [
-  bazarr jellyfin lidarr navidrome prowlarr radarr sabnzbd
-  seerr slskd sonarr soularr transmission dlna
+# modules/downloads/downloads.nix — an aspect that is just a bundle of aspects
+flake.modules.nixos.downloads.imports = with inputs.self.modules.nixos; [
+  bazarr lidarr prowlarr radarr sabnzbd slskd sonarr soularr transmission
 ];
 ```
 
 `modules/common.nix` does the same for the small set of aspects every host
-wants (`ssh`, `docker`, `nix`, `user`, …), and
+wants (`ssh`, `tailscale`, `nix`, `user`, …), and
 [`modules/hosts/thor/thor.nix`](../modules/hosts/thor/thor.nix) lists the
-rest thor specifically needs. `modules/lib/hosts.nix` builds
-`nixosConfigurations.thor` from `common`, `home-manager`, `interfaces`
-(below), and the host's own aspect — see `mkNixosSystem`.
+rest thor specifically needs. `common` holds only what a microvm guest can
+also use: `docker`, `avahi`, `home-manager`, `nix-gc`, `auto-upgrade` and
+`user-password` are separate aspects that a host imports by name. Files under
+`modules/hosts/<host>/` are for what is true of that one machine (disks,
+bridge, hypervisor); a feature that merely runs there is a named aspect at
+the top level. `modules/lib/hosts.nix` builds
+`nixosConfigurations.thor` from `common`, `interfaces` (below), and the
+host's own aspect — see `mkNixosSystem`.
 
 ## Cross-aspect options: how aspects talk without depending on each other
 

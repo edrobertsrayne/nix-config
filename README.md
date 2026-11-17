@@ -4,10 +4,11 @@
 
 Server configuration built around
 [**dendritic architecture**](https://github.com/mightyiam/dendritic) —
-organizing modules by _what they do_ rather than _where they run_. It has three
-`nixosConfigurations`: thor, the physical host, and two
+organizing modules by _what they do_ rather than _where they run_. It has four
+`nixosConfigurations`: thor, the physical host, two
 [microvm.nix](https://microvm-nix.github.io/microvm.nix/) guests that thor
-hypervises. mimir runs the download stack behind its own Mullvad exit node
+hypervises, and rpi5, a bootstrap SD image for a Raspberry Pi
+([docs/raspberry-pi.md](docs/raspberry-pi.md)). mimir runs the download stack behind its own Mullvad exit node
 (issue #203). njord runs [Dokploy](https://docs.dokploy.com/), a self-hosted
 Docker/Swarm deployment platform, for hosting Docker-based projects without a
 Nix module per project.
@@ -23,9 +24,10 @@ modules/           # Aspect-oriented modules (auto-loaded by import-tree)
 ├── hosts/         # Host-specific configs
 │   ├── thor/      # Home server (NixOS)
 │   ├── mimir/     # Download-stack microvm, hypervised by thor
-│   └── njord/     # Dokploy microvm, hypervised by thor
+│   ├── njord/     # Dokploy microvm, hypervised by thor
+│   └── rpi5/      # Raspberry Pi bootstrap SD image
 ├── downloads/     # Download stack (*arr apps, transmission, and more), runs on mimir
-├── settings/      # Project options (user.nix, ports.nix, hosts.nix, server.nix)
+├── settings/      # Project options (user.nix, ports.nix, hosts.nix, network.nix, …)
 ├── dashboards/    # Grafana dashboard JSON
 └── lib/           # Helper functions
 
@@ -120,7 +122,6 @@ are read-only in the browser — edit the JSON and rebuild. See
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/searxng.png" width="20" alt=""> | SearXNG | Private search engine |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/n8n.png" width="20" alt=""> | n8n | Workflow automation |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/ntfy.png" width="20" alt=""> | ntfy | Push notifications |
-| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/visual-studio-code.png" width="20" alt=""> | Code Server | VS Code in browser |
 
 **Ingress policy:** nginx opens no LAN-reachable port. The only paths in are
 the Cloudflare tunnel (`cloudflared` → `127.0.0.1:80`, gated by Cloudflare

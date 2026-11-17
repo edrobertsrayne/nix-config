@@ -1,5 +1,5 @@
 _: {
-  flake.modules.nixos.thor = {
+  flake.modules.nixos.nfs = {
     config,
     lib,
     ...

@@ -113,8 +113,11 @@ exists in `/var/lib/microvms/mimir/`, it is dead and safe to delete.
 
 ## Secrets
 
-mimir is not yet an agenix recipient. Its SSH host key exists only once it is
-actually provisioned. See the note in `secrets/secrets.nix`.
+mimir's SSH host key is an agenix recipient for the secrets its own services
+read (the *arr API keys, SABnzbd, slskd and the Tailscale auth key) — see
+`mimirSystems` in `secrets/secrets.nix`. It does not import the
+`user-password` aspect, so `ed` and `root` have no password there: log in by
+SSH key. There is no console login.
 
 ## State migration (2026-08-26)
 

@@ -18,14 +18,12 @@ in {
   "grafana.age".publicKeys = systems ++ users;
   "bar-assistant.age".publicKeys = systems ++ users;
   "slskd.age".publicKeys = mimirSystems ++ users;
-  "code-server.age".publicKeys = systems ++ users;
   "radarr-apikey.age".publicKeys = mimirSystems ++ users;
   "sonarr-apikey.age".publicKeys = mimirSystems ++ users;
   "lidarr-apikey.age".publicKeys = mimirSystems ++ users;
   "prowlarr-apikey.age".publicKeys = mimirSystems ++ users;
   "sabnzbd.age".publicKeys = mimirSystems ++ users;
   "user-password.age".publicKeys = systems ++ users;
-  "planner.age".publicKeys = systems ++ users;
   "root-password.age".publicKeys = systems ++ users;
   "restic-password.age".publicKeys = systems ++ users;
   "restic-rest-users.age".publicKeys = systems ++ users;

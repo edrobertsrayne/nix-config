@@ -198,10 +198,6 @@
       type = types.port;
       default = 2283;
     };
-    codeServer = mkOption {
-      type = types.port;
-      default = 8888;
-    };
     searxng = mkOption {
       type = types.port;
       default = 8083;
@@ -213,14 +209,6 @@
     paperless = mkOption {
       type = types.port;
       default = 28981;
-    };
-    planner = mkOption {
-      type = types.port;
-      default = 22400;
-    };
-    joplin = mkOption {
-      type = types.port;
-      default = 22300;
     };
     bentopdf = mkOption {
       type = types.port;

@@ -77,16 +77,16 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `alertmanager` | `127.0.0.1:9093` | `alertmanager.nix` | notification delivery success/failure |
 | `grafana` | `127.0.0.1:3000` | `grafana.nix` | dashboard server |
 | `loki` | `127.0.0.1:3100` | `loki.nix` | log ingestion rates |
-| `alloy` | `127.0.0.1:12345` | `hosts/thor/alloy.nix` | the log shipper itself |
+| `alloy` | `127.0.0.1:12345` | `alloy.nix` | the log shipper itself |
 | `blocky` | `127.0.0.1:4000` | `blocky.nix` | DNS queries, blocklists, cache |
-| `node-exporter` | `thor:9100` | `hosts/thor/node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile (Docker health, restic) |
-| `node-exporter-mimir` | `mimir:9100` | `hosts/thor/mimir-scrape.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
-| `node-exporter-njord` | `njord:9100` | `hosts/thor/njord-scrape.nix` | the same, for njord — no hwmon; its textfile carries Docker container state (`docker-health.nix`) |
-| `zfs-exporter` | `thor:9134` | `hosts/thor/zfs-exporter.nix` | pool health, dataset usage |
-| `smartctl-exporter` | `thor:9633` | `hosts/thor/smartctl-exporter.nix` | per-drive SMART attributes |
-| `cadvisor` | `127.0.0.1:9338` | `hosts/thor/container-metrics.nix` | per-container CPU, memory, start time |
-| `blackbox-exporter` | `127.0.0.1:9115` | `hosts/thor/blackbox-exporter.nix` | the prober itself |
-| `blackbox-http` | every `monitoring.probeTargets` entry | `hosts/thor/blackbox-exporter.nix` | end-to-end HTTP reachability |
+| `node-exporter` | `thor:9100` | `node-exporter.nix` | CPU, memory, filesystems, hwmon, **systemd unit states**, textfile (Docker health, restic) |
+| `node-exporter-mimir` | `mimir:9100` | `node-exporter.nix` | the same, for mimir — no hwmon (it is a VM) or textfile |
+| `node-exporter-njord` | `njord:9100` | `node-exporter.nix` | the same, for njord — no hwmon; its textfile carries Docker container state (`docker-health.nix`) |
+| `zfs-exporter` | `thor:9134` | `zfs.nix` | pool health, dataset usage |
+| `smartctl-exporter` | `thor:9633` | `smart.nix` | per-drive SMART attributes |
+| `cadvisor` | `127.0.0.1:9338` | `cadvisor.nix` | per-container CPU, memory, start time |
+| `blackbox-exporter` | `127.0.0.1:9115` | `blackbox-exporter.nix` | the prober itself |
+| `blackbox-http` | every `monitoring.probeTargets` entry | `blackbox-exporter.nix` | end-to-end HTTP reachability |
 
 `node-exporter` runs the `systemd` collector, which is what makes
 `node_systemd_unit_state` — and therefore per-unit failure alerting — possible
@@ -135,7 +135,7 @@ through Cloudflare and njord's tunnel (`hosts/thor/njord-probes.nix`), so a dead
 
 cAdvisor reports resource usage and start times but not Docker's `HEALTHCHECK`
 verdict, and node-exporter has no Docker collector. So
-`hosts/thor/container-metrics.nix` runs a 30s timer that renders `docker
+`docker-health.nix` runs a 30s timer that renders `docker
 inspect` into the textfile collector at
 `/var/lib/prometheus-node-exporter-textfile/docker-health.prom`:
 
@@ -183,8 +183,8 @@ Alloy reads the systemd journal (12h max age) and pushes to Loki, relabelling
 `unit`, `hostname` and `level` out of journal fields. Loki keeps 30 days.
 
 All three hosts run their own Alloy and push to the same Loki on thor
-(`hosts/thor/alloy.nix`, `hosts/mimir/alloy.nix`, `hosts/njord/alloy.nix`) —
-logs are pushed, never scraped. Each tags its stream with a static `host` label
+(the shared `alloy` aspect, `modules/alloy.nix`, imported by `common`) —
+logs are pushed, never scraped. Each tags its stream with a `host` label
 (`thor`, `mimir` or `njord`) alongside the shared `job="systemd-journal"`. That
 label is the only thing separating the hosts downstream, so it matters in three
 places: the log alert rules in `modules/loki.nix` all aggregate `sum by (host)`,
