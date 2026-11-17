@@ -87,9 +87,8 @@ target service's NixOS option expects, don't invent a new shape:
 
 | Pattern | Example | Secret file format |
 |---|---|---|
-| `environmentFile` (singular) | `paperless.nix`, `searxng.nix` | `KEY=value` lines |
+| `environmentFile` (singular) | `karakeep.nix`, `searxng.nix` | `KEY=value` lines |
 | `environmentFiles` (list) | `homepage.nix` | `KEY=value` lines |
-| `credentialsFile` | `mealie.nix` | `KEY=value` lines |
 | `*_FILE` env var → `.path` | `n8n.nix`: `N8N_ENCRYPTION_KEY_FILE = config.age.secrets.n8n.path` | raw value |
 | `$__file{...}` interpolation | `grafana.nix`: `security.secret_key = "$__file{${config.age.secrets.grafana.path}}"` | raw value |
 | OCI container `environmentFiles` | `bar-assistant.nix` | `KEY=value` lines |
