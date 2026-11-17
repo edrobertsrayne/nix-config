@@ -178,14 +178,6 @@
       type = types.port;
       default = 8081;
     };
-    mealie = mkOption {
-      type = types.port;
-      default = 8223;
-    };
-    stirlingPdf = mkOption {
-      type = types.port;
-      default = 8082;
-    };
     n8n = mkOption {
       type = types.port;
       default = 5678;
