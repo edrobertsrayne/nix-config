@@ -50,20 +50,19 @@ in {
     };
 
     systemd.services.${service} = {
-      # .NET 10.0.14 moved named mutexes out of /tmp/.dotnet: it uses
-      # $XDG_RUNTIME_DIR/.dotnet, or $HOME/.dotnet when that is unset. A system
-      # unit has no XDG_RUNTIME_DIR and the slskd user's home is /var/empty, so
-      # slskd cannot take its singleton mutex and exits at startup (#245).
+      # .NET 10.0.14 puts named mutexes in $XDG_RUNTIME_DIR/.dotnet, or
+      # $HOME/.dotnet when that is unset. A system unit has no XDG_RUNTIME_DIR
+      # and the slskd home is /var/empty, so slskd cannot take its singleton
+      # mutex and exits at startup.
       environment.XDG_RUNTIME_DIR = "/run/${service}";
 
       serviceConfig = {
         RuntimeDirectory = service;
         RuntimeDirectoryMode = "0700";
-        # slskd exits with status 0 when it cannot start, and on-failure does
-        # not retry that. With always, a repeat of #245 keeps retrying and trips
-        # SystemdUnitRestartLooping (modules/alert-rules.nix) as well as
-        # ProbeFailed. The delay keeps it clear of the start rate limit, which
-        # would stop the retries.
+        # slskd exits 0 when it cannot start, which on-failure does not retry.
+        # always retries and trips SystemdUnitRestartLooping and ProbeFailed;
+        # the delay keeps it clear of the start rate limit, which would stop the
+        # retries.
         Restart = lib.mkForce "always";
         RestartSec = "30s";
         UMask = lib.mkForce "0002";
@@ -77,7 +76,6 @@ in {
     environment.persistence."/persist".directories = ["/var/lib/slskd"];
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.slskd-proxy = inputs.self.lib.mkProxiedService {
     name = "Slskd";
     subdomain = "slskd";

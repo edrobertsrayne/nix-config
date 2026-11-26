@@ -2,11 +2,7 @@
 
 thor backs up its own state and the Immich library to restic repositories on
 its other disks. It also runs a restic REST server that odin and freyja back up
-to. Everything is local to thor for now. An off-site copy is designed for (see
-[Off-site, later](#off-site-later)) but not built yet (#169).
-
-Code: `modules/restic.nix` (thor's jobs and metrics) and
-`modules/restic-server.nix` (the REST server and client pruning).
+to. Everything is local to thor. There is no off-site copy.
 
 ## Layout
 
@@ -38,19 +34,6 @@ back the key that decrypts the agenix secrets.
 thor-immich skips `thumbs/` and `encoded-video/`. Immich regenerates both from
 the originals. Immich's own nightly database dumps in `backups/` are included.
 
-## Schedule and retention
-
-| Time | Job |
-|---|---|
-| 01:00 (+ up to 30 min) | `restic-backups-thor-state`, then `restic-backups-thor-state-ssd` on success |
-| 01:00 (+ up to 30 min) | `restic-backups-thor-immich` |
-| 05:00 (+ up to 30 min) | `restic-backups-clients-{odin,freyja}`: prune only |
-| hourly | `restic-metrics` |
-
-Every repo keeps 7 daily, 4 weekly and 6 monthly snapshots. Each job then runs
-`restic check --read-data-subset=5%`, so each night reads back a different part
-of the backup data.
-
 ### How thor-state gets a consistent copy
 
 The prepare step does these things, in this sequence:
@@ -66,7 +49,7 @@ mount namespace (this unit has `PrivateTmp`) triggers the mount, ZFS uses the
 mountpoint it recorded when the dataset was mounted. For `/persist`, that is the
 stage-1 path, `/sysroot/persist`. The mount then fails and the directory shows
 as empty. The failure is in `/proc/spl/kstat/zfs/dbgmsg` as `Unable to
-automount`. See #250.
+automount`.
 
 The cleanup step destroys the `@restic` snapshots, also after a failure. Every
 file comes from the same instant, so the SQLite databases (vaultwarden, ntfy,
@@ -107,9 +90,8 @@ Paths in thor-state start with `/srv/.zfs/snapshot/restic/` or
 After a restore, copy the files from under `/tmp/restore` back to their real
 place, with the service stopped.
 
-For a recent mistake, a ZFS snapshot is faster
-([storage.md](storage.md#getting-a-file-back)). Use restic when the pool or the
-SSD is gone.
+For a recent mistake, a ZFS snapshot is faster. Use restic when the pool or
+the SSD is gone.
 
 ### Postgres
 
@@ -158,7 +140,7 @@ it runs with two settings:
 - **`--private-repos`**: a login can reach only `/<user>/`.
 - **`--append-only`**: a client can add snapshots, but it cannot delete or
   change them. A compromised laptop cannot erase its own history. Because of
-  this, thor runs `forget --prune` on these repos locally, at 05:00.
+  this, thor runs `forget --prune` on these repos locally.
 
 ### Set up a laptop (Omarchy / Arch)
 
@@ -256,25 +238,9 @@ Do these steps as your normal user on the laptop. The examples use odin.
 7. Do **not** run `forget` or `prune` from the laptop. The server refuses them,
    and thor prunes these repos.
 
-The repo appears on thor with the first backup. `restic-metrics` then picks it
-up within the hour, and `ResticClientBackupStale` warns after 7 days without a
-new snapshot.
-
 To add another machine, add a `name:password` line to
 `restic-rest-users.age` and the name to `clients` in
 `modules/restic-server.nix`, then deploy.
-
-## Monitoring
-
-`restic-metrics` writes `restic.prom` to the node-exporter textfile directory:
-
-- `restic_last_snapshot_timestamp_seconds{repo}`
-- `restic_snapshot_count{repo}`
-- `restic_repo_readable{repo}`
-
-The alerts are in the `backup-health` group in `modules/alert-rules.nix`. See
-[monitoring.md](monitoring.md). A failed backup, copy, prune or check unit
-triggers `SystemdUnitFailed`.
 
 ## mergerfs and a second HDD
 
@@ -289,19 +255,3 @@ Some policies keep new files on the disk that already holds their directory
 (`ep*` policies). Others spread a repo's pack files across disks. If the files
 spread, one failed disk damages every repo on the pool. Then a restore depends
 on `thor-state-ssd` (for thor-state) and on the off-site copy.
-
-## Off-site, later
-
-The plan from #169 is a Hetzner Storage Box over `sftp:`, with thor's repos
-only:
-
-```sh
-restic -r sftp:<box>:thor-state init \
-  --from-repo /mnt/storage/restic/thor-state --copy-chunker-params
-restic -r sftp:<box>:thor-state copy --from-repo /mnt/storage/restic/thor-state
-```
-
-Do the same for `thor-immich`. A job like `thor-state-ssd` (a prepare step that
-runs `restic copy`, with the shared prune and check settings) can run it on a
-timer. Matching chunker params let the copy deduplicate as well as the source
-repo does.

@@ -19,12 +19,11 @@ in {
             inherit (ports) dns;
             http = ports.blocky;
           };
-          # strict means the fallbacks below are only ever queried once every
-          # entry before them has failed - the default "parallel_best"
-          # strategy would race all of them on every query. Quad9 is first
-          # since Mullvad shut down its own public DoH servers in favour of
-          # sponsoring Quad9 (see docs/blocky.md). All entries are unfiltered
-          # endpoints because blocky already does its own blocklist filtering.
+          # strict: fallbacks are queried only after every earlier entry fails
+          # (the default parallel_best races all of them on every query). Quad9
+          # is first because Mullvad shut down its public DoH servers in its
+          # favour. Entries are unfiltered since blocky does its own blocklist
+          # filtering.
           upstreams = {
             groups.default = [
               "https://dns10.quad9.net/dns-query"
@@ -50,8 +49,7 @@ in {
             upstream = "https://dns10.quad9.net/dns-query";
             ips = ["9.9.9.10"];
           };
-          # Resolves *.greensroad.uk straight to thor for tailnet clients -
-          # see docs/blocky.md#split-horizon-greensroaduk.
+          # Resolves *.greensroad.uk straight to thor for tailnet clients.
           customDNS.mapping.${server.domain} = hosts.thor.tailnetAddress;
           queryLog = {
             type = "postgresql";
@@ -60,12 +58,9 @@ in {
           };
           blocking = {
             loading.strategy = "fast";
-            # The hagezi lists come from raw.githubusercontent, not jsDelivr:
-            # the repo outgrew jsDelivr's 150 MB per-package cap, so the CDN
-            # now 403s the whole package. Their `domains/` directory is gone
-            # too, so both halves of the old URL had to change. `wildcard/` is
-            # the format hagezi recommends for blocky; the `adblock/` variant
-            # of every list below is ABP syntax, which blocky cannot parse.
+            # The hagezi lists come from raw.githubusercontent, not jsDelivr,
+            # which 403s the oversized package. `wildcard/` is the format blocky
+            # parses; the `adblock/` variants are ABP syntax.
             denylists = {
               ads = [
                 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
@@ -183,7 +178,6 @@ in {
       ];
 
       grafana.provision.datasources.settings = {
-        # Paired with the datasource below; see modules/grafana.nix for why.
         deleteDatasources = [
           {
             name = "Blocky";

@@ -32,9 +32,8 @@ _: {
                   summary: Memory critically low on {{ $labels.instance }}
                   description: "Only {{ $value | humanizePercentage }} memory available"
 
-              # 15%, not 20%: thor's steady state includes long stretches at
-              # 15-20% that are reclaimable cache, and at 20% this was firing
-              # most of the time (#224).
+              # 15%, not 20%: reclaimable cache keeps thor at 15-20% most of the
+              # time.
               - alert: HostMemoryHighUsage
                 expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.15
                 for: 10m
@@ -44,14 +43,10 @@ _: {
                   summary: Memory usage high on {{ $labels.instance }}
                   description: "Only {{ $value | humanizePercentage }} memory available"
 
-              # Measures stalls, not occupancy. Swap *used* is a poor signal:
-              # cold pages get parked on thor's /mnt/ssd tier and sit there for
-              # days without being touched, so a used-bytes threshold (the old
-              # HostSwapSpilledToDisk, >8 GiB) fired almost continuously. PSI
-              # "some" is the share of wall time at least one task waited on
-              # memory (reclaim, swap-in), whichever tier the page is in. Over
-              # 30 days baseline peaked ~2.5%; the one real episode (2026-10-05
-              # 04:17, swap at 19.7 GiB) is the only time the 15m rate crossed 3%.
+              # Measures stalls, not occupancy: cold pages parked on swap sit
+              # there for days, so a used-bytes threshold fires constantly. PSI
+              # "some" is the share of time at least one task waited on memory
+              # (reclaim, swap-in). Baseline peaks ~2.5%.
               - alert: HostMemoryPressure
                 expr: rate(node_pressure_memory_waiting_seconds_total[15m]) > 0.03
                 for: 10m
@@ -61,9 +56,8 @@ _: {
                   summary: Memory pressure stalling tasks on {{ $labels.instance }}
                   description: "Tasks stalled on memory {{ $value | humanizePercentage }} of the time over 15m — reclaim/swap-in is costing real time"
 
-              # The backstop is itself nearly gone. Below this there is only
-              # the OOM killer — this is the alert that should have preceded
-              # #218 by hours.
+              # The backstop is nearly gone; below this only the OOM killer
+              # remains.
               - alert: HostSwapAlmostFull
                 expr: >
                   node_memory_SwapTotal_bytes > 0
@@ -75,13 +69,9 @@ _: {
                   summary: Swap almost exhausted on {{ $labels.instance }}
                   description: "{{ $value | humanizePercentage }} of all swap in use — OOM kills are imminent"
 
-              # virtiofs is excluded because mimir mounts thor's own
-              # filesystems over it (/nix/.ro-store, /mnt/ssd/downloads,
-              # /mnt/storage — modules/hosts/mimir/mimir.nix). Without this,
-              # thor's pools are evaluated a second time through mimir's view of
-              # them and alert as if they were mimir's disks. thor already
-              # watches the originals, where /mnt/storage is fuse.mergerfs and
-              # so falls to MergerfsLowFreeSpace instead of the 10% rule below.
+              # virtiofs is excluded: mimir mounts thor's own filesystems over
+              # it, and thor already watches the originals (where /mnt/storage
+              # is fuse.mergerfs and falls to MergerfsLowFreeSpace).
               - alert: HostFilesystemAlmostFull
                 expr: >
                   (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|fuse\\.mergerfs|virtiofs"}
@@ -160,10 +150,10 @@ _: {
                   summary: Drive temperature high on {{ $labels.instance }}
                   description: "Drive {{ $labels.device }} is {{ $value }}°C (threshold: 55°C)"
 
-              # SmartUnhealthy only fires once a drive declares overall failure,
-              # which is late. Reallocated (5), pending (197) and uncorrectable
-              # (198) sector counts creep up first, so any non-zero value is worth
-              # knowing about while the drive still reports itself healthy.
+              # SmartUnhealthy fires only once a drive declares overall failure.
+              # Reallocated (5), pending (197) and uncorrectable (198) sector
+              # counts creep up first, so any non-zero value is worth knowing
+              # about.
               - alert: SmartSectorErrors
                 expr: smartctl_device_attribute{attribute_id=~"5|197|198",attribute_value_type="raw"} > 0
                 for: 15m
@@ -175,15 +165,11 @@ _: {
 
           - name: dns-health
             rules:
-              # Blocky resolves DNS for the whole network, so a failure here is
-              # felt everywhere. loading.strategy = "fast" means Blocky serves
-              # regardless of blocklist state, which makes the two list rules
-              # necessary: without them, blocking degrades with no symptom.
-              # Blocky retries 3x per query and has a Quad9 fallback upstream,
-              # so a raw error count is never zero — it sits at a ~1%
-              # background rate from normal DoH flakiness. Alert on a
-              # sustained error *rate* instead, so this only fires when
-              # resolution is actually degraded.
+              # Blocky resolves DNS for the whole network. loading.strategy =
+              # "fast" serves regardless of blocklist state, so the two list
+              # rules are needed: without them, blocking degrades with no
+              # symptom. Retries and the Quad9 fallback leave a ~1% background
+              # error rate, so alert on a sustained error *rate*.
               - alert: BlockyResolutionErrors
                 expr: >
                   (sum(increase(blocky_error_total[15m])) /
@@ -234,11 +220,9 @@ _: {
                   summary: Systemd unit failed on {{ $labels.instance }}
                   description: "{{ $labels.name }} has been in a failed state for >5m — check systemctl --failed"
 
-              # SystemdUnitFailed above cannot catch this: a unit with
-              # Restart=always and no start rate limit cycles through
-              # activating/active forever and never reaches "failed", no
-              # matter how many times it crashes. flaresolverr did this 768
-              # times over 2.5 days with nothing alerting (#225).
+              # SystemdUnitFailed cannot catch this: a unit with Restart=always
+              # and no start rate limit cycles through activating/active forever
+              # and never reaches "failed".
               - alert: SystemdUnitRestartLooping
                 expr: increase(node_systemd_service_restart_total[15m]) > 5
                 for: 15m

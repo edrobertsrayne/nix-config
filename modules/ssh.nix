@@ -18,7 +18,6 @@ in {
         ChallengeResponseAuthentication = false;
         KbdInteractiveAuthentication = false;
         UseDns = false;
-        # unbind gnupg sockets if they exists
         StreamLocalBindUnlink = true;
 
         # Use key exchange algorithms recommended by `nixpkgs#ssh-audit`

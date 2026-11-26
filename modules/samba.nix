@@ -2,10 +2,9 @@ _: {
   flake.modules.nixos.samba = {
     services.samba = {
       enable = true;
-      # Deliberate: SMB stays reachable from the untrusted LAN bridge (br0,
-      # not just tailscale0 - modules/tailscale.nix) so home devices like
-      # Sonos can browse `media`/`music` without any tailnet setup. See
-      # #175.
+      # Deliberate: SMB stays reachable from the untrusted LAN bridge (br0, not
+      # just tailscale0) so home devices like Sonos can browse `media`/`music`
+      # without tailnet setup.
       openFirewall = true;
       settings = {
         global = {
@@ -17,7 +16,7 @@ _: {
           # guest rather than being rejected, so anonymous read of
           # `media`/`music` keeps working. Samba is guest-read-only now;
           # all writable access (downloads, backup) moved to NFS, gated by
-          # the tailnet. See #175.
+          # the tailnet.
           "map to guest" = "bad user";
         };
         "media" = {

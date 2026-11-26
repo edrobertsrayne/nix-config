@@ -40,27 +40,17 @@ in {
         dataDir = "/srv/grafana";
         provision = {
           enable = true;
-          # Datasources are declared by the aspect that runs the thing being
-          # queried — the prometheus, loki and blocky aspects each set
-          # services.grafana.provision.datasources.settings in their own
-          # block, so an aspect stays self-contained. Both lists there are
-          # plain listOf, so the definitions concatenate.
-          #
-          # Two conventions those modules follow. uids are pinned, so the
-          # dashboard JSON in modules/dashboards can reference a datasource by
-          # a name we control rather than the random uid Grafana would
-          # generate per install. And every datasource pairs with a
-          # deleteDatasources entry for its own name: Grafana looks an
-          # existing datasource up by uid, so pinning a uid onto one that was
+          # Datasources are declared by the aspect that runs the thing queried,
+          # as plain listOf definitions that concatenate. uids are pinned so
+          # dashboard JSON can reference them by a name we control. Each
+          # datasource pairs with a deleteDatasources entry for its own name:
+          # Grafana looks datasources up by uid, so pinning a uid onto one
           # created with a generated uid fails with "data source not found",
-          # which aborts the whole provisioning module — dashboards included —
-          # and crash-loops the service. Deleting first makes provisioning
-          # authoritative and the startup idempotent.
+          # aborting provisioning and crash-looping the service.
 
           # Dashboards are contributed by the module owning the metrics they
-          # display (monitoring.dashboards in modules/interfaces.nix) and
-          # collected into one directory here. allowUiUpdates = false makes
-          # them read-only in the browser: edits go through the repo.
+          # display (monitoring.dashboards) and are read-only in the browser:
+          # edits go through the repo.
           dashboards.settings.providers = [
             {
               name = "home-server";

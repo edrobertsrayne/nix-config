@@ -30,7 +30,6 @@ _: {
       };
     };
 
-    # Ensure ripgrep is available for grug-far to use
     programs.ripgrep.enable = true;
   };
 }

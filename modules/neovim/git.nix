@@ -11,7 +11,6 @@ _: {
           };
 
           keymaps = [
-            # === Git hunks ===
             {
               key = "]h";
               mode = "n";
@@ -61,7 +60,6 @@ _: {
               desc = "Undo stage hunk";
             }
 
-            # === LazyGit ===
             {
               key = "<leader>gg";
               mode = "n";
@@ -77,7 +75,6 @@ _: {
               desc = "LazyGit (cwd)";
             }
 
-            # === Git Browse ===
             {
               key = "<leader>gB";
               mode = "n";

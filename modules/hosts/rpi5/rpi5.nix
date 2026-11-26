@@ -2,9 +2,9 @@
   inherit (inputs.self.settings) user;
 in {
   # Bootstrap image only - no agenix/impermanence, so this does NOT use
-  # flake.lib.mkNixosSystem (which pulls `common` -> agenix-backed user
-  # passwords + tailscale authkey). Replace with a proper host once the Pi
-  # is confirmed working; see docs/raspberry-pi.md.
+  # flake.lib.mkNixosSystem (which pulls `common` -> agenix-backed passwords +
+  # tailscale authkey). Replace with a proper host once the Pi is confirmed
+  # working.
   flake.nixosConfigurations.rpi5 = inputs.nixpkgs.lib.nixosSystem {
     system = "aarch64-linux";
     modules = [

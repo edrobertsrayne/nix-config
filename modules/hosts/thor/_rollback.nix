@@ -4,7 +4,7 @@
   ...
 }: {
   # Wipe root to a pristine blank snapshot on every boot (systemd stage-1
-  # initrd; boot.initrd.systemd.enable is already set on thor). See #163.
+  # initrd; boot.initrd.systemd.enable is already set on thor).
   #
   # Fail-open by design: nothing depends on this unit, so a failed rollback
   # boots a stale root rather than stranding a headless box in an initrd

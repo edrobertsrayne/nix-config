@@ -3,7 +3,6 @@ _: {
     programs.nvf = {
       settings = {
         vim.keymaps = [
-          # === Save ===
           {
             key = "<leader>w";
             mode = "n";
@@ -17,7 +16,6 @@ _: {
             desc = "Save file";
           }
 
-          # === Buffer management ===
           {
             key = "<leader>bd";
             mode = "n";
@@ -67,7 +65,6 @@ _: {
             desc = "Next buffer";
           }
 
-          # === Window management ===
           {
             key = "<leader>wd";
             mode = "n";
@@ -87,7 +84,6 @@ _: {
             desc = "Split window vertically";
           }
 
-          # === Window resize ===
           {
             key = "<C-Up>";
             mode = "n";
@@ -113,7 +109,6 @@ _: {
             desc = "Increase window width";
           }
 
-          # === Better n/N (center search results) ===
           {
             key = "n";
             mode = "n";
@@ -127,7 +122,6 @@ _: {
             desc = "Previous search result";
           }
 
-          # === Clear search highlights ===
           {
             key = "<Esc>";
             mode = "n";
@@ -135,7 +129,6 @@ _: {
             desc = "Clear search highlights";
           }
 
-          # === Insert mode ===
           {
             key = "jk";
             mode = "i";
@@ -149,7 +142,6 @@ _: {
             desc = "Save file";
           }
 
-          # === Move lines in insert mode ===
           {
             key = "<A-j>";
             mode = "i";
@@ -163,7 +155,6 @@ _: {
             desc = "Move line up";
           }
 
-          # === Visual mode — keep selection after indent ===
           {
             key = "<";
             mode = "v";
@@ -177,7 +168,6 @@ _: {
             desc = "Indent right";
           }
 
-          # === Move lines in visual mode ===
           {
             key = "J";
             mode = "v";

@@ -2,7 +2,6 @@ _: {
   flake.modules.nixos.locale = {
     time.timeZone = "UTC";
 
-    # UK English locale settings
     i18n = {
       defaultLocale = "en_GB.UTF-8";
 
@@ -20,7 +19,6 @@ _: {
       };
     };
 
-    # UK keyboard layout for console (TTY)
     console.keyMap = "uk";
   };
 }

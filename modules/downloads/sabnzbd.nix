@@ -158,17 +158,11 @@ in {
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
-      # 2775: setgid so SABnzbd's per-job dirs (and the nested dirs unpack
-      # creates inside them) inherit group tank instead of sabnzbd's primary
-      # group. /mnt/ssd/downloads and /mnt/storage are separate virtiofs
-      # mounts, so imports cannot hardlink and must copy+delete, which needs
-      # write access to the job dir either way.
-      #
-      # Setgid inheritance over virtiofs is unreliable - some job dirs still
-      # come out group=sabnzbd (seen 2026-09-16, dozens of dirs affected).
-      # The actual guarantee that the *arrs can delete is their membership in
-      # both tank and sabnzbd (flake.lib.mkArr, modules/lib/servarr.nix);
-      # this setgid rule is defense-in-depth, not load-bearing on its own.
+      # 2775: setgid so job dirs inherit group tank. The mounts are separate
+      # virtiofs shares, so imports cannot hardlink and must copy+delete, which
+      # needs write access to the dir. Setgid inheritance over virtiofs is
+      # unreliable; the real guarantee is the *arrs' membership in both tank and
+      # sabnzbd (flake.lib.mkArr), so this is defence-in-depth.
       "d /mnt/ssd/downloads/usenet/complete 2775 ${cfg.user} tank -"
       "d /mnt/ssd/downloads/usenet/incomplete 2775 ${cfg.user} tank -"
     ];
@@ -181,7 +175,6 @@ in {
     environment.persistence."/persist".directories = ["/var/lib/sabnzbd"];
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.sabnzbd-proxy = inputs.self.lib.mkProxiedService {
     name = "SABnzbd";
     subdomain = "sabnzbd";

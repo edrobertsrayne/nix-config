@@ -1,6 +1,5 @@
 {lib, ...}: {
   options.flake.settings.ports = with lib; {
-    # Infrastructure
     ssh = mkOption {
       type = types.port;
       default = 22;
@@ -17,12 +16,10 @@
       type = types.port;
       default = 53;
     };
-    # Backup
     resticServer = mkOption {
       type = types.port;
       default = 8010;
     };
-    # Monitoring
     prometheus = mkOption {
       type = types.port;
       default = 9090;
@@ -47,7 +44,6 @@
       type = types.port;
       default = 12345;
     };
-    # Exporters (9xxx series)
     exporters = mkOption {
       type = types.submodule {
         options = {
@@ -76,7 +72,6 @@
       default = {};
     };
 
-    # Media services
     media = mkOption {
       type = types.submodule {
         options = {
@@ -153,7 +148,6 @@
       default = {};
     };
 
-    # Applications
     blocky = mkOption {
       type = types.port;
       default = 4000;
@@ -211,7 +205,6 @@
       default = 3005;
     };
 
-    # Bar Assistant
     barAssistant = mkOption {
       type = types.submodule {
         options = {

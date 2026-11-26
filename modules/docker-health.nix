@@ -2,10 +2,9 @@
   inherit (inputs.self.lib) textfileDir;
 in {
   flake.modules.nixos.docker-health = {pkgs, ...}: let
-    # Docker's own HEALTHCHECK verdict is the earliest signal that a container
-    # is running but useless — Bar Assistant's API sat "unhealthy" for 16h
-    # while its unit stayed active (#192). cAdvisor doesn't expose it and
-    # node-exporter has no Docker collector, so publish it as a textfile.
+    # Docker's HEALTHCHECK verdict is the earliest signal that a container is
+    # running but useless. cAdvisor doesn't expose it and node-exporter has no
+    # Docker collector, so publish it as a textfile.
     dockerHealth = pkgs.writeShellScript "docker-health-textfile" ''
       set -euo pipefail
 

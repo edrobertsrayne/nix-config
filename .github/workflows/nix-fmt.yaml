@@ -17,7 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Needed if we want to commit back to the repo or PR
           token: ${{ secrets.GH_ACTIONS_TOKEN }}
       
       - name: Install Determinate Nix
@@ -28,7 +27,6 @@ jobs:
       - name: Run nix fmt
         id: fmt
         run: |
-          # Run nix fmt and check if any files were modified
           nix fmt .
           if git diff --exit-code; then
             echo "No formatting changes needed"
@@ -38,7 +36,6 @@ jobs:
             echo "changes_detected=true" >> $GITHUB_OUTPUT
           fi
       
-      # For push events, commit the formatting changes directly
       - name: Commit formatting changes (push)
         if: steps.fmt.outputs.changes_detected == 'true' && github.event_name == 'push'
         run: |
@@ -48,7 +45,6 @@ jobs:
           git commit -m "style: apply nix fmt changes"
           git push
       
-      # For pull requests, commit to the PR branch
       - name: Commit formatting changes (pull request)
         if: steps.fmt.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
         run: |
@@ -58,7 +54,6 @@ jobs:
           git commit -m "style: apply nix fmt changes"
           git push origin HEAD:${{ github.head_ref }}
       
-      # Add a comment to the PR if formatting changes were made
       - name: Comment on PR
         if: steps.fmt.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
         uses: actions/github-script@v7

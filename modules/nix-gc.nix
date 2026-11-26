@@ -1,6 +1,6 @@
 _: {
   # Opt-in, not part of `common`: a microvm guest mounts thor's /nix/store
-  # read-only, so nix-gc cannot unlink there and fails on every run (#219).
+  # read-only, so nix-gc cannot unlink there and fails on every run.
   flake.modules.nixos.nix-gc = {
     lib,
     config,

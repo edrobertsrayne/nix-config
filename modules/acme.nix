@@ -7,11 +7,9 @@ in {
     security.acme = {
       acceptTerms = true;
       defaults.email = user.email;
-      # lego finds the Cloudflare zone and checks propagation via SOA/TXT
-      # lookups. The system resolver is blocky, whose split-horizon mapping for
-      # greensroad.uk (modules/blocky.nix) answers with a fake SOA, so lego
-      # looked for zone "uk." and every renewal failed. Public DNS sees the
-      # real zone.
+      # lego finds the Cloudflare zone via SOA/TXT lookups through the system
+      # resolver (blocky), whose split-horizon answer for greensroad.uk makes it
+      # pick zone "uk.". Public DNS sees the real zone.
       defaults.dnsResolver = "1.1.1.1:53";
       certs.${server.domain} = {
         extraDomainNames = ["*.${server.domain}"];

@@ -33,7 +33,6 @@ _: {
           };
 
           keymaps = [
-            # GitHub pickers
             {
               key = "<leader>gi";
               mode = "n";
@@ -63,7 +62,6 @@ _: {
               desc = "GitHub Pull Requests (all)";
             }
 
-            # File pickers
             {
               key = "<leader><space>";
               mode = "n";
@@ -121,7 +119,6 @@ _: {
               desc = "Recent Files (cwd)";
             }
 
-            # Grep/search
             {
               key = "<leader>/";
               mode = "n";
@@ -144,7 +141,6 @@ _: {
               desc = "Grep (cwd)";
             }
 
-            # History
             {
               key = "<leader>:";
               mode = "n";
@@ -160,7 +156,6 @@ _: {
               desc = "Search History";
             }
 
-            # Explorer
             {
               key = "<leader>e";
               mode = "n";
@@ -176,7 +171,6 @@ _: {
               desc = "Explorer (cwd)";
             }
 
-            # Notifications & scratch
             {
               key = "<leader>n";
               mode = "n";
@@ -206,7 +200,6 @@ _: {
               desc = "Select Scratch Buffer";
             }
 
-            # Zen mode
             {
               key = "<leader>uz";
               mode = "n";
@@ -215,7 +208,6 @@ _: {
               desc = "Toggle Zen Mode";
             }
 
-            # Terminal
             {
               key = "<C-/>";
               mode = "t";

@@ -4,7 +4,7 @@
     networking = {
       useNetworkd = lib.mkDefault true;
 
-      # Trust boundary (see #174): tailscale0 is the only trustedInterfaces
+      # Trust boundary: tailscale0 is the only trustedInterfaces
       # entry (tailscale.nix) - the LAN bridge br0 (hosts/thor/bridge.nix)
       # is untrusted, same as the WAN. Everything not listed below is
       # loopback + tailscale0 only, reached via nginx (cloudflared ->
