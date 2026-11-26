@@ -49,6 +49,9 @@ in {
       consumptionDirIsPublic = true;
       settings = {
         PAPERLESS_URL = "https://${url}";
+        # Blackbox probe and homepage siteMonitor hit the backend directly with
+        # Host: 127.0.0.1:<port>; without this Django 400s and logs a traceback.
+        PAPERLESS_ALLOWED_HOSTS = "127.0.0.1";
         PAPERLESS_OCR_LANGUAGE = "eng";
         PAPERLESS_TIME_ZONE = "Europe/London";
         PAPERLESS_AI_ENABLED = true;
