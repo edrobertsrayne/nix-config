@@ -20,6 +20,7 @@
         blocky
         cadvisor
         capslock
+        chhoto-url
         cloudflared
         dlna
         docker

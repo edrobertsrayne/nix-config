@@ -206,6 +206,10 @@
       type = types.port;
       default = 8085;
     };
+    chhotoUrl = mkOption {
+      type = types.port;
+      default = 4567;
+    };
 
     # Bar Assistant
     barAssistant = mkOption {
