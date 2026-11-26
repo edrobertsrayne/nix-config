@@ -61,6 +61,7 @@ grep -oE 'DS_[A-Z_]+|VAR_[A-Z_]+' modules/dashboards/*.json
 | `system-errors-warnings.json` | hand-written | — |
 | `storage-health.json` | hand-written | — |
 | `host-comparison.json` | hand-written | — |
+| `internet.json` | hand-written | — |
 
 `blocky-query.json` is **not** a straight download. Upstream 14980 is written
 for MySQL (`INSTR`, `SUBSTRING_INDEX`), but `queryLog.type` here is

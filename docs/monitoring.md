@@ -87,6 +87,7 @@ job is declared by the module that owns the thing being scraped, not centrally.
 | `cadvisor` | `127.0.0.1:9338` | `cadvisor.nix` | per-container CPU, memory, start time |
 | `blackbox-exporter` | `127.0.0.1:9115` | `blackbox-exporter.nix` | the prober itself |
 | `blackbox-http` | every `monitoring.probeTargets` entry | `blackbox-exporter.nix` | end-to-end HTTP reachability |
+| `blackbox-icmp` | router (`settings.network.gateway`), 1.1.1.1, 8.8.8.8 | `blackbox-exporter.nix` | ping latency and loss, every 30s — router vs. ISP |
 
 `node-exporter` runs the `systemd` collector, which is what makes
 `node_systemd_unit_state` — and therefore per-unit failure alerting — possible
@@ -164,6 +165,35 @@ are not unmonitored — thor's blackbox probes reach them through nginx, so
 *reason*: a restart loop, a failed healthcheck, or per-container resource use.
 See [Deliberate omissions](#deliberate-omissions).
 
+### Internet connection
+
+Two signals, because they answer different questions.
+
+**Continuous ping** (`blackbox-icmp`, 30s). The ICMP targets are a let-binding
+in `blackbox-exporter.nix`, not `monitoring.probeTargets`, which is HTTP-only and
+feeds `ProbeFailed`. The `Router` target separates a LAN fault from an ISP
+fault: if the router answers and both public resolvers do not, the WAN is down.
+`InstanceDown` excludes this job, like `blackbox-http`, because a failed ping is
+`probe_success 0`, not a down scrape.
+
+**Hourly speed test** (`modules/speedtest.nix`). A timer runs `speedtest-go`
+and writes `speedtest.prom` to the shared textfile directory:
+
+| Metric | Meaning |
+|---|---|
+| `speedtest_download_bits_per_second{server,server_id}` | download throughput |
+| `speedtest_upload_bits_per_second{server,server_id}` | upload throughput |
+| `speedtest_latency_seconds`, `speedtest_jitter_seconds` | latency and jitter to the test server |
+| `speedtest_packet_loss_ratio` | emitted only when the server measured it |
+| `speedtest_success` | 1 if the last test completed, 0 if it failed |
+| `speedtest_last_run_timestamp_seconds` | when the last attempt ran |
+
+A failed test publishes `speedtest_success 0` and exits 0: a failure usually
+means the link is down, which is data. Only a broken binary fails the unit
+(`SystemdUnitFailed`). Each run saturates the link for about 20s and uses
+roughly 100–500 MB, so the timer is hourly with 5m of random delay. Run one by
+hand with `sudo systemctl start speedtest-textfile.service`.
+
 ### Backup freshness
 
 `restic-metrics` (`modules/restic.nix`) reads every restic repo on thor hourly
@@ -231,6 +261,10 @@ rules are in `modules/loki.nix`. Both fire into Alertmanager.
 | | `ContainerRestartLoop` | crit | >3 restarts in 15m |
 | | `ContainerStopped` | warn | container still exists but hasn't run for 10m — in practice a non-Nix one, see [Container health](#container-health) |
 | | `ContainerHealthCollectorStale` | warn | the health textfile is >10m old |
+| `internet-health` | `InternetDown` | crit | router answers but neither 1.1.1.1 nor 8.8.8.8 does, 3m. The notification only arrives once the link is back, since ntfy is reached through the tunnel |
+| | `RouterUnreachable` | crit | thor cannot ping the gateway for 3m |
+| | `InternetPacketLoss` | warn | >5% of pings to a public resolver lost over 15m |
+| | `SpeedtestStale` | warn | no speed test for >3h |
 | `backup-health` ([backup.md](backup.md)) | `ResticBackupStale` | warn / crit | newest snapshot in a `thor-*` repo >2d old, crit at >3d |
 | | `ResticClientBackupStale` | warn | a laptop repo's newest snapshot >7d old |
 | | `ResticRepoUnreadable` | crit | restic can't list a repo's snapshots for 2h |
@@ -300,6 +334,7 @@ signal that turns it into a notification.
 | Container restart-looping | `ContainerRestartLoop` |
 | Container stopped and forgotten | `ContainerStopped` |
 | Container deliberately removed | *nothing, by design* — the metrics leave with it |
+| Internet down, router down, or lossy link | `internet-health` group |
 | Host out of memory, disk, or cooling | `host-health` group |
 | Swap creeping toward exhaustion (#218, #221) | `HostMemoryPressure`, then `HostSwapAlmostFull` |
 | Backup didn't run, or the SSD copy stopped | `ResticBackupStale`, `ResticBackupMissing`; a failed job is `SystemdUnitFailed` |
@@ -321,7 +356,7 @@ systemd perfectly happy.
 
 Provisioned read-only from `modules/dashboards/` — `node-exporter-full`,
 `host-comparison`, `cadvisor`, `smartctl`, `storage-health`, `blackbox-http`,
-`blocky`, `blocky-query`, `system-errors-warnings`. Each is contributed by the
+`internet`, `blocky`, `blocky-query`, `system-errors-warnings`. Each is contributed by the
 module owning the metrics it displays. See [dashboards.md](dashboards.md).
 
 The two node dashboards split by question. **Host Comparison** puts every host
