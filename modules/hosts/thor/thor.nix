@@ -127,7 +127,8 @@
       fileSystems = {
         "/boot".options = ["umask=0077"];
 
-        # Needed in stage 1: agenix reads the host key from here.
+        # Needed in stage 1: agenix reads the host key from here, and
+        # impermanence requires it on every persistent store.
         "/persist".neededForBoot = true;
 
         "/mnt/storage" = {

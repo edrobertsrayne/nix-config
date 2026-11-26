@@ -50,7 +50,8 @@ in {
 
           # Dashboards are contributed by the module owning the metrics they
           # display (monitoring.dashboards) and are read-only in the browser:
-          # edits go through the repo.
+          # edits go through the repo. Vendored community dashboards:
+          # docs/grafana-dashboards.md.
           dashboards.settings.providers = [
             {
               name = "home-server";

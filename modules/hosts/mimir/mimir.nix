@@ -133,6 +133,9 @@
           ];
         };
 
+        # /srv has no ordering pull on systemd-tmpfiles-setup, so rules
+        # targeting /srv/* could run before the mount and land on the
+        # transient root, shadowed once the mount completes.
         services.systemd-tmpfiles-setup.after = ["srv.mount"];
         tmpfiles.rules = [
           "d /srv/containers 0755 root root -"
@@ -177,16 +180,12 @@
       # Same GID as thor's tank group — see modules/settings/storage.nix.
       users.groups.tank.gid = inputs.self.settings.storage.tankGid;
 
-      # /srv has no ordering pull on systemd-tmpfiles-setup, so rules targeting
-      # /srv/* can run before the mount and land on the transient root, shadowed
-      # once the mount completes. Same fix as thor's /mnt/ssd.
-
       fileSystems."/persist" = {
         neededForBoot = true;
-        # persist.img is a small virtio-attached image that's always cleanly
-        # unmounted on shutdown; skipping fsck removes the one big, avoidable
-        # chunk of latency between virtio-blk attach and the mount completing
-        # — see the machine-id race note below.
+        # persist.img is always cleanly unmounted on shutdown. Skipping fsck
+        # removes avoidable latency before its bind-mounts (/etc/machine-id,
+        # SSH host keys) must win the race against systemd's machine-id
+        # setup at boot.
         noCheck = true;
       };
     };

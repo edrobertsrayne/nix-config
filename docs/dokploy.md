@@ -36,8 +36,10 @@ Then, from `http://192.168.68.130:3000`:
 
 `dokploy-traefik` is a plain container, not a Swarm service, because Dokploy's
 Web Server actions act on a container with that name.
-`modules/hosts/njord/traefik-watchdog.nix` restarts or recreates it. To keep it
-down on purpose, first run `systemctl stop dokploy-traefik-watchdog.timer`.
+`modules/hosts/njord/traefik-watchdog.nix` restarts or recreates it. A recreate
+uses `install.sh`'s run arguments, so it drops any extra ports added in
+Dokploy's UI. To keep it down on purpose, first run
+`systemctl stop dokploy-traefik-watchdog.timer`.
 
 If the watchdog can't bring it back, check
 `journalctl -u dokploy-traefik-watchdog` on njord. Dokploy's Settings > Web

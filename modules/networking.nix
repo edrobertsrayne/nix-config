@@ -8,12 +8,10 @@
       # entry (tailscale.nix) - the LAN bridge br0 (hosts/thor/bridge.nix)
       # is untrusted, same as the WAN. Everything not listed below is
       # loopback + tailscale0 only, reached via nginx (cloudflared ->
-      # Access-gated) or by <tailscale-ip>:<port> for mobile clients (no
-      # split-horizon DNS exists for the public domain - see immich.nix,
-      # navidrome.nix). A service that binds 0.0.0.0 with no firewall
-      # opening is tailnet-reachable but not LAN-reachable; that's
-      # deliberate for anything with a mobile client, since the public
-      # domain can't do the app's login there.
+      # Access-gated, or the tailnet) or by <tailscale-ip>:<port> for mobile
+      # clients (see immich.nix). A service that binds 0.0.0.0 with no
+      # firewall opening is tailnet-reachable but not LAN-reachable; that's
+      # deliberate.
       #
       # Ports deliberately open on br0 (the untrusted LAN), and why:
       #   22/tcp                   ssh.nix              key-only admin access

@@ -15,7 +15,7 @@ to. Everything is local to thor. There is no off-site copy.
 
 Every repo is on a different physical disk from its source. thor-state has
 two backups, so it still has one after the HDD or the SSD fails. Immich and the
-laptops have one backup each. The off-site copy is meant to be their second.
+laptops have one backup each.
 
 ### What thor-state includes
 
@@ -53,7 +53,11 @@ automount`.
 
 The cleanup step destroys the `@restic` snapshots, also after a failure. Every
 file comes from the same instant, so the SQLite databases (vaultwarden, ntfy,
-uptime-kuma, the \*arr apps) are crash-consistent.
+grafana and the rest) are crash-consistent.
+
+thor-state does not cover mimir's or njord's disk images
+(`/var/lib/microvms`), so the download stack's \*arr databases have only ZFS
+snapshots.
 
 ## The repo password
 
@@ -253,5 +257,5 @@ getfattr -n user.mergerfs.category.create /mnt/storage/.mergerfs
 
 Some policies keep new files on the disk that already holds their directory
 (`ep*` policies). Others spread a repo's pack files across disks. If the files
-spread, one failed disk damages every repo on the pool. Then a restore depends
-on `thor-state-ssd` (for thor-state) and on the off-site copy.
+spread, one failed disk damages every repo on the pool. Then only thor-state
+has a backup left, in `thor-state-ssd`.

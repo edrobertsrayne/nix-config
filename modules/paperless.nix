@@ -43,7 +43,9 @@ in {
     services.paperless = {
       enable = true;
       inherit port;
-      address = "0.0.0.0"; # tailnet client,
+      # 0.0.0.0 with no firewall opening: tailnet clients and scripts reach the
+      # API directly, without the Access login. Same pattern as immich.nix.
+      address = "0.0.0.0";
       dataDir = "/srv/paperless";
       consumptionDir = "/srv/paperless/consume";
       consumptionDirIsPublic = true;

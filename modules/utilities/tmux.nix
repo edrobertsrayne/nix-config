@@ -37,7 +37,6 @@ _: {
       historyLimit = 50000;
       baseIndex = 1;
 
-      # Custom configuration
       extraConfig = ''
         unbind '"'
         unbind %

@@ -23,8 +23,10 @@ in {
     services.immich = {
       enable = true;
       port = ports.immich;
-      # 0.0.0.0, not 127.0.0.1: the mobile app needs <tailscale-ip>:2283
-      # directly. The firewall is the boundary, not the bind address: no
+      # 0.0.0.0, not 127.0.0.1: the mobile app uses <tailscale-ip>:2283, not
+      # the hostname. With Tailscale down the hostname resolves publicly and
+      # returns the Access login as a 302, which the app mishandles; IP:port
+      # just times out. The firewall is the boundary, not the bind address: no
       # openFirewall, so only loopback (nginx) and tailscale0 (trusted) reach
       # this port. Unlike the loopback-only admin UIs
       # (transmission/searxng/n8n), this has a non-Access client.
