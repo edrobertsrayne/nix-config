@@ -22,6 +22,11 @@ a Google login before a request ever reaches thor. Access policies are
 configured in the Cloudflare dashboard, not in this repo — there is no password
 layer in the Nix config because Access *is* the auth layer.
 
+The one exception is `go.greensroad.uk` (Chhoto URL, the link shortener). Its
+Access application uses a Bypass policy so anyone can follow a short link.
+Chhoto's own password and API key (`secrets/chhoto-url.age`) are then the only
+gate on its admin UI and API.
+
 ### Tailscale — for admin, from your devices
 
 `tailscale0` is the **only** entry in `networking.firewall.trustedInterfaces`
