@@ -22,10 +22,12 @@ a Google login before a request ever reaches thor. Access policies are
 configured in the Cloudflare dashboard, not in this repo — there is no password
 layer in the Nix config because Access *is* the auth layer.
 
-The one exception is `go.greensroad.uk` (Chhoto URL, the link shortener). Its
+The one exception is `go.greensroad.uk` (Kutt, the link shortener). Its
 Access application uses a Bypass policy so anyone can follow a short link.
-Chhoto's own password and API key (`secrets/chhoto-url.age`) are then the only
-gate on its admin UI and API.
+Kutt's own login is then the only gate on creating and managing links.
+Registration is disabled; accounts are created by the admin. On a fresh
+install, open the site and create the admin account straight away, because
+the first-run page is public. `secrets/kutt.age` holds the JWT signing key.
 
 ### Tailscale — for admin, from your devices
 

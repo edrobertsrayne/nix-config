@@ -20,7 +20,6 @@
         blocky
         cadvisor
         capslock
-        chhoto-url
         cloudflared
         dlna
         docker
@@ -33,6 +32,7 @@
         janitarr
         jellyfin
         karakeep
+        kutt
         libvirt
         loki
         n8n
