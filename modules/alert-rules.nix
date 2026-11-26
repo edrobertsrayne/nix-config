@@ -123,7 +123,7 @@ _: {
                   description: "Fan {{ $labels.sensor }} ({{ $labels.chip }}) reports 0 RPM — possible fan failure"
 
               - alert: InstanceDown
-                expr: up{job!="blackbox-http"} == 0
+                expr: up{job!~"blackbox-(http|icmp)"} == 0
                 for: 5m
                 labels:
                   severity: critical
@@ -409,6 +409,46 @@ _: {
                 annotations:
                   summary: Backup metrics stale on {{ $labels.instance }}
                   description: "restic-metrics last wrote {{ $value | humanizeDuration }} ago (threshold: 3h) — backup freshness is no longer being reported"
+
+          - name: internet-health
+            rules:
+              - alert: InternetDown
+                expr: |
+                  max(probe_success{job="blackbox-icmp",instance!="Router"}) == 0
+                    and on() probe_success{job="blackbox-icmp",instance="Router"} == 1
+                for: 3m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Internet unreachable
+                  description: "Router answers but neither 1.1.1.1 nor 8.8.8.8 has for >3m — an ISP or WAN fault. This notification arrives only once the link is back."
+
+              - alert: RouterUnreachable
+                expr: probe_success{job="blackbox-icmp",instance="Router"} == 0
+                for: 3m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: Router unreachable
+                  description: "thor cannot ping the gateway for >3m — a LAN or router fault"
+
+              - alert: InternetPacketLoss
+                expr: 1 - avg_over_time(probe_success{job="blackbox-icmp",instance!="Router"}[15m]) > 0.05
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Packet loss to {{ $labels.instance }}
+                  description: "{{ $value | humanizePercentage }} of pings to {{ $labels.instance }} lost over 15m"
+
+              - alert: SpeedtestStale
+                expr: time() - speedtest_last_run_timestamp_seconds > 3 * 3600
+                for: 15m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: Speed test stale on {{ $labels.instance }}
+                  description: "The speed test last ran {{ $value | humanizeDuration }} ago (threshold: 3h)"
       ''
     ];
   };

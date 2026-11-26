@@ -50,6 +50,7 @@
         searxng
         seerr
         smart
+        speedtest
         user-password
         vaultwarden
         zfs
