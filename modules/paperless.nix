@@ -43,7 +43,9 @@ in {
     services.paperless = {
       enable = true;
       inherit port;
-      address = "0.0.0.0"; # tailnet client, per docs/networking.md
+      # 0.0.0.0 with no firewall opening: tailnet clients and scripts reach the
+      # API directly, without the Access login. Same pattern as immich.nix.
+      address = "0.0.0.0";
       dataDir = "/srv/paperless";
       consumptionDir = "/srv/paperless/consume";
       consumptionDirIsPublic = true;
@@ -62,7 +64,6 @@ in {
         PAPERLESS_AI_LLM_EMBEDDING_MODEL = "embeddinggemma:300m";
         PAPERLESS_AI_LLM_EMBEDDING_ENDPOINT = "http://127.0.0.1:11434";
       };
-      # Admin password now set via `paperless-manage createsuperuser` instead.
     };
 
     environment.persistence."/persist".directories = [

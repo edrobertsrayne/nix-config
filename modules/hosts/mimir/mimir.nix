@@ -30,12 +30,9 @@
       ];
 
       networking = {
-        # The microvm.nix module also sets a mkDefault hostId, conditional on
-        # microvm.machineId != null — set to null by the microvm-guest aspect
-        # (#220), so that mkDefault no longer fires here. A plain assignment
-        # still outranks mkNixosSystem's own mkDefault (modules/lib/hosts.nix)
-        # regardless. This value has no other use. mimir does not run ZFS
-        # itself. The value only needs to be a valid 8-digit hex number.
+        # A plain assignment outranks mkNixosSystem's mkDefault, and
+        # microvm.nix's own mkDefault no longer fires (machineId is null). mimir
+        # runs no ZFS; the value only needs to be 8-digit hex.
         hostId = "10000001";
 
         firewall = {
@@ -51,9 +48,9 @@
       microvm = {
         hypervisor = "qemu";
         vcpu = 2;
-        # Was 8192, all of which the guest used: its page cache grew to fill
-        # it, and that RAM is host shmem that thor can only swap, never drop
-        # (#221). Working set is ~1.7 GiB anon + ~1.6 GiB tmpfs.
+        # Not 8192: the guest's page cache grew to fill it, and that RAM is host
+        # shmem thor can only swap, never drop. Working set is ~1.7 GiB anon +
+        # ~1.6 GiB tmpfs.
         mem = 5120;
         # Returns pages the guest frees to thor (free-page-reporting).
         balloon = true;
@@ -104,15 +101,12 @@
 
       systemd = {
         network.networks."05-container" = {
-          # networkd must never manage container links. netavark enslaves each
-          # container veth to podman0; a few seconds later networkd would
-          # configure the veth with a .network file, which drops it off the
-          # bridge — the container keeps eth0 but loses all reachability
-          # (observed 2026-08-28: soularr unreachable from thor, and unable to
-          # reach lidarr/slskd, on every boot since 2026-08-26). Scoping
-          # 10-eth below to the real NIC alone is not enough: the 99-*-dhcp
-          # fallback files would then match the veths instead, so they are
-          # explicitly unmanaged here first (this file sorts before both).
+          # networkd must never manage container links: netavark enslaves each
+          # veth to podman0, and a networkd .network file would drop it off the
+          # bridge, cutting the container off. Scoping 10-eth to the real NIC is
+          # not enough, since the 99-*-dhcp fallbacks would then match the
+          # veths, so they are unmanaged here first (this file sorts before
+          # both).
           matchConfig.Name = ["veth*" "podman*" "docker*" "aardvark*"];
           linkConfig.Unmanaged = "yes";
         };
@@ -120,12 +114,9 @@
         network.networks."10-eth" = {
           matchConfig = {
             Type = "ether";
-            # Matched by MAC, not interface name: Type=ether alone also
-            # matches container veths (their devtype is ether), and networkd
-            # managing those breaks podman networking — see the 05-container
-            # block above. The name follows the guest's PCI slot, which moved
-            # (enp0s7 -> enp0s8) when the qemu device list changed, dropping
-            # mimir onto the DHCP fallback (#236).
+            # Matched by MAC, not interface name: Type=ether also matches
+            # container veths, and the name follows the guest's PCI slot, which
+            # moves when the qemu device list changes.
             MACAddress = mac;
           };
           networkConfig = {
@@ -142,6 +133,9 @@
           ];
         };
 
+        # /srv has no ordering pull on systemd-tmpfiles-setup, so rules
+        # targeting /srv/* could run before the mount and land on the
+        # transient root, shadowed once the mount completes.
         services.systemd-tmpfiles-setup.after = ["srv.mount"];
         tmpfiles.rules = [
           "d /srv/containers 0755 root root -"
@@ -151,17 +145,16 @@
       };
 
       services.tailscale.extraSetFlags = [
-        # By IP, not hostname: tailscaled-set runs before Tailscale can
-        # resolve MagicDNS names and fails with "cannot resolve exit node by
-        # hostname while Tailscale is starting up". This is
+        # By IP, not hostname: tailscaled-set runs before MagicDNS resolves
+        # ("cannot resolve exit node by hostname"). This is
         # se-sto-wg-201.mullvad.ts.net.
         "--exit-node=100.84.2.120"
         "--exit-node-allow-lan-access=true"
       ];
 
       # tailscaled-autoconnect reports Running before the netmap holds every
-      # peer, so `tailscale set --exit-node=<ip>` can fail with "no node found
-      # in netmap" (#240). Retry until the exit node is known.
+      # peer, so `tailscale set --exit-node` can fail with "no node found in
+      # netmap". Retry until the exit node is known.
       systemd.services.tailscaled-set = {
         serviceConfig = {
           Restart = "on-failure";
@@ -173,9 +166,8 @@
         };
       };
 
-      # Root is tmpfs, so podman's default graphroot would lose the image
-      # cache every boot and force a Docker Hub pull (#234). Keep storage and
-      # the pull staging dir (default /var/tmp, also tmpfs) on srv.img.
+      # Root is tmpfs: keep podman's storage and pull staging dir (default
+      # /var/tmp) on srv.img so the image cache survives reboots.
       virtualisation.containers = {
         storage.rootful.settings.storage = {
           driver = "overlay";
@@ -188,19 +180,12 @@
       # Same GID as thor's tank group — see modules/settings/storage.nix.
       users.groups.tank.gid = inputs.self.settings.storage.tankGid;
 
-      # /srv (srv.img) has no ordering pull on systemd-tmpfiles-setup by
-      # default, so rules targeting /srv/* (e.g. transmission's home dir,
-      # modules/downloads/transmission.nix) can run before /srv is mounted —
-      # they then land on the transient root and get shadowed once the mount
-      # completes. Same fix thor applies for /mnt/ssd (modules/hosts/thor/thor.nix).
-      # Ordered in the systemd block above.
-
       fileSystems."/persist" = {
         neededForBoot = true;
-        # persist.img is a small virtio-attached image that's always cleanly
-        # unmounted on shutdown; skipping fsck removes the one big, avoidable
-        # chunk of latency between virtio-blk attach and the mount completing
-        # — see the machine-id race note below.
+        # persist.img is always cleanly unmounted on shutdown. Skipping fsck
+        # removes avoidable latency before its bind-mounts (/etc/machine-id,
+        # SSH host keys) must win the race against systemd's machine-id
+        # setup at boot.
         noCheck = true;
       };
     };

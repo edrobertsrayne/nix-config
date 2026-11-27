@@ -80,16 +80,12 @@
         priority = 100; # first tier — compressed, in-RAM, fast
       };
 
-      # zram alone is not a backstop: it holds compressed pages *in RAM*, so
-      # when it fills there is nowhere left to evict to and the next large
-      # allocation OOMs — which is what killed the 04:00 build and took
-      # nix-daemon with it (#218). This gives the kernel a real second tier.
-      # Not on ZFS: zvol swap deadlocks under exactly the memory pressure it
-      # exists to relieve, and ZFS supports no swapfile. /mnt/ssd is ext4
-      # (_hardware.nix) and is the only writable non-ZFS filesystem on thor.
-      # Lower priority than zram, so zram is still used first and this only
-      # takes the genuinely cold overflow. Shares a spindle with
-      # /mnt/ssd/downloads — accepted trade, see docs/storage.md.
+      # zram alone is not a backstop: it holds compressed pages in RAM, so when
+      # it fills the next large allocation OOMs. This gives the kernel a real
+      # second tier. Not on ZFS: zvol swap deadlocks under the memory pressure
+      # it exists to relieve, and ZFS supports no swapfile. /mnt/ssd is ext4 and
+      # the only writable non-ZFS filesystem. Lower priority than zram, so it
+      # takes only cold overflow; it shares a spindle with /mnt/ssd/downloads.
       swapDevices = [
         {
           device = "/mnt/ssd/swapfile";
@@ -104,7 +100,6 @@
         members = ["${inputs.self.settings.user.username}"];
       };
 
-      # Ensure tmpfiles runs after /mnt/ssd is mounted
       systemd.services.systemd-tmpfiles-setup.after = ["mnt-ssd.mount"];
 
       services = {
@@ -132,7 +127,8 @@
       fileSystems = {
         "/boot".options = ["umask=0077"];
 
-        # See docs/storage.md ("The ZFS pool") for why this is required.
+        # Needed in stage 1: agenix reads the host key from here, and
+        # impermanence requires it on every persistent store.
         "/persist".neededForBoot = true;
 
         "/mnt/storage" = {

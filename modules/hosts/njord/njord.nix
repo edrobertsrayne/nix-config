@@ -16,20 +16,13 @@
         inputs.self.modules.nixos.microvm-guest
       ];
 
-      # Dokploy's install.sh shells out to `openssl rand -hex 32` to generate
-      # its Better Auth secret, with no fallback if it's missing — the script
-      # only falls back to /dev/urandom/sha256sum for the Postgres password,
-      # not this. Without it Dokploy silently falls back to its own default
-      # auth secret (BetterAuthError in the container logs) rather than
-      # failing the install outright.
+      # Dokploy's install.sh needs `openssl rand -hex 32` for its auth secret,
+      # with no fallback; without it Dokploy silently uses its own default
+      # secret.
       environment.systemPackages = [pkgs.openssl];
 
-      # The microvm.nix module also sets a mkDefault hostId, conditional on
-      # microvm.machineId != null — set to null by the microvm-guest aspect
-      # (#220), so that mkDefault no longer fires here. A plain assignment
-      # still outranks mkNixosSystem's own mkDefault (modules/lib/hosts.nix)
-      # regardless, the same way mimir.nix handles it. This value has no
-      # other use and only needs to be a valid 8-digit hex number.
+      # A plain assignment outranks mkNixosSystem's mkDefault (same as
+      # mimir.nix); the value only needs to be 8-digit hex.
       networking.hostId = "10000002";
 
       # Dokploy's UI. 80/443 are published directly by Docker (traefik's
@@ -40,12 +33,10 @@
       microvm = {
         hypervisor = "qemu";
         vcpu = 4;
-        # Trimmed from 8192: #221 found MemoryCurrent 1.1G / MemoryPeak 3G on
-        # this guest under normal load (Docker Swarm + Traefik + Dokploy's
-        # Postgres) — 8 GiB of thor's 31 GiB was uncommitted headroom. 4096
-        # keeps clear margin above the observed peak.
+        # Observed peak ~3G under normal load (Swarm + Traefik + Dokploy's
+        # Postgres).
         mem = 4096;
-        # Returns pages the guest frees to thor (free-page-reporting), see mimir.
+        # free-page-reporting returns freed guest pages to thor.
         balloon = true;
 
         interfaces = [
@@ -80,21 +71,15 @@
       };
 
       systemd.network.networks = {
-        # networkd must never manage Docker's links — the same footgun mimir
-        # hit with podman (see the long comment in
-        # modules/hosts/mimir/mimir.nix): if networkd claims a veth, Docker's
-        # own bridging gets pulled out from under it. Belt-and-braces
-        # alongside the MACAddress match below, which already keeps 10-eth
-        # from matching these.
+        # networkd must never manage Docker's links: claiming a veth pulls
+        # Docker's bridging out from under it (see mimir.nix).
         "05-container" = {
           matchConfig.Name = ["veth*" "docker*" "br-*"];
           linkConfig.Unmanaged = "yes";
         };
 
-        # Matched by MAC rather than interface name: unlike mimir (whose NIC
-        # now also matches by MAC after its NIC name changed), njord's guest
-        # NIC name isn't pinned down, and MACAddress is immune to that while still
-        # excluding Docker's own interfaces.
+        # Matched by MAC: the guest NIC name isn't pinned, and a MAC match still
+        # excludes Docker's interfaces.
         "10-eth" = {
           matchConfig = {
             Type = "ether";
@@ -108,14 +93,11 @@
         };
       };
 
-      # All of Dokploy's and Docker's state lives on srv.img.
       virtualisation.docker.daemon.settings.data-root = "/srv/docker";
 
-      # Dokploy hardcodes /etc/dokploy for its config, Traefik's dynamic
-      # config dir, and app volumes. Root is tmpfs on a microvm (wiped every
-      # boot via the persistence model thor and mimir both use), so bind it
-      # onto srv.img instead. The installer chmods this 0777 itself; the
-      # tmpfiles rule just ensures the mountpoint exists first.
+      # Dokploy hardcodes /etc/dokploy and root is tmpfs, so bind it onto
+      # srv.img. The installer chmods it 0777; the tmpfiles rule only ensures
+      # the mountpoint exists.
       systemd.tmpfiles.rules = ["d /srv/dokploy 0755 root root -"];
       fileSystems."/etc/dokploy" = {
         device = "/srv/dokploy";

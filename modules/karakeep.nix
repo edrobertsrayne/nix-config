@@ -39,8 +39,8 @@ in {
       RestartSec = "5s";
     };
 
-    # server.nix turns fontconfig off by default; karakeep's headless
-    # Chromium aborts without it (see prowlarr.nix, #225).
+    # server.nix turns fontconfig off by default; karakeep's headless Chromium
+    # aborts without it.
     fonts = {
       fontconfig.enable = true;
       packages = [pkgs.noto-fonts];

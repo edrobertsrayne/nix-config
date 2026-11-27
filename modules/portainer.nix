@@ -50,10 +50,8 @@ in {
           "/var/run/docker.sock:/var/run/docker.sock"
         ];
 
-        # :latest + --pull=always is deliberate, not an oversight: personal
-        # server, nixpkgs is already tracked on unstable, rolling container
-        # images are an accepted trade for staying current without manual
-        # version bumps. See #181.
+        # :latest + --pull=always is deliberate: rolling images, no manual
+        # bumps.
         extraOptions = [
           "--pull=always"
         ];

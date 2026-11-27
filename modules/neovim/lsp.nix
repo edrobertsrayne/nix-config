@@ -11,7 +11,6 @@ _: {
           };
 
           keymaps = [
-            # === LSP (quick access) ===
             {
               key = "K";
               mode = "n";
@@ -62,7 +61,6 @@ _: {
               desc = "Go to type definition";
             }
 
-            # === Code/LSP ===
             {
               key = "<leader>ca";
               mode = "n";
@@ -120,7 +118,6 @@ _: {
               desc = "Line diagnostics";
             }
 
-            # === Diagnostics ===
             {
               key = "]d";
               mode = "n";
@@ -164,7 +161,6 @@ _: {
               desc = "Previous warning";
             }
 
-            # === LSP in insert mode ===
             {
               key = "<C-k>";
               mode = "i";
@@ -173,7 +169,6 @@ _: {
               desc = "Signature help";
             }
 
-            # === Code/LSP in visual mode ===
             {
               key = "<leader>ca";
               mode = "v";

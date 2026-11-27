@@ -26,7 +26,7 @@ in {
     systemd.tmpfiles.rules = ["d /srv/kutt 0755 root root -"];
 
     # Not in nixpkgs, so it runs as a container. Floating tag + --pull=always
-    # follows the repo convention for rolling images (see #181).
+    # follows the repo convention for rolling images.
     virtualisation.oci-containers.containers.kutt = {
       image = "kutt/kutt:latest";
       autoStart = true;

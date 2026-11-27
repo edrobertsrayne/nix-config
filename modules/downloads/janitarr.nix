@@ -30,8 +30,8 @@ in {
   };
 
   # Runs on thor (not in the `downloads` group, which is mimir's) and talks to
-  # mimir's sonarr/radarr over the LAN; mimir's firewall already accepts thor
-  # on those ports. See docs/deploying.md, "Same-host vs. cross-host services".
+  # mimir's sonarr/radarr over the LAN; mimir's firewall already accepts thor on
+  # those ports.
   flake.modules.nixos.janitarr = {
     config,
     pkgs,

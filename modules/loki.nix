@@ -9,10 +9,10 @@ in {
           rules:
             # Counts per unit, not per host: a shutdown stops every unit once,
             # so one guest restart logs one failure each for units that exit
-            # non-zero on SIGTERM (#243). Only "Failed with result" is counted,
-            # as it covers every failure type and is logged once per failure.
-            # The 1h window catches slow loops: acme-order-renew retried every
-            # 15m for 8 days without tripping a 5m window.
+            # non-zero on SIGTERM. Only "Failed with result" is counted: it
+            # covers every failure type and is logged once per failure. The 1h
+            # window catches slow loops: acme-order-renew retried every 15m for
+            # 8 days without tripping a 5m window.
             - alert: SystemdUnitCrashLooping
               expr: |
                 sum by (host, name) (
@@ -166,7 +166,6 @@ in {
       ];
 
       grafana.provision.datasources.settings = {
-        # Paired with the datasource below; see modules/grafana.nix for why.
         deleteDatasources = [
           {
             name = "Loki";
@@ -188,11 +187,12 @@ in {
 
     monitoring.dashboards.system-errors-warnings = ./dashboards/system-errors-warnings.json;
 
-    # Loki local ruler expects rules at <storage.local.directory>/<tenant>/<file>.yml
-    # With auth_enabled=false the tenant is "fake"
-    # L+ (not plain L): plain L only creates the symlink if the path doesn't already
-    # exist, so it silently stops tracking rule-content changes after the first deploy.
-    # Confirmed live: this symlink pointed at a June store path until this fix.
+    # Loki's local ruler expects rules at
+    # <storage.local.directory>/<tenant>/<file>.yml; with auth_enabled=false the
+    # tenant is "fake".
+    #
+    # L+, not L: plain L only creates the symlink if the path doesn't exist, so
+    # it silently stops tracking rule changes after the first deploy.
     systemd.tmpfiles.rules = [
       "d /srv/loki/rules 0750 loki loki -"
       "d /srv/loki/rules/fake 0750 loki loki -"

@@ -21,7 +21,6 @@
         locations."/".return = "404";
       };
 
-      # WebSocket upgrade support
       appendHttpConfig = ''
         map $http_upgrade $connection_upgrade {
           default upgrade;

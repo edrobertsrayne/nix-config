@@ -1,17 +1,15 @@
 {inputs, ...}: {
   flake.modules.nixos.njord = {pkgs, ...}: let
-    # dokploy-traefik is a plain container (Dokploy's install script, not a
-    # Swarm service) on the swarm-scoped `dokploy-network` overlay. After a
-    # hard reboot dockerd can start it before Swarm's overlay networking is
-    # ready; the attach fails, it exits 255, and restart policy `always` never
-    # retries — admin/slicer sat on 502 for ~14h (#223). Swarm has no loop for
-    # plain containers, so this is that loop.
+    # dokploy-traefik is a plain container on the swarm-scoped overlay. After a
+    # hard reboot dockerd can start it before the overlay is ready; the attach
+    # fails, it exits 255, and restart=always never retries. Swarm has no loop
+    # for plain containers, so this is that loop.
     #
-    # Starting is not always enough. After a VM restart a stopped container can
-    # fail every start with `Address already in use` on the overlay, and
-    # Dokploy's scheduled cleanup then prunes it and its image. So a container
-    # that won't start or is gone gets recreated with install.sh's run args. To
-    # take traefik down on purpose, stop this unit's timer first.
+    # Starting is not always enough: a start can fail with `Address already in
+    # use` on the overlay, and Dokploy's cleanup prunes stopped containers and
+    # their image. So a container that won't start or is gone is recreated with
+    # install.sh's run args. To take traefik down on purpose, stop this unit's
+    # timer first.
     watchdog = pkgs.writeShellScript "dokploy-traefik-watchdog" ''
       set -euo pipefail
 

@@ -12,17 +12,12 @@ in {
     users.users.${cfg.user}.extraGroups = ["tank"];
 
     systemd.tmpfiles.rules = [
-      # 2775: setgid so transmission's completed-download dirs inherit group
-      # tank instead of transmission's primary group. /mnt/ssd/downloads and
-      # /mnt/storage are separate virtiofs mounts, so imports cannot hardlink
-      # and must copy+delete, which needs write access to the dir either way.
-      #
-      # Setgid inheritance over virtiofs is unreliable (confirmed for
-      # sabnzbd's equivalent dirs, 2026-09-16) - some dirs may come out
-      # group=transmission instead. The actual guarantee that the *arrs can
-      # delete is their membership in both tank and transmission
-      # (flake.lib.mkArr, modules/lib/servarr.nix); this setgid rule is
-      # defense-in-depth, not load-bearing on its own.
+      # 2775: setgid so completed-download dirs inherit group tank. The mounts
+      # are separate virtiofs shares, so imports cannot hardlink and must
+      # copy+delete, which needs write access to the dir. Setgid inheritance
+      # over virtiofs is unreliable; the real guarantee is the *arrs' membership
+      # in both tank and transmission (flake.lib.mkArr), so this is
+      # defence-in-depth.
       "d ${cfg.settings.incomplete-dir} 2775 ${cfg.user} tank -"
       "d ${cfg.settings.download-dir} 2775 ${cfg.user} tank -"
       # cfg.home lives outside the default /var/lib/transmission, so
@@ -84,7 +79,6 @@ in {
     };
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.transmission-proxy = inputs.self.lib.mkProxiedService {
     name = "Transmission";
     subdomain = "transmission";

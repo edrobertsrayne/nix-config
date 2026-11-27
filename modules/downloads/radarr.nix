@@ -7,7 +7,6 @@ in {
     secret = ../../secrets/radarr-apikey.age;
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.radarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Radarr";
     subdomain = "radarr";

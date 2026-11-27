@@ -23,9 +23,8 @@
     autostart = ["mimir" "njord"];
   };
 
-  # No MemoryHigh on microvm-virtiofsd@. Its ~4 GB RSS per share looked like
-  # a cache (#221) but is the guest's own RAM: virtiofsd maps the guest's
-  # shared memfd, so every share's RSS repeats it. Private memory is ~1-10 MB.
-  # A cap only throttled that shmem and pushed guest pages into zram. Size the
-  # guests (microvm.mem) and ZFS ARC (modules/zfs.nix) instead.
+  # No MemoryHigh on microvm-virtiofsd@: its ~4 GB RSS per share is the guest's
+  # own RAM (virtiofsd maps the guest's shared memfd), not a cache. A cap only
+  # throttled that shmem and pushed guest pages into zram. Size the guests
+  # (microvm.mem) and ZFS ARC (modules/zfs.nix) instead.
 }

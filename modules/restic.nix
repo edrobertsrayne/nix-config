@@ -1,10 +1,10 @@
 {inputs, ...}: let
   inherit (inputs.self.lib) textfileDir;
 in {
-  # Local backups of thor's own data (#169). Every repo sits on a different
-  # physical disk from its source. thor-state also gets a second copy on the
-  # SSD, so losing the HDD or the SSD still leaves one backup of the NVMe
-  # state. See docs/backup.md for the layout, restores and the client runbook.
+  # Local backups of thor's own data. Every repo sits on a different physical
+  # disk from its source. thor-state also gets a second copy on the SSD, so
+  # losing the HDD or the SSD still leaves one backup of the NVMe state. See
+  # docs/backup.md for restores and the client runbook.
   flake.modules.nixos.restic = {
     config,
     lib,
@@ -164,7 +164,7 @@ in {
               # directory with no warning, so mount both here and refuse to
               # back up an empty one.
               #
-              # Trigger each automount from PID 1's mount namespace (#250).
+              # Trigger each automount from PID 1's mount namespace.
               # ZFS builds the mount path from the dataset's recorded
               # mountpoint, and only refreshes that record when the caller
               # shares init's root. This unit has its own namespace

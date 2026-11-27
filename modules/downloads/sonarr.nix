@@ -7,7 +7,6 @@ in {
     secret = ../../secrets/sonarr-apikey.age;
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.sonarr-proxy = inputs.self.lib.mkProxiedService {
     name = "Sonarr";
     subdomain = "sonarr";

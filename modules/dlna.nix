@@ -4,12 +4,9 @@ in {
   flake.modules.nixos.dlna = {
     services.minidlna = {
       enable = true;
-      # Deliberate LAN opening, not an oversight - see #174: DLNA/SSDP only
-      # function on the local segment, so closing this disables the
-      # service outright. No new exposure results - /mnt/ssd/music is
-      # already guest-readable to the whole LAN over Samba
-      # (modules/samba.nix), and minidlna serves the same tree
-      # unauthenticated either way.
+      # Deliberate LAN opening: DLNA/SSDP only work on the local segment. No new
+      # exposure: /mnt/ssd/music is already guest-readable over Samba
+      # (modules/samba.nix).
       openFirewall = true; # HTTP + SSDP
       settings = {
         media_dir = ["A,/mnt/ssd/music"]; # A = audio only

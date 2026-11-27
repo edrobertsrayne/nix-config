@@ -41,11 +41,10 @@ in {
           requires = ["init-bar-assistant-network.service"];
 
           # The serversideup base image races its nginx s6 longrun against the
-          # oneshot that renders the site config; when it loses, nginx comes up
-          # with no server block, binds nothing, and the unit still looks
-          # active (s6 itself is running fine). Fail the unit instead so
-          # Restart=on-failure (already set by oci-containers) retries the
-          # race, and a persistent failure reaches the SystemdUnitFailed alert.
+          # oneshot that renders the site config; when it loses, nginx binds
+          # nothing while the unit still looks active. Fail the unit instead so
+          # Restart=on-failure retries and a persistent failure reaches
+          # SystemdUnitFailed.
           serviceConfig.ExecStartPost = pkgs.writeShellScript "bar-assistant-ready" ''
             for _ in $(seq 1 60); do
               ${lib.getExe pkgs.curl} -fsS -o /dev/null \
@@ -57,14 +56,11 @@ in {
           '';
         };
 
-        # salt-rim's Requires=+After= on bar-assistant-server (from dependsOn
-        # below) only orders a *simultaneous* start — if bar-assistant-server's
-        # own start attempt fails (e.g. the s6/nginx race above) and its
-        # Restart=on-failure later recovers it, salt-rim's start job has
-        # already failed with a "dependency" result and is never retried.
-        # Wait for the API to actually be healthy instead of trusting the
-        # ordering alone, so a transient bar-assistant-server failure doesn't
-        # permanently strand salt-rim.
+        # Requires=+After= on bar-assistant-server only orders a simultaneous
+        # start: if its first attempt fails (the s6/nginx race above) and
+        # Restart=on-failure later recovers it, this unit's start job has
+        # already failed with "dependency" and is never retried. Wait for the
+        # API to be healthy instead.
         "docker-salt-rim".serviceConfig.ExecStartPre = pkgs.writeShellScript "salt-rim-wait-for-api" ''
           for _ in $(seq 1 60); do
             ${lib.getExe pkgs.curl} -fsS -o /dev/null \
@@ -77,13 +73,10 @@ in {
       };
     };
 
-    # :latest/floating-major tags + --pull=always are deliberate, not an
-    # oversight: personal server, nixpkgs is already tracked on unstable,
-    # rolling container images are an accepted trade for staying current
-    # without manual version bumps. See #181. `meilisearch` below is the
-    # deliberate exception, pinned to a minor version because Meilisearch's
-    # index/dump format changes across releases and needs a controlled
-    # upgrade rather than a silent pull.
+    # :latest/floating-major tags + --pull=always are deliberate: rolling
+    # images, no manual bumps. `meilisearch` is pinned to a minor version
+    # because its index/dump format changes across releases and needs a
+    # controlled upgrade.
     virtualisation.oci-containers.containers = {
       meilisearch = {
         image = "getmeili/meilisearch:v1.15";

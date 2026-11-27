@@ -32,23 +32,12 @@ _: {
 
     services.nfs.server = {
       enable = true;
-      # Deliberate, not an oversight - see #175:
-      # - NFS is tailnet-only (100.64.0.0/10): the LAN subnet export was
-      #   dropped, so downloads/backup/media/music over NFS only reach
-      #   devices on the tailnet. LAN-only devices (Sonos etc.) fall back
-      #   to the guest-read-only Samba shares in samba.nix for
-      #   media/music.
-      # - The tailnet has exactly one user, so the whole CGNAT range is
-      #   "my devices" here, not an attack surface - pinning individual
-      #   peer IPs would just break on every new device.
-      # - root_squash is already the default and already active -
-      #   confirmed via `/var/lib/nfs/etab`
-      #   (root_squash,anonuid=65534,anongid=65534 on every export); no
-      #   config was needed for the corresponding acceptance criterion.
-      # - `insecure` (allows client source ports >1023) is kept: privileged-
-      #   port checks add nothing on top of host/range-based trust here,
-      #   and dropping it risks silently breaking a client mount that
-      #   happens to use a high source port.
+      # Deliberate: NFS is tailnet-only (100.64.0.0/10); LAN-only devices (Sonos
+      # etc.) fall back to the guest-read-only Samba shares for media/music. The
+      # tailnet has one user, so the whole CGNAT range is "my devices", and
+      # pinning peer IPs would break on every new device. `insecure` (client
+      # ports >1023) is kept: privileged-port checks add nothing here, and
+      # dropping it risks breaking a client that uses a high source port.
       exports =
         ''
           /export         100.64.0.0/10(insecure,rw,sync,no_subtree_check,crossmnt,fsid=0)

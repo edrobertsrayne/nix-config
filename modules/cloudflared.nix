@@ -2,9 +2,8 @@
   inherit (inputs.self.settings.server) domain;
   tunnel = "23c4423f-ec30-423b-ba18-ba18904ddb85";
 in {
-  # The only public way in: an outbound tunnel to Cloudflare that forwards
-  # every name under the domain to nginx on loopback, behind Cloudflare
-  # Access. See docs/networking.md.
+  # The only public way in: an outbound tunnel to Cloudflare that forwards every
+  # name under the domain to nginx on loopback, behind Cloudflare Access.
   flake.modules.nixos.cloudflared = {config, ...}: {
     age.secrets.cloudflared.file = ../secrets/cloudflare-thor.age;
 

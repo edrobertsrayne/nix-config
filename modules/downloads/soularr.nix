@@ -141,11 +141,10 @@ in {
         "/srv/soularr:/data"
         "${downloadDir}:${downloadDir}" # same path in-container so both agree
       ];
-      # Not --pull=always: it contacts Docker Hub on every start, so a
-      # rate-limit (toomanyrequests) put the unit in a restart loop that kept
-      # the limit exhausted (#234). The image cache persists (mimir's podman
-      # graphroot is on /srv), so pull only when missing; update by hand
-      # (podman pull) when wanted.
+      # Not --pull=always: a Docker Hub rate limit (toomanyrequests) put the
+      # unit in a restart loop that kept the limit exhausted. The image cache
+      # persists (podman graphroot is on /srv), so pull only when missing;
+      # update by hand (podman pull).
       extraOptions = [
         "--pull=missing"
         "--add-host=host.docker.internal:host-gateway"
@@ -153,7 +152,6 @@ in {
     };
   };
 
-  # See docs/deploying.md, "Same-host vs. cross-host services", for why this module exists.
   flake.modules.nixos.soularr-proxy = inputs.self.lib.mkProxiedService {
     name = "Soularr";
     subdomain = "soularr";

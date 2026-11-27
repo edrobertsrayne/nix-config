@@ -9,7 +9,7 @@ _: {
       enable = true;
       extraPackages = with pkgs; [
         intel-media-driver
-        intel-vaapi-driver # previously vaapiIntel
+        intel-vaapi-driver
         libva-vdpau-driver
         libvdpau-va-gl
         intel-compute-runtime # OpenCL filter support (hardware tonemapping and subtitle burn-in)

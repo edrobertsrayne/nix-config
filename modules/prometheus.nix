@@ -26,7 +26,6 @@ in {
     };
 
     services.grafana.provision.datasources.settings = {
-      # Paired with the datasource below; see modules/grafana.nix for why.
       deleteDatasources = [
         {
           name = "Prometheus";
