@@ -31,7 +31,21 @@ in {
         max_age       = "12h"
         labels        = { job = "systemd-journal", host = "${config.networking.hostName}" }
         relabel_rules = loki.relabel.journal.rules
-        forward_to    = [loki.write.default.receiver]
+        forward_to    = [loki.process.reclassify.receiver]
+      }
+
+      // Docker's journald driver tags all container stderr as priority 3, so
+      // INFO lines from tools that log there (meilisearch, soularr) show up
+      // as errors. Anchored to each tool's level position so an ERROR line
+      // that merely mentions INFO in its body keeps its level.
+      loki.process "reclassify" {
+        stage.match {
+          selector = "{level=\"error\"} |~ `^(\\S+Z\\s+INFO\\s|\\[INFO\\|)`"
+          stage.static_labels {
+            values = { level = "info" }
+          }
+        }
+        forward_to = [loki.write.default.receiver]
       }
 
       loki.write "default" {
