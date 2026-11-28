@@ -36,11 +36,11 @@ in {
 
       // Docker's journald driver tags all container stderr as priority 3, so
       // INFO lines from tools that log there (meilisearch, soularr) show up
-      // as errors. Anchored to each tool's level position so an ERROR line
+      // as errors (meilisearch also wraps them in ANSI colour). Anchored to each tool's level position so an ERROR line
       // that merely mentions INFO in its body keeps its level.
       loki.process "reclassify" {
         stage.match {
-          selector = "{level=\"error\"} |~ `^(\\S+Z\\s+INFO\\s|\\[INFO\\|)`"
+          selector = `{level="error"} |~ "^((?:\\x1b\\[[0-9;]*m)*\\S+Z(?:\\x1b\\[[0-9;]*m)*\\s+(?:\\x1b\\[[0-9;]*m)*\\s*INFO\\b|\\[INFO\\|)"`
           stage.static_labels {
             values = { level = "info" }
           }
